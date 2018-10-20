@@ -112,6 +112,7 @@ namespace VisualAdjustmentsMod
                     }
                     characterSettings.hideBackpack = GUILayout.Toggle(characterSettings.hideBackpack, "Hide Backpack", Array.Empty<GUILayoutOption>());
                     characterSettings.hideHelmet = GUILayout.Toggle(characterSettings.hideHelmet, "Hide Helmet", Array.Empty<GUILayoutOption>());
+                    characterSettings.hideCap = GUILayout.Toggle(characterSettings.hideCap, "Hide Cap", Array.Empty<GUILayoutOption>());
                     GUILayout.EndHorizontal();
                     if (unitEntityData.Descriptor.Doll != null && characterSettings.showClassSelection)
                     {
@@ -140,9 +141,8 @@ namespace VisualAdjustmentsMod
             bool dirty = __instance.CharacterAvatar.IsDirty;
             if (characterSettings.hideBackpack)
             {
-                for (int i = __instance.CharacterAvatar.EquipmentEntities.Count - 1; i >= 0; i--)
+                foreach (var ee in __instance.CharacterAvatar.EquipmentEntities)
                 {
-                    var ee = __instance.CharacterAvatar.EquipmentEntities[i];
                     for (int j = ee.OutfitParts.Count - 1; j >= 0; j--)
                     {
                         var outfit = ee.OutfitParts[j];
@@ -163,6 +163,24 @@ namespace VisualAdjustmentsMod
                     dirty = true;
                 }
             }
+            if (characterSettings.hideCap)
+            {
+                foreach (var ee in __instance.CharacterAvatar.EquipmentEntities)
+                {
+                    for (int j = ee.BodyParts.Count - 1; j >= 0; j--)
+                    {
+                        var bodypart = ee.BodyParts[j];
+                        if (bodypart.Type == BodyPartType.Cap)
+                        {
+
+                            ee.BodyParts.Remove(bodypart);
+                            dirty = true;
+                        }
+                    }
+                    ee.HideBodyParts &= ~(BodyPartType.Ears | BodyPartType.Hair | BodyPartType.Hair2 | BodyPartType.HeadTop); //Show ears, hair, headtop
+                }
+            }
+
             __instance.CharacterAvatar.IsDirty = dirty;                
         }
         [HarmonyPatch(typeof(UnitEntityView), "UpdateBodyEquipmentModel")]
