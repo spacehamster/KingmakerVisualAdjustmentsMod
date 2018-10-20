@@ -115,6 +115,7 @@ namespace VisualAdjustmentsMod
                     GUILayout.EndHorizontal();
                     if (unitEntityData.Descriptor.Doll != null && characterSettings.showClassSelection)
                     {
+                        GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
                         foreach (var _class in classes)
                         {
                             if(GUILayout.Button(_class, Array.Empty<GUILayoutOption>()))
@@ -124,6 +125,7 @@ namespace VisualAdjustmentsMod
                                 unitEntityData.View.UpdateClassEquipment();
                             }
                         }
+                        GUILayout.EndHorizontal();
                     }
 
                 }
@@ -135,7 +137,7 @@ namespace VisualAdjustmentsMod
             if (!__instance.EntityData.IsPlayerFaction) return;
             Settings.CharacterSettings characterSettings = settings.characterSettings.FirstOrDefault((cs) => cs.characterName == __instance.EntityData.CharacterName);
             if (characterSettings == null) return;            
-            bool dirty = false;
+            bool dirty = __instance.CharacterAvatar.IsDirty;
             if (characterSettings.hideBackpack)
             {
                 for (int i = __instance.CharacterAvatar.EquipmentEntities.Count - 1; i >= 0; i--)
@@ -242,6 +244,8 @@ namespace VisualAdjustmentsMod
                     default:
                         return true;
                 }
+                DebugLog("Setting class to " + __result);
+                if (__result == null) return true;
                 return false;
             }
         }
