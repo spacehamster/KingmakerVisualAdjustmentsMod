@@ -16,6 +16,7 @@ namespace VisualAdjustmentsMod
             public bool hideHelmet = false;
             public bool hideBackpack = false;
             public bool hideCap = false;
+            public bool hideCloak = false;
             public string classOutfit = "Default";
         }
         public List<CharacterSettings> characterSettings = new List<CharacterSettings>();

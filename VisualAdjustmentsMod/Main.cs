@@ -105,14 +105,15 @@ namespace VisualAdjustmentsMod
                     }
                    
                     GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-                    GUILayout.Label(string.Format("{0}:", unitEntityData.CharacterName), "box", new GUILayoutOption[] { GUILayout.Width(300f) });
+                    GUILayout.Label(string.Format("{0}", unitEntityData.CharacterName), "box", GUILayout.Width(300f));
                     if(unitEntityData.Descriptor.Doll != null)
                     {
-                        characterSettings.showClassSelection = GUILayout.Toggle(characterSettings.showClassSelection, "Select Character Outfit", Array.Empty<GUILayoutOption>());
+                        characterSettings.showClassSelection = GUILayout.Toggle(characterSettings.showClassSelection, "Select Character Outfit", GUILayout.ExpandWidth(false));
+                        characterSettings.hideCap = GUILayout.Toggle(characterSettings.hideCap, "Hide Cap", GUILayout.ExpandWidth(false));
                     }
-                    characterSettings.hideBackpack = GUILayout.Toggle(characterSettings.hideBackpack, "Hide Backpack", Array.Empty<GUILayoutOption>());
-                    characterSettings.hideHelmet = GUILayout.Toggle(characterSettings.hideHelmet, "Hide Helmet", Array.Empty<GUILayoutOption>());
-                    characterSettings.hideCap = GUILayout.Toggle(characterSettings.hideCap, "Hide Cap", Array.Empty<GUILayoutOption>());
+                    characterSettings.hideBackpack = GUILayout.Toggle(characterSettings.hideBackpack, "Hide Backpack", GUILayout.ExpandWidth(false));
+                    characterSettings.hideHelmet = GUILayout.Toggle(characterSettings.hideHelmet, "Hide Helmet", GUILayout.ExpandWidth(false));
+                    characterSettings.hideCloak = GUILayout.Toggle(characterSettings.hideCloak, "Hide Cloak", GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
                     if (unitEntityData.Descriptor.Doll != null && characterSettings.showClassSelection)
                     {
@@ -163,6 +164,21 @@ namespace VisualAdjustmentsMod
                     dirty = true;
                 }
             }
+            if (characterSettings.hideCloak)
+            {
+                foreach (var ee in __instance.CharacterAvatar.EquipmentEntities)
+                {
+                    for (int j = ee.OutfitParts.Count - 1; j >= 0; j--)
+                    {
+                        var outfit = ee.OutfitParts[j];
+                        if (outfit.Special == EquipmentEntity.OutfitPartSpecialType.Cloak || outfit.Special == EquipmentEntity.OutfitPartSpecialType.CloakSquashed)
+                        {
+                            ee.OutfitParts.Remove(outfit);
+                            dirty = true;
+                        }
+                    }
+                }
+            }
             if (characterSettings.hideCap)
             {
                 foreach (var ee in __instance.CharacterAvatar.EquipmentEntities)
@@ -172,7 +188,6 @@ namespace VisualAdjustmentsMod
                         var bodypart = ee.BodyParts[j];
                         if (bodypart.Type == BodyPartType.Cap)
                         {
-
                             ee.BodyParts.Remove(bodypart);
                             dirty = true;
                         }
