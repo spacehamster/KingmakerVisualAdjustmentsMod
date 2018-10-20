@@ -1,5 +1,5 @@
 # KingmakerVisualAdjustmentsMod
-Remove backpacks, helmets and class outfits.
+Mod to remove backpacks, helmets and class outfits for the Game Pathfinder Kingmaker.
 ## Install
 1. Download and install Unity Mod Manager﻿
 2. Download the [mod](https://github.com/spacehamster/KingmakerVisualAdjustmentsMod/releases)
