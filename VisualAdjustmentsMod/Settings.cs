@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityModManagerNet;
 
-namespace VisualMod
+namespace VisualAdjustmentsMod
 {
     public class Settings : UnityModManager.ModSettings
     {

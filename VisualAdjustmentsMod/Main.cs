@@ -8,19 +8,14 @@ using Debug = System.Diagnostics.Debug;
 using System.Diagnostics;
 using System.Linq;
 using Kingmaker.Visual.CharacterSystem;
-using Kingmaker.UI.ServiceWindow;
-using Newtonsoft.Json;
-using UnityEngine;
-using System.IO;
 using System.Collections.Generic;
-using Kingmaker.UnitLogic.Class.LevelUp;
 using Kingmaker.Blueprints.Classes;
 using Kingmaker;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.View;
 using Kingmaker.UnitLogic;
 
-namespace VisualMod
+namespace VisualAdjustmentsMod
 {
 
     public class Main
@@ -29,7 +24,7 @@ namespace VisualMod
         [System.Diagnostics.Conditional("DEBUG")]
         private static void DebugLog(string msg)
         {
-            Debug.WriteLine(nameof(VisualMod) + ": " + msg);
+            Debug.WriteLine(nameof(VisualAdjustmentsMod) + ": " + msg);
             if(logger != null) logger.Log(msg);
         }
 
@@ -57,7 +52,7 @@ namespace VisualMod
         {
             try
             {
-                Debug.Listeners.Add(new TextWriterTraceListener("Mods/VisualMod.log"));
+                Debug.Listeners.Add(new TextWriterTraceListener("Mods/VisualAdjustmentsMod/VisualAdjustmentsMod.log"));
                 Debug.AutoFlush = true;
 
                 var harmony = HarmonyInstance.Create(modEntry.Info.Id);
@@ -70,7 +65,7 @@ namespace VisualMod
                 modEntry.OnToggle = OnToggle;
                 modEntry.OnGUI = OnGUI;
                 modEntry.OnSaveGUI = OnSaveGUI;
-                modEntry.Logger.Log("Loaded VisualMod");
+                modEntry.Logger.Log("Loaded VisualAdjustmentsMod");
                 logger = modEntry.Logger;
 
             }
