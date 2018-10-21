@@ -14,6 +14,7 @@ using Kingmaker;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.View;
 using Kingmaker.UnitLogic;
+using Kingmaker.UnitLogic.Class.LevelUp;
 
 namespace VisualAdjustments
 {
@@ -54,10 +55,9 @@ namespace VisualAdjustments
             {
                 Debug.Listeners.Add(new TextWriterTraceListener("Mods/VisualAdjustments/VisualAdjustments.log"));
                 Debug.AutoFlush = true;
-
+                settings = UnityModManager.ModSettings.Load<Settings>(modEntry);
                 var harmony = HarmonyInstance.Create(modEntry.Info.Id);
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
-                settings = UnityModManager.ModSettings.Load<Settings>(modEntry);
                 foreach(var characterSettings in settings.characterSettings)
                 {
                     settingsLookup[characterSettings.characterName] = characterSettings;
@@ -74,7 +74,7 @@ namespace VisualAdjustments
             }
             return true;
         }
-        private static void OnSaveGUI(UnityModManager.ModEntry modEntry)
+        static void OnSaveGUI(UnityModManager.ModEntry modEntry)
         {
             settings.Save(modEntry);
         }
@@ -86,29 +86,31 @@ namespace VisualAdjustments
             enabled = value;
             return true; // Permit or not.
         }
-        private static void OnGUI(UnityModManager.ModEntry modEntry)
+        static void OnGUI(UnityModManager.ModEntry modEntry)
         {
-            if (Main.enabled)
+            try
             {
+                if (!enabled) return;
                 foreach (UnitEntityData unitEntityData in Game.Instance.Player.ControllableCharacters)
                 {
                     Settings.CharacterSettings characterSettings;
                     if (settingsLookup.ContainsKey(unitEntityData.CharacterName))
                     {
                         characterSettings = settingsLookup[unitEntityData.CharacterName];
-                    } else
+                    }
+                    else
                     {
                         characterSettings = new Settings.CharacterSettings();
                         characterSettings.characterName = unitEntityData.CharacterName;
                         settings.characterSettings.Add(characterSettings);
                         settingsLookup[characterSettings.characterName] = characterSettings;
                     }
-                   
+
                     GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
                     GUILayout.Label(string.Format("{0}", unitEntityData.CharacterName), "box", GUILayout.Width(300f));
                     if(unitEntityData.Descriptor.Doll != null)
                     {
-                        characterSettings.showClassSelection = GUILayout.Toggle(characterSettings.showClassSelection, "Select Character Outfit", GUILayout.ExpandWidth(false));
+                        characterSettings.showClassSelection = GUILayout.Toggle(characterSettings.showClassSelection, "Select Outfit", GUILayout.ExpandWidth(false));
                         characterSettings.hideCap = GUILayout.Toggle(characterSettings.hideCap, "Hide Cap", GUILayout.ExpandWidth(false));
                     }
                     characterSettings.hideBackpack = GUILayout.Toggle(characterSettings.hideBackpack, "Hide Backpack", GUILayout.ExpandWidth(false));
@@ -129,8 +131,79 @@ namespace VisualAdjustments
                         }
                         GUILayout.EndHorizontal();
                     }
-
                 }
+            } catch(Exception e)
+            {
+                DebugLog(e.ToString() + " " + e.StackTrace);
+            }
+        }
+        static int GetPrimaryColor(UnitEntityData unitEntityData)
+        {
+            if (unitEntityData.Descriptor.Doll == null) return -1;
+            var doll = unitEntityData.Descriptor.Doll;
+            foreach(var assetId in doll.EntitySecondaryRampIdices.Keys.ToList())
+            {
+                if (doll.EntityRampIdices.ContainsKey(assetId)) return doll.EntityRampIdices[assetId];
+            }
+            return -1;
+        }
+        static int GetSecondaryColor(UnitEntityData unitEntityData)
+        {
+            if (unitEntityData.Descriptor.Doll == null) return -1;
+            var doll = unitEntityData.Descriptor.Doll;
+            foreach (var assetId in doll.EntitySecondaryRampIdices.Keys.ToList())
+            {
+                return doll.EntitySecondaryRampIdices[assetId];
+            }
+            return -1;
+        }
+        static void SetPrimaryColor(UnitEntityData unitEntityData, int colorIndex)
+        {
+            if (unitEntityData.Descriptor.Doll == null) return;
+            var doll = unitEntityData.Descriptor.Doll;
+            foreach (var assetId in doll.EntitySecondaryRampIdices.Keys.ToList())
+            {
+                if (doll.EntityRampIdices.ContainsKey(assetId)) doll.EntityRampIdices[assetId] = colorIndex;
+            }
+            doll.ApplyRampIndices(unitEntityData.View.CharacterAvatar);
+            UpdateModel(unitEntityData.View);
+            
+        }
+        static void SetSecondaryColor(UnitEntityData unitEntityData, int colorIndex)
+        {
+            if (unitEntityData.Descriptor.Doll == null) return;
+            var doll = unitEntityData.Descriptor.Doll;
+            foreach (var assetId in doll.EntitySecondaryRampIdices.Keys.ToList())
+            {
+                doll.EntitySecondaryRampIdices[assetId] = colorIndex;
+            }
+            doll.ApplyRampIndices(unitEntityData.View.CharacterAvatar);
+            UpdateModel(unitEntityData.View);
+        }
+        static void FixColors(UnitEntityView unitEntityView)
+        {
+            //Probably not necessary, don't update colors if doll contains current class
+            var dollEE = new List<EquipmentEntity>();
+            var doll = unitEntityView.EntityData.Descriptor.Doll;
+            if (doll == null) return;
+            foreach (var assetId in doll.EquipmentEntityIds)
+            {
+                EquipmentEntity ee = ResourcesLibrary.TryGetResource<EquipmentEntity>(assetId);
+                if (ee == null) continue;
+                dollEE.Add(ee);
+            }
+
+            var character = unitEntityView.CharacterAvatar;
+            var equipmentClass = unitEntityView.EntityData.Descriptor.Progression.GetEquipmentClass();
+            var clothes = equipmentClass.LoadClothes(unitEntityView.EntityData.Descriptor.Gender, unitEntityView.EntityData.Descriptor.Progression.Race);
+            var primaryIndex = GetPrimaryColor(unitEntityView.EntityData);
+            var secondaryIndex = GetSecondaryColor(unitEntityView.EntityData);
+
+            foreach(var ee in clothes)
+            {
+                if (dollEE.Contains(ee)) continue;
+                character.SetPrimaryRampIndex(ee, primaryIndex);
+                character.SetSecondaryRampIndex(ee, secondaryIndex);
             }
         }
         static void UpdateModel(UnitEntityView __instance)
@@ -195,7 +268,7 @@ namespace VisualAdjustments
                     ee.HideBodyParts &= ~(BodyPartType.Ears | BodyPartType.Hair | BodyPartType.Hair2 | BodyPartType.HeadTop); //Show ears, hair, headtop
                 }
             }
-
+            FixColors(__instance);
             __instance.CharacterAvatar.IsDirty = dirty;                
         }
         [HarmonyPatch(typeof(UnitEntityView), "UpdateBodyEquipmentModel")]
@@ -277,7 +350,6 @@ namespace VisualAdjustments
                     default:
                         return true;
                 }
-                DebugLog("Setting class to " + __result);
                 if (__result == null) return true;
                 return false;
             }

@@ -22,7 +22,7 @@ namespace VisualAdjustments
         public List<CharacterSettings> characterSettings = new List<CharacterSettings>();
         public override void Save(UnityModManager.ModEntry modEntry)
         {
-            UnityModManager.ModSettings.Save<Settings>(this, modEntry);
+            Save(this, modEntry);
         }
     }
 }
