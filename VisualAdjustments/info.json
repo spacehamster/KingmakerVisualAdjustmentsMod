@@ -1,0 +1,12 @@
+{
+  "Id": "VisualAdjustments",
+  "DisplayName": "Visual Adjustments",
+  "Author": "spacehamster",
+  "Version": "1.0.5",
+  "ManagerVersion": "0.12.0",
+  "Requirements": [],
+  "AssemblyName": "VisualAdjustments.dll",
+  "EntryMethod": "VisualAdjustments.Main.Load",
+  "HomePage": "https://github.com/spacehamster/KingmakerVisualAdjustmentsMod",
+  "Repository": "https://raw.githubusercontent.com/spacehamster/KingmakerVisualAdjustmentsMod/master/VisualAdjustments/Repository.json"
+}

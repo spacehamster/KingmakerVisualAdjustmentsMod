@@ -7,8 +7,8 @@
     <ProjectGuid>{3724AF9A-1765-4FBD-B4BF-1C7A89CF2510}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>VisualAdjustmentsMod</RootNamespace>
-    <AssemblyName>VisualAdjustmentsMod</AssemblyName>
+    <RootNamespace>VisualAdjustments</RootNamespace>
+    <AssemblyName>VisualAdjustments</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -27,7 +27,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\VisualAdjustmentsMod\</OutputPath>
+    <OutputPath>bin\Release\VisualAdjustments\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -35,7 +35,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug Install|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\..\..\..\..\..\Program Files %28x86%29\Steam\steamapps\common\Pathfinder Kingmaker\Mods\VisualAdjustmentsMod\</OutputPath>
+    <OutputPath>C:\Program Files %28x86%29\Steam\steamapps\common\Pathfinder Kingmaker\Mods\VisualAdjustments\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -88,6 +88,9 @@
     <Content Include="info.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Repository.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

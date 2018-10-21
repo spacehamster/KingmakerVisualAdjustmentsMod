@@ -15,7 +15,7 @@ using Kingmaker.EntitySystem.Entities;
 using Kingmaker.View;
 using Kingmaker.UnitLogic;
 
-namespace VisualAdjustmentsMod
+namespace VisualAdjustments
 {
 
     public class Main
@@ -24,7 +24,7 @@ namespace VisualAdjustmentsMod
         [System.Diagnostics.Conditional("DEBUG")]
         private static void DebugLog(string msg)
         {
-            Debug.WriteLine(nameof(VisualAdjustmentsMod) + ": " + msg);
+            Debug.WriteLine(nameof(VisualAdjustments) + ": " + msg);
             if(logger != null) logger.Log(msg);
         }
 
@@ -52,7 +52,7 @@ namespace VisualAdjustmentsMod
         {
             try
             {
-                Debug.Listeners.Add(new TextWriterTraceListener("Mods/VisualAdjustmentsMod/VisualAdjustmentsMod.log"));
+                Debug.Listeners.Add(new TextWriterTraceListener("Mods/VisualAdjustments/VisualAdjustments.log"));
                 Debug.AutoFlush = true;
 
                 var harmony = HarmonyInstance.Create(modEntry.Info.Id);
@@ -65,7 +65,7 @@ namespace VisualAdjustmentsMod
                 modEntry.OnToggle = OnToggle;
                 modEntry.OnGUI = OnGUI;
                 modEntry.OnSaveGUI = OnSaveGUI;
-                modEntry.Logger.Log("Loaded VisualAdjustmentsMod");
+                modEntry.Logger.Log("Loaded VisualAdjustments");
                 logger = modEntry.Logger;
 
             }
