@@ -34,6 +34,7 @@ namespace VisualAdjustments
 
         public static bool enabled;
         public static Settings settings;
+        public static bool disableEquipmentClassPatch = false;
         public static String[] classes = new String[] {
             "Default",
             "Alchemist",
@@ -112,7 +113,7 @@ namespace VisualAdjustments
                     if (unitEntityData.Descriptor.Doll != null)
                     {
                         characterSettings.showClassSelection = GUILayout.Toggle(characterSettings.showClassSelection, "Select Outfit", GUILayout.ExpandWidth(false));
-                        characterSettings.showColorSelection = GUILayout.Toggle(characterSettings.showColorSelection, "Select Doll", GUILayout.ExpandWidth(false));
+                        characterSettings.showDollSelection = GUILayout.Toggle(characterSettings.showDollSelection, "Select Doll", GUILayout.ExpandWidth(false));
                         characterSettings.hideCap = GUILayout.Toggle(characterSettings.hideCap, "Hide Cap", GUILayout.ExpandWidth(false));
                     }
                     characterSettings.hideBackpack = GUILayout.Toggle(characterSettings.hideBackpack, "Hide Backpack", GUILayout.ExpandWidth(false));
@@ -133,7 +134,7 @@ namespace VisualAdjustments
                         }
                         GUILayout.EndHorizontal();
                     }
-                    if (unitEntityData.Descriptor.Doll != null && characterSettings.showColorSelection)
+                    if (unitEntityData.Descriptor.Doll != null && characterSettings.showDollSelection)
                     {
                         ChooseDoll(unitEntityData);
                     }
@@ -371,6 +372,7 @@ namespace VisualAdjustments
             static bool Prefix(UnitProgressionData __instance, ref BlueprintCharacterClass __result)
             {
                 if (!enabled) return true;
+                if(disableEquipmentClassPatch) return true;
                 if (!__instance.Owner.IsPlayerFaction) return true;
                 if (!settingsLookup.ContainsKey(__instance.Owner.CharacterName)) return true;
                 Settings.CharacterSettings characterSettings = settingsLookup[__instance.Owner.CharacterName];

@@ -13,7 +13,7 @@ namespace VisualAdjustments
         {
             public string characterName = "";
             public bool showClassSelection = false;
-            public bool showColorSelection = false;
+            public bool showDollSelection = false;
             public bool hideHelmet = false;
             public bool hideBackpack = false;
             public bool hideCap = false;

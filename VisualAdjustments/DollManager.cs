@@ -93,7 +93,10 @@ namespace VisualAdjustments
             var dollState = new DollState();
             var dollData = unitEntityData.Descriptor.Doll;
             dollState.SetRace(unitEntityData.Descriptor.Progression.Race); //Race must be set before class
-            dollState.SetClass(GetEquipmentClass(unitEntityData.Descriptor.Progression)); //TODO replace with original instance method
+            //This is a hack to work around harmony not allowing calls to the unpatched method
+            Main.disableEquipmentClassPatch = true; 
+            dollState.SetClass(unitEntityData.Descriptor.Progression.GetEquipmentClass()); 
+            Main.disableEquipmentClassPatch = false;
             dollState.SetGender(dollData.Gender);
             dollState.SetRacePreset(dollData.RacePreset);
             dollState.SetLeftHanded(dollData.LeftHanded);
