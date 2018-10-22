@@ -17,6 +17,7 @@ using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Class.LevelUp;
 using Kingmaker.Blueprints.CharGen;
 using Kingmaker.ResourceLinks;
+using Kingmaker.Blueprints.Root;
 
 namespace VisualAdjustments
 {
@@ -114,6 +115,7 @@ namespace VisualAdjustments
                         characterSettings.showColorSelection = GUILayout.Toggle(characterSettings.showColorSelection, "Select Colors", GUILayout.ExpandWidth(false));
                         characterSettings.hideCap = GUILayout.Toggle(characterSettings.hideCap, "Hide Cap", GUILayout.ExpandWidth(false));
                     }
+                    characterSettings.showInfo = GUILayout.Toggle(characterSettings.showInfo, "Show Info", GUILayout.ExpandWidth(false));
                     characterSettings.hideBackpack = GUILayout.Toggle(characterSettings.hideBackpack, "Hide Backpack", GUILayout.ExpandWidth(false));
                     characterSettings.hideHelmet = GUILayout.Toggle(characterSettings.hideHelmet, "Hide Helmet", GUILayout.ExpandWidth(false));
                     characterSettings.hideCloak = GUILayout.Toggle(characterSettings.hideCloak, "Hide Cloak", GUILayout.ExpandWidth(false));
@@ -134,8 +136,12 @@ namespace VisualAdjustments
                     }
                     if (unitEntityData.Descriptor.Doll != null && characterSettings.showColorSelection)
                     {
-                        ChooseColor(unitEntityData);
                         ChooseDoll(unitEntityData);
+                    }
+                    if (characterSettings.showInfo)
+                    {
+                        ShowInfo(unitEntityData);
+                        if(unitEntityData.Descriptor.Doll != null) ChooseColor(unitEntityData);
                     }
                 }
             } catch(Exception e)
@@ -179,6 +185,23 @@ namespace VisualAdjustments
                 var ee = ResourcesLibrary.TryGetResource<EquipmentEntity>(key);
                 if (ee == null) continue;
                 GUILayout.Label(String.Format("{0}:{1} ", ee.name, dollManager.GetType(key)), GUILayout.Width(300));
+            }
+        }
+        static void ShowInfo(UnitEntityData unitEntityData)
+        {
+
+            var character = unitEntityData.View.CharacterAvatar;
+            GUILayout.Label("Info", GUILayout.Width(300));
+            foreach (var ee in character.EquipmentEntities)
+            {
+                GUILayout.Label(String.Format("{0}", ee.name), GUILayout.ExpandWidth(false));
+            }
+            CharGenRoot charGen = BlueprintRoot.Instance.CharGen;
+            Character charGenCharacter = (unitEntityData.Descriptor.Doll.Gender != Gender.Male) ? charGen.FemaleDoll : charGen.MaleDoll;
+            GUILayout.Label("CharGen", GUILayout.Width(300));
+            foreach (var ee in charGenCharacter.EquipmentEntities)
+            {
+                GUILayout.Label(String.Format("{0}", ee.name), GUILayout.ExpandWidth(false));
             }
         }
         static void ChooseEEL(UnitEntityData unitEntityData, DollState doll, EquipmentEntityLink[] links, EquipmentEntityLink currentLink, string name, Action<EquipmentEntityLink> setter)
@@ -315,6 +338,7 @@ namespace VisualAdjustments
             }
             doll.ApplyRampIndices(character);
             //character.RestoreSavedEquipment(); ?
+            Traverse.Create(unitEntityData.View).Field("m_EquipmentClass").SetValue(null); //UpdateClassEquipment won't update if the class doesn't change
             unitEntityData.View.UpdateBodyEquipmentModel();
             unitEntityData.View.UpdateClassEquipment();
             //character.IsDirty = true;

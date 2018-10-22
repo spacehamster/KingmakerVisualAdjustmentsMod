@@ -76,17 +76,6 @@ namespace VisualAdjustments
             }
             return characterDolls[unitEntityData.CharacterName];
         }
-        public EquipmentEntityLink GetEEL(string assetID)
-        {
-            if (!loaded) init();
-            if (head.ContainsKey(assetID)) return head[assetID];
-            if (hair.ContainsKey(assetID)) return hair[assetID];
-            if (beard.ContainsKey(assetID)) return beard[assetID];
-            if (eyebrows.ContainsKey(assetID)) return eyebrows[assetID];
-            if (skin.ContainsKey(assetID)) return skin[assetID];
-            if (classOutfits.ContainsKey(assetID)) return classOutfits[assetID];
-            return null;
-        }
         public string GetType(string assetID)
         {
             if (!loaded) init();
@@ -102,8 +91,8 @@ namespace VisualAdjustments
         {
             var dollState = new DollState();
             var dollData = unitEntityData.Descriptor.Doll;
+            dollState.SetRace(unitEntityData.Descriptor.Progression.Race); //Race must be set before class
             dollState.SetClass(unitEntityData.Descriptor.Progression.GetEquipmentClass()); //TODO get real equipment class, will break colors if mod disabled
-            dollState.SetRace(unitEntityData.Descriptor.Progression.Race);
             dollState.SetGender(dollData.Gender);
             dollState.SetRacePreset(dollData.RacePreset);
             dollState.SetLeftHanded(dollData.LeftHanded);

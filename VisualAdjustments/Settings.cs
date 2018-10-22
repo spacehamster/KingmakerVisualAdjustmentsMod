@@ -18,7 +18,9 @@ namespace VisualAdjustments
             public bool hideBackpack = false;
             public bool hideCap = false;
             public bool hideCloak = false;
+            public bool showInfo = false;
             public string classOutfit = "Default";
+
         }
         public List<CharacterSettings> characterSettings = new List<CharacterSettings>();
         public override void Save(UnityModManager.ModEntry modEntry)
