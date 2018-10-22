@@ -3,6 +3,7 @@ using Kingmaker.Blueprints.CharGen;
 using Kingmaker.Blueprints.Classes;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.ResourceLinks;
+using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Class.LevelUp;
 using System;
 using System.Collections.Generic;
@@ -92,7 +93,7 @@ namespace VisualAdjustments
             var dollState = new DollState();
             var dollData = unitEntityData.Descriptor.Doll;
             dollState.SetRace(unitEntityData.Descriptor.Progression.Race); //Race must be set before class
-            dollState.SetClass(unitEntityData.Descriptor.Progression.GetEquipmentClass()); //TODO get real equipment class, will break colors if mod disabled
+            dollState.SetClass(GetEquipmentClass(unitEntityData.Descriptor.Progression)); //TODO replace with original instance method
             dollState.SetGender(dollData.Gender);
             dollState.SetRacePreset(dollData.RacePreset);
             dollState.SetLeftHanded(dollData.LeftHanded);
@@ -141,5 +142,29 @@ namespace VisualAdjustments
             dollState.Validate();
             return dollState;
         }
+        //TODO: Replace with call to original method
+        public BlueprintCharacterClass GetEquipmentClass(UnitProgressionData _instance)
+        {
+            int num = 0;
+            BlueprintCharacterClass result = null;
+            foreach (ClassData classData in _instance.Classes)
+            {
+                if (classData.CharacterClass.HasEquipmentEntities())
+                {
+                    if (classData.Level > num)
+                    {
+                        num = classData.Level;
+                        result = classData.CharacterClass;
+                    }
+                    if (classData.PriorityEquipment)
+                    {
+                        result = classData.CharacterClass;
+                        break;
+                    }
+                }
+            }
+            return result;
+        }
     }
+
 }

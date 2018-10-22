@@ -115,7 +115,6 @@ namespace VisualAdjustments
                         characterSettings.showColorSelection = GUILayout.Toggle(characterSettings.showColorSelection, "Select Colors", GUILayout.ExpandWidth(false));
                         characterSettings.hideCap = GUILayout.Toggle(characterSettings.hideCap, "Hide Cap", GUILayout.ExpandWidth(false));
                     }
-                    characterSettings.showInfo = GUILayout.Toggle(characterSettings.showInfo, "Show Info", GUILayout.ExpandWidth(false));
                     characterSettings.hideBackpack = GUILayout.Toggle(characterSettings.hideBackpack, "Hide Backpack", GUILayout.ExpandWidth(false));
                     characterSettings.hideHelmet = GUILayout.Toggle(characterSettings.hideHelmet, "Hide Helmet", GUILayout.ExpandWidth(false));
                     characterSettings.hideCloak = GUILayout.Toggle(characterSettings.hideCloak, "Hide Cloak", GUILayout.ExpandWidth(false));
@@ -138,70 +137,10 @@ namespace VisualAdjustments
                     {
                         ChooseDoll(unitEntityData);
                     }
-                    if (characterSettings.showInfo)
-                    {
-                        ShowInfo(unitEntityData);
-                        if(unitEntityData.Descriptor.Doll != null) ChooseColor(unitEntityData);
-                    }
                 }
             } catch(Exception e)
             {
                 DebugLog(e.ToString() + " " + e.StackTrace);
-            }
-        }
-        static void ChooseRamp(UnitEntityData unitEntityData, Dictionary<String, int> ramp, string key)
-        {
-            var ee = ResourcesLibrary.TryGetResource<EquipmentEntity>(key);
-            if (ee == null) return;
-            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-            GUILayout.Label(String.Format("{0}:{1} ", ee.name, dollManager.GetType(key)), GUILayout.Width(300));
-            int newValue = (int)GUILayout.HorizontalSlider(ramp[key], 0, 35, GUILayout.Width(300f));
-            if (newValue != ramp[key])
-            {
-                ramp[key] = newValue;
-                unitEntityData.Descriptor.Doll.ApplyRampIndices(unitEntityData.View.CharacterAvatar);
-                UpdateModel(unitEntityData.View);
-            }
-            GUILayout.Label(String.Format(" {0}", newValue), GUILayout.ExpandWidth(false));
-            GUILayout.EndHorizontal();
-        }
-        static void ChooseColor(UnitEntityData unitEntityData)
-        {
-            var doll = unitEntityData.Descriptor.Doll;
-            GUILayout.Label("Primary Color", GUILayout.ExpandWidth(false));
-            foreach (var key in doll.EntityRampIdices.Keys.ToList())
-            {
-                ChooseRamp(unitEntityData, doll.EntityRampIdices, key);
-            }
-            GUILayout.Label("Secondary Color", GUILayout.ExpandWidth(false));
-            foreach (var key in doll.EntitySecondaryRampIdices.Keys.ToList())
-            {
-                ChooseRamp(unitEntityData, doll.EntitySecondaryRampIdices, key);
-            }
-            GUILayout.Label("No Ramp", GUILayout.ExpandWidth(false));
-            foreach (var key in doll.EquipmentEntityIds)
-            {
-                if (doll.EntityRampIdices.ContainsKey(key)) continue;
-                var ee = ResourcesLibrary.TryGetResource<EquipmentEntity>(key);
-                if (ee == null) continue;
-                GUILayout.Label(String.Format("{0}:{1} ", ee.name, dollManager.GetType(key)), GUILayout.Width(300));
-            }
-        }
-        static void ShowInfo(UnitEntityData unitEntityData)
-        {
-
-            var character = unitEntityData.View.CharacterAvatar;
-            GUILayout.Label("Info", GUILayout.Width(300));
-            foreach (var ee in character.EquipmentEntities)
-            {
-                GUILayout.Label(String.Format("{0}", ee.name), GUILayout.ExpandWidth(false));
-            }
-            CharGenRoot charGen = BlueprintRoot.Instance.CharGen;
-            Character charGenCharacter = (unitEntityData.Descriptor.Doll.Gender != Gender.Male) ? charGen.FemaleDoll : charGen.MaleDoll;
-            GUILayout.Label("CharGen", GUILayout.Width(300));
-            foreach (var ee in charGenCharacter.EquipmentEntities)
-            {
-                GUILayout.Label(String.Format("{0}", ee.name), GUILayout.ExpandWidth(false));
             }
         }
         static void ChooseEEL(UnitEntityData unitEntityData, DollState doll, EquipmentEntityLink[] links, EquipmentEntityLink currentLink, string name, Action<EquipmentEntityLink> setter)
@@ -210,7 +149,7 @@ namespace VisualAdjustments
             var currentIndex = links.ToList().FindIndex((eel) => eel.AssetId == currentLink.AssetId);
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
             GUILayout.Label(name + " ", GUILayout.Width(300));
-            var newIndex = (int)GUILayout.HorizontalSlider(currentIndex, 0, links.Length, GUILayout.Width(300));
+            var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, 0, links.Length - 1, GUILayout.Width(300)), 0);
             GUILayout.Label(" " + newIndex, GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
             if (newIndex != currentIndex && newIndex < links.Length)
@@ -220,12 +159,12 @@ namespace VisualAdjustments
                 UpdateDoll(unitEntityData);
             }
         }
-        static void ChooseEELRamp(UnitEntityData unitEntityData, DollState doll, List<Texture2D> ramps, int currentIndex, string name, Action<int> setter)
+        static void ChooseEELRamp<T>(UnitEntityData unitEntityData, DollState doll, List<T> ramps, int currentIndex, string name, Action<int> setter)
         {
             if (ramps.Count == 0) return;
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
             GUILayout.Label(name + " ", GUILayout.Width(300));
-            var newIndex = (int)GUILayout.HorizontalSlider(currentIndex, 0, ramps.Count, GUILayout.Width(300));
+            var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, 0, ramps.Count - 1, GUILayout.Width(300)), 0);
             GUILayout.Label(" " + newIndex, GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
             if (newIndex != currentIndex && newIndex < ramps.Count)
@@ -248,6 +187,7 @@ namespace VisualAdjustments
             ChooseEELRamp(unitEntityData, doll, doll.GetSkinRamps(), doll.SkinRampIndex, "Skin Color", (int index) => doll.SetSkinColor(index));
             ChooseEELRamp(unitEntityData, doll, doll.GetOutfitRampsPrimary(), doll.EquipmentRampIndex, "Primary Outfit Color", (int index) => doll.SetEquipColors(index, doll.EquipmentRampIndexSecondary));
             ChooseEELRamp(unitEntityData, doll, doll.GetOutfitRampsSecondary(), doll.EquipmentRampIndexSecondary, "Secondary Outfit Color", (int index) => doll.SetEquipColors(doll.EquipmentRampIndex, index));
+            //ChooseEELRamp(unitEntityData, doll, (new int[] { 0, 1 }).ToList(), doll.LeftHanded ? 1 : 0, "Left Handed", (int value) => doll.SetLeftHanded(value > 0));
         }
         static int GetPrimaryColor(UnitEntityData unitEntityData)
         {
@@ -269,29 +209,6 @@ namespace VisualAdjustments
             }
             return -1;
         }
-        static void SetPrimaryColor(UnitEntityData unitEntityData, int colorIndex)
-        {
-            if (unitEntityData.Descriptor.Doll == null) return;
-            var doll = unitEntityData.Descriptor.Doll;
-            foreach (var assetId in doll.EntitySecondaryRampIdices.Keys.ToList())
-            {
-                if (doll.EntityRampIdices.ContainsKey(assetId)) doll.EntityRampIdices[assetId] = colorIndex;
-            }
-            doll.ApplyRampIndices(unitEntityData.View.CharacterAvatar);
-            UpdateModel(unitEntityData.View);
-            
-        }
-        static void SetSecondaryColor(UnitEntityData unitEntityData, int colorIndex)
-        {
-            if (unitEntityData.Descriptor.Doll == null) return;
-            var doll = unitEntityData.Descriptor.Doll;
-            foreach (var assetId in doll.EntitySecondaryRampIdices.Keys.ToList())
-            {
-                doll.EntitySecondaryRampIdices[assetId] = colorIndex;
-            }
-            doll.ApplyRampIndices(unitEntityData.View.CharacterAvatar);
-            UpdateModel(unitEntityData.View);
-        }
         static void FixColors(UnitEntityView unitEntityView)
         {
             //Probably not necessary, don't update colors if doll contains current class
@@ -310,7 +227,6 @@ namespace VisualAdjustments
             var clothes = equipmentClass.LoadClothes(unitEntityView.EntityData.Descriptor.Gender, unitEntityView.EntityData.Descriptor.Progression.Race);
             var primaryIndex = GetPrimaryColor(unitEntityView.EntityData);
             var secondaryIndex = GetSecondaryColor(unitEntityView.EntityData);
-
             foreach(var ee in clothes)
             {
                 if (dollEE.Contains(ee)) continue;
@@ -323,7 +239,6 @@ namespace VisualAdjustments
             var character = unitEntityData.View.CharacterAvatar;
             var doll = unitEntityData.Descriptor.Doll;
             var savedEquipment = true;
-            //Save equipment?
             character.RemoveAllEquipmentEntities(savedEquipment);
             if (doll.RacePreset != null)
             {
@@ -337,11 +252,9 @@ namespace VisualAdjustments
                 character.AddEquipmentEntity(ee, savedEquipment);
             }
             doll.ApplyRampIndices(character);
-            //character.RestoreSavedEquipment(); ?
             Traverse.Create(unitEntityData.View).Field("m_EquipmentClass").SetValue(null); //UpdateClassEquipment won't update if the class doesn't change
             unitEntityData.View.UpdateBodyEquipmentModel();
             unitEntityData.View.UpdateClassEquipment();
-            //character.IsDirty = true;
         }
         static void UpdateModel(UnitEntityView __instance)
         {

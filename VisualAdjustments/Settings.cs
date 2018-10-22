@@ -18,7 +18,6 @@ namespace VisualAdjustments
             public bool hideBackpack = false;
             public bool hideCap = false;
             public bool hideCloak = false;
-            public bool showInfo = false;
             public string classOutfit = "Default";
 
         }
