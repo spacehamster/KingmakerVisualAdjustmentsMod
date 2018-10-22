@@ -112,7 +112,7 @@ namespace VisualAdjustments
                     if (unitEntityData.Descriptor.Doll != null)
                     {
                         characterSettings.showClassSelection = GUILayout.Toggle(characterSettings.showClassSelection, "Select Outfit", GUILayout.ExpandWidth(false));
-                        characterSettings.showColorSelection = GUILayout.Toggle(characterSettings.showColorSelection, "Select Colors", GUILayout.ExpandWidth(false));
+                        characterSettings.showColorSelection = GUILayout.Toggle(characterSettings.showColorSelection, "Select Doll", GUILayout.ExpandWidth(false));
                         characterSettings.hideCap = GUILayout.Toggle(characterSettings.hideCap, "Hide Cap", GUILayout.ExpandWidth(false));
                     }
                     characterSettings.hideBackpack = GUILayout.Toggle(characterSettings.hideBackpack, "Hide Backpack", GUILayout.ExpandWidth(false));
