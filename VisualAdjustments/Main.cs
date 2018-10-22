@@ -15,6 +15,8 @@ using Kingmaker.EntitySystem.Entities;
 using Kingmaker.View;
 using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Class.LevelUp;
+using Kingmaker.Blueprints.CharGen;
+using Kingmaker.ResourceLinks;
 
 namespace VisualAdjustments
 {
@@ -49,6 +51,7 @@ namespace VisualAdjustments
             "Wizard"
         };
         static Dictionary<string, Settings.CharacterSettings> settingsLookup = new Dictionary<string, Settings.CharacterSettings>();
+        static DollManager dollManager = new DollManager();
         static bool Load(UnityModManager.ModEntry modEntry)
         {
             try
@@ -67,7 +70,6 @@ namespace VisualAdjustments
                 modEntry.OnSaveGUI = OnSaveGUI;
                 modEntry.Logger.Log("Loaded VisualAdjustments");
                 logger = modEntry.Logger;
-
             }
             catch (Exception e){
                 modEntry.Logger.Log(e.ToString());
@@ -78,8 +80,6 @@ namespace VisualAdjustments
         {
             settings.Save(modEntry);
         }
-    
-
         // Called when the mod is turned to on/off.
         static bool OnToggle(UnityModManager.ModEntry modEntry, bool value /* active or inactive */)
         {
@@ -108,9 +108,10 @@ namespace VisualAdjustments
 
                     GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
                     GUILayout.Label(string.Format("{0}", unitEntityData.CharacterName), "box", GUILayout.Width(300f));
-                    if(unitEntityData.Descriptor.Doll != null)
+                    if (unitEntityData.Descriptor.Doll != null)
                     {
                         characterSettings.showClassSelection = GUILayout.Toggle(characterSettings.showClassSelection, "Select Outfit", GUILayout.ExpandWidth(false));
+                        characterSettings.showColorSelection = GUILayout.Toggle(characterSettings.showColorSelection, "Select Colors", GUILayout.ExpandWidth(false));
                         characterSettings.hideCap = GUILayout.Toggle(characterSettings.hideCap, "Hide Cap", GUILayout.ExpandWidth(false));
                     }
                     characterSettings.hideBackpack = GUILayout.Toggle(characterSettings.hideBackpack, "Hide Backpack", GUILayout.ExpandWidth(false));
@@ -122,7 +123,7 @@ namespace VisualAdjustments
                         GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
                         foreach (var _class in classes)
                         {
-                            if(GUILayout.Button(_class, Array.Empty<GUILayoutOption>()))
+                            if (GUILayout.Button(_class, Array.Empty<GUILayoutOption>()))
                             {
                                 characterSettings.classOutfit = _class;
                                 characterSettings.showClassSelection = false;
@@ -131,11 +132,99 @@ namespace VisualAdjustments
                         }
                         GUILayout.EndHorizontal();
                     }
+                    if (unitEntityData.Descriptor.Doll != null && characterSettings.showColorSelection)
+                    {
+                        ChooseColor(unitEntityData);
+                        ChooseDoll(unitEntityData);
+                    }
                 }
             } catch(Exception e)
             {
                 DebugLog(e.ToString() + " " + e.StackTrace);
             }
+        }
+        static void ChooseRamp(UnitEntityData unitEntityData, Dictionary<String, int> ramp, string key)
+        {
+            var ee = ResourcesLibrary.TryGetResource<EquipmentEntity>(key);
+            if (ee == null) return;
+            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+            GUILayout.Label(String.Format("{0}:{1} ", ee.name, dollManager.GetType(key)), GUILayout.Width(300));
+            int newValue = (int)GUILayout.HorizontalSlider(ramp[key], 0, 35, GUILayout.Width(300f));
+            if (newValue != ramp[key])
+            {
+                ramp[key] = newValue;
+                unitEntityData.Descriptor.Doll.ApplyRampIndices(unitEntityData.View.CharacterAvatar);
+                UpdateModel(unitEntityData.View);
+            }
+            GUILayout.Label(String.Format(" {0}", newValue), GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+        }
+        static void ChooseColor(UnitEntityData unitEntityData)
+        {
+            var doll = unitEntityData.Descriptor.Doll;
+            GUILayout.Label("Primary Color", GUILayout.ExpandWidth(false));
+            foreach (var key in doll.EntityRampIdices.Keys.ToList())
+            {
+                ChooseRamp(unitEntityData, doll.EntityRampIdices, key);
+            }
+            GUILayout.Label("Secondary Color", GUILayout.ExpandWidth(false));
+            foreach (var key in doll.EntitySecondaryRampIdices.Keys.ToList())
+            {
+                ChooseRamp(unitEntityData, doll.EntitySecondaryRampIdices, key);
+            }
+            GUILayout.Label("No Ramp", GUILayout.ExpandWidth(false));
+            foreach (var key in doll.EquipmentEntityIds)
+            {
+                if (doll.EntityRampIdices.ContainsKey(key)) continue;
+                var ee = ResourcesLibrary.TryGetResource<EquipmentEntity>(key);
+                if (ee == null) continue;
+                GUILayout.Label(String.Format("{0}:{1} ", ee.name, dollManager.GetType(key)), GUILayout.Width(300));
+            }
+        }
+        static void ChooseEEL(UnitEntityData unitEntityData, DollState doll, EquipmentEntityLink[] links, EquipmentEntityLink currentLink, string name, Action<EquipmentEntityLink> setter)
+        {
+            if (links.Length == 0) return;
+            var currentIndex = links.ToList().FindIndex((eel) => eel.AssetId == currentLink.AssetId);
+            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+            GUILayout.Label(name + " ", GUILayout.Width(300));
+            var newIndex = (int)GUILayout.HorizontalSlider(currentIndex, 0, links.Length, GUILayout.Width(300));
+            GUILayout.Label(" " + newIndex, GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            if (newIndex != currentIndex && newIndex < links.Length)
+            {
+                setter(links[newIndex]);
+                unitEntityData.Descriptor.Doll = doll.CreateData();
+                UpdateDoll(unitEntityData);
+            }
+        }
+        static void ChooseEELRamp(UnitEntityData unitEntityData, DollState doll, List<Texture2D> ramps, int currentIndex, string name, Action<int> setter)
+        {
+            if (ramps.Count == 0) return;
+            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+            GUILayout.Label(name + " ", GUILayout.Width(300));
+            var newIndex = (int)GUILayout.HorizontalSlider(currentIndex, 0, ramps.Count, GUILayout.Width(300));
+            GUILayout.Label(" " + newIndex, GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            if (newIndex != currentIndex && newIndex < ramps.Count)
+            {
+                setter(newIndex);
+                unitEntityData.Descriptor.Doll = doll.CreateData();
+                UpdateDoll(unitEntityData);
+            }
+        }
+        static void ChooseDoll(UnitEntityData unitEntityData)
+        {
+            var doll = dollManager.GetDoll(unitEntityData);
+            var race = unitEntityData.Descriptor.Progression.Race;
+            var gender = unitEntityData.Gender;
+            CustomizationOptions customizationOptions = gender != Gender.Male ? race.FemaleOptions : race.MaleOptions;
+            ChooseEEL(unitEntityData, doll, customizationOptions.Heads, doll.Head, "Face", (EquipmentEntityLink ee) => doll.SetHead(ee));
+            ChooseEEL(unitEntityData, doll, customizationOptions.Hair, doll.Hair, "Hair", (EquipmentEntityLink ee) => doll.SetHair(ee));
+            ChooseEEL(unitEntityData, doll, customizationOptions.Beards, doll.Beard, "Beards", (EquipmentEntityLink ee) => doll.SetBeard(ee));
+            ChooseEELRamp(unitEntityData, doll, doll.GetHairRamps(), doll.HairRampIndex, "Hair Color", (int index) => doll.SetHairColor(index));
+            ChooseEELRamp(unitEntityData, doll, doll.GetSkinRamps(), doll.SkinRampIndex, "Skin Color", (int index) => doll.SetSkinColor(index));
+            ChooseEELRamp(unitEntityData, doll, doll.GetOutfitRampsPrimary(), doll.EquipmentRampIndex, "Primary Outfit Color", (int index) => doll.SetEquipColors(index, doll.EquipmentRampIndexSecondary));
+            ChooseEELRamp(unitEntityData, doll, doll.GetOutfitRampsSecondary(), doll.EquipmentRampIndexSecondary, "Secondary Outfit Color", (int index) => doll.SetEquipColors(doll.EquipmentRampIndex, index));
         }
         static int GetPrimaryColor(UnitEntityData unitEntityData)
         {
@@ -206,6 +295,30 @@ namespace VisualAdjustments
                 character.SetSecondaryRampIndex(ee, secondaryIndex);
             }
         }
+        static void UpdateDoll(UnitEntityData unitEntityData)
+        {
+            var character = unitEntityData.View.CharacterAvatar;
+            var doll = unitEntityData.Descriptor.Doll;
+            var savedEquipment = true;
+            //Save equipment?
+            character.RemoveAllEquipmentEntities(savedEquipment);
+            if (doll.RacePreset != null)
+            {
+                character.Skeleton = ((doll.Gender != Gender.Male)) ? doll.RacePreset.FemaleSkeleton : doll.RacePreset.MaleSkeleton;
+                character.AddEquipmentEntities(doll.RacePreset.Skin.Load(doll.Gender, doll.RacePreset.RaceId), savedEquipment);
+            }
+            character.Mirror = doll.LeftHanded;
+            foreach(string assetID in doll.EquipmentEntityIds)
+            {
+                EquipmentEntity ee = ResourcesLibrary.TryGetResource<EquipmentEntity>(assetID);
+                character.AddEquipmentEntity(ee, savedEquipment);
+            }
+            doll.ApplyRampIndices(character);
+            //character.RestoreSavedEquipment(); ?
+            unitEntityData.View.UpdateBodyEquipmentModel();
+            unitEntityData.View.UpdateClassEquipment();
+            //character.IsDirty = true;
+        }
         static void UpdateModel(UnitEntityView __instance)
         {
             if (__instance.CharacterAvatar == null) return;
@@ -271,27 +384,47 @@ namespace VisualAdjustments
             FixColors(__instance);
             __instance.CharacterAvatar.IsDirty = dirty;                
         }
+        /*
+         * Called by CheatsSilly.UpdatePartyNoArmor and OnDataAttached
+         * Applies all EquipmentEntities from item Slots for NonBaked avatars
+         * Does nothing if SCCCanSeeTheirClassSpecificClothes is enabled
+         * */
         [HarmonyPatch(typeof(UnitEntityView), "UpdateBodyEquipmentModel")]
         static class UnitEntityView_UpdateBodyEquipmentModel_Patch
         {
             static void Postfix(UnitEntityView __instance)
             {
+                if (!enabled) return;
                 UpdateModel(__instance);
             }
         }
+        /*
+         * Unclear when called
+         * Handles changed hand slots, usable slots
+         * When item slot is changed, removes old equipment and adds new slot
+         * */
         [HarmonyPatch(typeof(UnitEntityView), "HandleEquipmentSlotUpdated")]
         static class UnitEntityView_HandleEquipmentSlotUpdated_Patch
         {
             static void Postfix(UnitEntityView __instance)
             {
+                if (!enabled) return;
                 UpdateModel(__instance);
             }
         }
+        /*
+         * Called when a character levels up, or on UnitEntityView.OnDataAttached
+         * Removes all equipment of current class, CheatSillyShirt.
+         * Adds equipment of new class
+         * Adds CheatSillyShirt back
+         * Applies doll colors and saves class
+         * */
         [HarmonyPatch(typeof(UnitEntityView), "UpdateClassEquipment")]
         static class UnitEntityView_UpdateClassEquipment_Patch
         {
             static void Postfix(UnitEntityView __instance)
             {
+                if (!enabled) return;
                 UpdateModel(__instance);
             }
         }
@@ -300,9 +433,10 @@ namespace VisualAdjustments
         {
             static bool Prefix(UnitProgressionData __instance, ref BlueprintCharacterClass __result)
             {
-                Settings.CharacterSettings characterSettings = settings.characterSettings.FirstOrDefault((cs) => cs.characterName == __instance.Owner.CharacterName);
+                if (!enabled) return true;
                 if (!__instance.Owner.IsPlayerFaction) return true;
-                if (characterSettings == null) return true;
+                if (!settingsLookup.ContainsKey(__instance.Owner.CharacterName)) return true;
+                Settings.CharacterSettings characterSettings = settingsLookup[__instance.Owner.CharacterName];
                 switch (characterSettings.classOutfit)
                 {
                     case "Alchemist":
