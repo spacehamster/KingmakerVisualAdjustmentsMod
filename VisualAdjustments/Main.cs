@@ -116,7 +116,7 @@ namespace VisualAdjustments
                         characterSettings.showDollSelection = GUILayout.Toggle(characterSettings.showDollSelection, "Select Doll", GUILayout.ExpandWidth(false));
                     }
                     characterSettings.showEquipmentSelection = GUILayout.Toggle(characterSettings.showEquipmentSelection, "Show Equipment Selection", GUILayout.ExpandWidth(false));
-                    characterSettings.showInfo = GUILayout.Toggle(characterSettings.showInfo, "Show Info", GUILayout.ExpandWidth(false));
+                    //characterSettings.showInfo = GUILayout.Toggle(characterSettings.showInfo, "Show Info", GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
                     if (characterSettings.showEquipmentSelection) ChooseEquipment(unitEntityData, characterSettings);
                     if (unitEntityData.Descriptor.Doll != null && characterSettings.showClassSelection)
@@ -127,7 +127,6 @@ namespace VisualAdjustments
                             if (GUILayout.Button(_class, Array.Empty<GUILayoutOption>()))
                             {
                                 characterSettings.classOutfit = _class;
-                                characterSettings.showClassSelection = false;
                                 unitEntityData.View.UpdateClassEquipment();
                             }
                         }
@@ -137,7 +136,7 @@ namespace VisualAdjustments
                     {
                         ChooseDoll(unitEntityData);
                     }
-                    if (characterSettings.showInfo) EquipmentEntityManager.ShowInfo(unitEntityData);
+                    //if (characterSettings.showInfo) EquipmentEntityManager.ShowInfo(unitEntityData);
                 }
             } catch(Exception e)
             {
@@ -158,8 +157,8 @@ namespace VisualAdjustments
         {
             ChooseEquipment(unitEntityData, characterSettings.hideCap, "Hide Cap", (value) => characterSettings.hideCap = value);
             ChooseEquipment(unitEntityData, characterSettings.hideBackpack, "Hide Backpack", (value) => characterSettings.hideBackpack = value);
+            ChooseEquipment(unitEntityData, characterSettings.hideCloak, "Hide All Cloaks", (value) => characterSettings.hideCloak = value);
             ChooseEquipment(unitEntityData, characterSettings.hideHelmet, "Hide Helmet", (value) => characterSettings.hideHelmet = value);
-            ChooseEquipment(unitEntityData, characterSettings.hideCloak, "Hide Cloak", (value) => characterSettings.hideCloak = value);
             ChooseEquipment(unitEntityData, characterSettings.hideArmor, "Hide Armor", (value) => characterSettings.hideArmor = value);
             ChooseEquipment(unitEntityData, characterSettings.hideBoots, "Hide Boots", (value) => characterSettings.hideBoots = value);
             ChooseEquipment(unitEntityData, characterSettings.hideGloves, "Hide Gloves", (value) => characterSettings.hideGloves = value);
@@ -209,7 +208,7 @@ namespace VisualAdjustments
             ChooseEELRamp(unitEntityData, doll, doll.GetSkinRamps(), doll.SkinRampIndex, "Skin Color", (int index) => doll.SetSkinColor(index));
             ChooseEELRamp(unitEntityData, doll, doll.GetOutfitRampsPrimary(), doll.EquipmentRampIndex, "Primary Outfit Color", (int index) => doll.SetEquipColors(index, doll.EquipmentRampIndexSecondary));
             ChooseEELRamp(unitEntityData, doll, doll.GetOutfitRampsSecondary(), doll.EquipmentRampIndexSecondary, "Secondary Outfit Color", (int index) => doll.SetEquipColors(doll.EquipmentRampIndex, index));
-            //ChooseEELRamp(unitEntityData, doll, (new int[] { 0, 1 }).ToList(), doll.LeftHanded ? 1 : 0, "Left Handed", (int value) => doll.SetLeftHanded(value > 0));
+            //ChooseEELRamp(unitEntityData, doll, (new int[] { 0, 1 }).ToList(), doll.LeftHanded ? 1 : 0, "Left Handed", (int value) => doll.SetLeftHanded(value > 0)); //TODO
         }
         static int GetPrimaryColor(UnitEntityData unitEntityData)
         {
@@ -278,61 +277,6 @@ namespace VisualAdjustments
             Traverse.Create(unitEntityData.View).Field("m_EquipmentClass").SetValue(null); //UpdateClassEquipment won't update if the class doesn't change
             unitEntityData.View.UpdateBodyEquipmentModel();
             unitEntityData.View.UpdateClassEquipment();
-        }
-        static EquipmentEntity CloneEquipmentEntity(EquipmentEntity ee)
-        {
-            // return JsonUtility.FromJson<EquipmentEntity>(JsonUtility.ToJson(ee));
-            return ee;
-        }
-        static bool RemoveBodyPart(UnitEntityView __instance, Predicate<BodyPart> selector)
-        {
-            bool dirty = false;
-            foreach (var currentEE in __instance.CharacterAvatar.EquipmentEntities.ToArray())
-            {
-                if (!currentEE.BodyParts.Exists(selector))
-                {
-                    continue;
-                }
-                var ee = CloneEquipmentEntity(currentEE);
-                __instance.CharacterAvatar.RemoveEquipmentEntity(currentEE);
-                __instance.CharacterAvatar.AddEquipmentEntity(ee);
-                for (int j = ee.BodyParts.Count - 1; j >= 0; j--)
-                {
-                    var bodypart = ee.BodyParts[j];
-
-                    if (selector(bodypart))
-                    {
-                        ee.BodyParts.Remove(bodypart);
-                        dirty = true;
-                    }
-                }
-            }
-            return dirty;
-        }
-        static bool RemovOutfitPart(UnitEntityView __instance, Predicate<OutfitPart> selector)
-        {
-            bool dirty = false;
-            foreach (var currentEE in __instance.CharacterAvatar.EquipmentEntities.ToArray())
-            {
-                if (!currentEE.OutfitParts.Exists(selector))
-                {
-                    continue;
-                }
-                var ee = CloneEquipmentEntity(currentEE);
-                __instance.CharacterAvatar.RemoveEquipmentEntity(currentEE);
-                __instance.CharacterAvatar.AddEquipmentEntity(ee);
-                for (int j = ee.OutfitParts.Count - 1; j >= 0; j--)
-                {
-                    var outfit = ee.OutfitParts[j];
-
-                    if (selector(outfit))
-                    {
-                        ee.OutfitParts.Remove(outfit);
-                        dirty = true;
-                    }
-                }
-            }
-            return dirty;
         }
         static void UpdateModel(UnitEntityView __instance)
         {
