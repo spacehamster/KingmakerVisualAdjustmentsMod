@@ -15,22 +15,22 @@ namespace VisualAdjustments
 {
     class DollManager
     {
-        private Dictionary<string, EquipmentEntityLink> head = new Dictionary<string, EquipmentEntityLink>();
-        private Dictionary<string, EquipmentEntityLink> hair = new Dictionary<string, EquipmentEntityLink>();
-        private Dictionary<string, EquipmentEntityLink> beard = new Dictionary<string, EquipmentEntityLink>();
-        private Dictionary<string, EquipmentEntityLink> eyebrows = new Dictionary<string, EquipmentEntityLink>();
-        private Dictionary<string, EquipmentEntityLink> skin = new Dictionary<string, EquipmentEntityLink>();
-        private Dictionary<string, EquipmentEntityLink> classOutfits = new Dictionary<string, EquipmentEntityLink>();
-        private Dictionary<string, DollState> characterDolls = new Dictionary<string, DollState>();
-        private bool loaded = false;
-        private void AddLinks(Dictionary<string, EquipmentEntityLink> dict, EquipmentEntityLink[] links)
+        static private Dictionary<string, EquipmentEntityLink> head = new Dictionary<string, EquipmentEntityLink>();
+        static private Dictionary<string, EquipmentEntityLink> hair = new Dictionary<string, EquipmentEntityLink>();
+        static private Dictionary<string, EquipmentEntityLink> beard = new Dictionary<string, EquipmentEntityLink>();
+        static private Dictionary<string, EquipmentEntityLink> eyebrows = new Dictionary<string, EquipmentEntityLink>();
+        static private Dictionary<string, EquipmentEntityLink> skin = new Dictionary<string, EquipmentEntityLink>();
+        static private Dictionary<string, EquipmentEntityLink> classOutfits = new Dictionary<string, EquipmentEntityLink>();
+        static private Dictionary<string, DollState> characterDolls = new Dictionary<string, DollState>();
+        static private bool loaded = false;
+        static private void AddLinks(Dictionary<string, EquipmentEntityLink> dict, EquipmentEntityLink[] links)
         {
             foreach (var eel in links)
             {
                 dict[eel.AssetId] = eel;
             }
         }
-        private void init()
+        static private void Init()
         {
             var races = ResourcesLibrary.GetBlueprints<BlueprintRace>();
             var racePresets = ResourcesLibrary.GetBlueprints<BlueprintRaceVisualPreset>();
@@ -67,9 +67,9 @@ namespace VisualAdjustments
             }
             loaded = true;
         }
-        public DollState GetDoll(UnitEntityData unitEntityData)
+        static public DollState GetDoll(UnitEntityData unitEntityData)
         {
-            if (!loaded) init();
+            if (!loaded) Init();
             if (unitEntityData.Descriptor.Doll == null) return null;
             if (!characterDolls.ContainsKey(unitEntityData.CharacterName))
             {
@@ -77,9 +77,9 @@ namespace VisualAdjustments
             }
             return characterDolls[unitEntityData.CharacterName];
         }
-        public string GetType(string assetID)
+        static public string GetType(string assetID)
         {
-            if (!loaded) init();
+            if (!loaded) Init();
             if (head.ContainsKey(assetID)) return "Head";
             if (hair.ContainsKey(assetID)) return "Hair";
             if (beard.ContainsKey(assetID)) return "Beard";
@@ -88,7 +88,7 @@ namespace VisualAdjustments
             if (classOutfits.ContainsKey(assetID)) return "ClassOutfit";
             return "Unknown";
         }
-        private DollState CreateDollState(UnitEntityData unitEntityData)
+        static private DollState CreateDollState(UnitEntityData unitEntityData)
         {
             var dollState = new DollState();
             var dollData = unitEntityData.Descriptor.Doll;
@@ -144,29 +144,6 @@ namespace VisualAdjustments
             }
             dollState.Validate();
             return dollState;
-        }
-        //TODO: Replace with call to original method
-        public BlueprintCharacterClass GetEquipmentClass(UnitProgressionData _instance)
-        {
-            int num = 0;
-            BlueprintCharacterClass result = null;
-            foreach (ClassData classData in _instance.Classes)
-            {
-                if (classData.CharacterClass.HasEquipmentEntities())
-                {
-                    if (classData.Level > num)
-                    {
-                        num = classData.Level;
-                        result = classData.CharacterClass;
-                    }
-                    if (classData.PriorityEquipment)
-                    {
-                        result = classData.CharacterClass;
-                        break;
-                    }
-                }
-            }
-            return result;
         }
     }
 

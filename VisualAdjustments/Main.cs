@@ -18,6 +18,8 @@ using Kingmaker.UnitLogic.Class.LevelUp;
 using Kingmaker.Blueprints.CharGen;
 using Kingmaker.ResourceLinks;
 using Kingmaker.Blueprints.Root;
+using static Kingmaker.Visual.CharacterSystem.EquipmentEntity;
+using static VisualAdjustments.Settings;
 
 namespace VisualAdjustments
 {
@@ -26,12 +28,11 @@ namespace VisualAdjustments
     {
         public static UnityModManager.ModEntry.ModLogger logger;
         [System.Diagnostics.Conditional("DEBUG")]
-        private static void DebugLog(string msg)
+        public static void DebugLog(string msg)
         {
             Debug.WriteLine(nameof(VisualAdjustments) + ": " + msg);
             if(logger != null) logger.Log(msg);
         }
-
         public static bool enabled;
         public static Settings settings;
         public static bool disableEquipmentClassPatch = false;
@@ -53,7 +54,6 @@ namespace VisualAdjustments
             "Wizard"
         };
         static Dictionary<string, Settings.CharacterSettings> settingsLookup = new Dictionary<string, Settings.CharacterSettings>();
-        static DollManager dollManager = new DollManager();
         static bool Load(UnityModManager.ModEntry modEntry)
         {
             try
@@ -114,12 +114,11 @@ namespace VisualAdjustments
                     {
                         characterSettings.showClassSelection = GUILayout.Toggle(characterSettings.showClassSelection, "Select Outfit", GUILayout.ExpandWidth(false));
                         characterSettings.showDollSelection = GUILayout.Toggle(characterSettings.showDollSelection, "Select Doll", GUILayout.ExpandWidth(false));
-                        characterSettings.hideCap = GUILayout.Toggle(characterSettings.hideCap, "Hide Cap", GUILayout.ExpandWidth(false));
                     }
-                    characterSettings.hideBackpack = GUILayout.Toggle(characterSettings.hideBackpack, "Hide Backpack", GUILayout.ExpandWidth(false));
-                    characterSettings.hideHelmet = GUILayout.Toggle(characterSettings.hideHelmet, "Hide Helmet", GUILayout.ExpandWidth(false));
-                    characterSettings.hideCloak = GUILayout.Toggle(characterSettings.hideCloak, "Hide Cloak", GUILayout.ExpandWidth(false));
+                    characterSettings.showEquipmentSelection = GUILayout.Toggle(characterSettings.showEquipmentSelection, "Show Equipment Selection", GUILayout.ExpandWidth(false));
+                    characterSettings.showInfo = GUILayout.Toggle(characterSettings.showInfo, "Show Info", GUILayout.ExpandWidth(false));
                     GUILayout.EndHorizontal();
+                    if (characterSettings.showEquipmentSelection) ChooseEquipment(unitEntityData, characterSettings);
                     if (unitEntityData.Descriptor.Doll != null && characterSettings.showClassSelection)
                     {
                         GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
@@ -138,11 +137,33 @@ namespace VisualAdjustments
                     {
                         ChooseDoll(unitEntityData);
                     }
+                    if (characterSettings.showInfo) EquipmentEntityManager.ShowInfo(unitEntityData);
                 }
             } catch(Exception e)
             {
                 DebugLog(e.ToString() + " " + e.StackTrace);
             }
+        }
+        static void ChooseEquipment(UnitEntityData unitEntityData, bool currentValue, string display, Action<bool> onSelect)
+        {
+            bool newValue = GUILayout.Toggle(currentValue, display, GUILayout.ExpandWidth(false));
+            if(newValue != currentValue)
+            {
+                onSelect(newValue);
+                UpdateDoll(unitEntityData);
+                UpdateModel(unitEntityData.View);
+            }
+        }
+        static void ChooseEquipment(UnitEntityData unitEntityData, CharacterSettings characterSettings)
+        {
+            ChooseEquipment(unitEntityData, characterSettings.hideCap, "Hide Cap", (value) => characterSettings.hideCap = value);
+            ChooseEquipment(unitEntityData, characterSettings.hideBackpack, "Hide Backpack", (value) => characterSettings.hideBackpack = value);
+            ChooseEquipment(unitEntityData, characterSettings.hideHelmet, "Hide Helmet", (value) => characterSettings.hideHelmet = value);
+            ChooseEquipment(unitEntityData, characterSettings.hideCloak, "Hide Cloak", (value) => characterSettings.hideCloak = value);
+            ChooseEquipment(unitEntityData, characterSettings.hideArmor, "Hide Armor", (value) => characterSettings.hideArmor = value);
+            ChooseEquipment(unitEntityData, characterSettings.hideBoots, "Hide Boots", (value) => characterSettings.hideBoots = value);
+            ChooseEquipment(unitEntityData, characterSettings.hideGloves, "Hide Gloves", (value) => characterSettings.hideGloves = value);
+            ChooseEquipment(unitEntityData, characterSettings.hideEquipCloak, "Hide Equp Cloak", (value) => characterSettings.hideEquipCloak = value);
         }
         static void ChooseEEL(UnitEntityData unitEntityData, DollState doll, EquipmentEntityLink[] links, EquipmentEntityLink currentLink, string name, Action<EquipmentEntityLink> setter)
         {
@@ -177,7 +198,7 @@ namespace VisualAdjustments
         }
         static void ChooseDoll(UnitEntityData unitEntityData)
         {
-            var doll = dollManager.GetDoll(unitEntityData);
+            var doll = DollManager.GetDoll(unitEntityData);
             var race = unitEntityData.Descriptor.Progression.Race;
             var gender = unitEntityData.Gender;
             CustomizationOptions customizationOptions = gender != Gender.Male ? race.FemaleOptions : race.MaleOptions;
@@ -235,10 +256,11 @@ namespace VisualAdjustments
                 character.SetSecondaryRampIndex(ee, secondaryIndex);
             }
         }
-        static void UpdateDoll(UnitEntityData unitEntityData)
+        public static void UpdateDoll(UnitEntityData unitEntityData)
         {
             var character = unitEntityData.View.CharacterAvatar;
             var doll = unitEntityData.Descriptor.Doll;
+            if (doll == null) return;
             var savedEquipment = true;
             character.RemoveAllEquipmentEntities(savedEquipment);
             if (doll.RacePreset != null)
@@ -257,6 +279,61 @@ namespace VisualAdjustments
             unitEntityData.View.UpdateBodyEquipmentModel();
             unitEntityData.View.UpdateClassEquipment();
         }
+        static EquipmentEntity CloneEquipmentEntity(EquipmentEntity ee)
+        {
+            // return JsonUtility.FromJson<EquipmentEntity>(JsonUtility.ToJson(ee));
+            return ee;
+        }
+        static bool RemoveBodyPart(UnitEntityView __instance, Predicate<BodyPart> selector)
+        {
+            bool dirty = false;
+            foreach (var currentEE in __instance.CharacterAvatar.EquipmentEntities.ToArray())
+            {
+                if (!currentEE.BodyParts.Exists(selector))
+                {
+                    continue;
+                }
+                var ee = CloneEquipmentEntity(currentEE);
+                __instance.CharacterAvatar.RemoveEquipmentEntity(currentEE);
+                __instance.CharacterAvatar.AddEquipmentEntity(ee);
+                for (int j = ee.BodyParts.Count - 1; j >= 0; j--)
+                {
+                    var bodypart = ee.BodyParts[j];
+
+                    if (selector(bodypart))
+                    {
+                        ee.BodyParts.Remove(bodypart);
+                        dirty = true;
+                    }
+                }
+            }
+            return dirty;
+        }
+        static bool RemovOutfitPart(UnitEntityView __instance, Predicate<OutfitPart> selector)
+        {
+            bool dirty = false;
+            foreach (var currentEE in __instance.CharacterAvatar.EquipmentEntities.ToArray())
+            {
+                if (!currentEE.OutfitParts.Exists(selector))
+                {
+                    continue;
+                }
+                var ee = CloneEquipmentEntity(currentEE);
+                __instance.CharacterAvatar.RemoveEquipmentEntity(currentEE);
+                __instance.CharacterAvatar.AddEquipmentEntity(ee);
+                for (int j = ee.OutfitParts.Count - 1; j >= 0; j--)
+                {
+                    var outfit = ee.OutfitParts[j];
+
+                    if (selector(outfit))
+                    {
+                        ee.OutfitParts.Remove(outfit);
+                        dirty = true;
+                    }
+                }
+            }
+            return dirty;
+        }
         static void UpdateModel(UnitEntityView __instance)
         {
             if (__instance.CharacterAvatar == null) return;
@@ -264,59 +341,82 @@ namespace VisualAdjustments
             Settings.CharacterSettings characterSettings = settings.characterSettings.FirstOrDefault((cs) => cs.characterName == __instance.EntityData.CharacterName);
             if (characterSettings == null) return;            
             bool dirty = __instance.CharacterAvatar.IsDirty;
-            if (characterSettings.hideBackpack)
-            {
-                foreach (var ee in __instance.CharacterAvatar.EquipmentEntities)
-                {
-                    for (int j = ee.OutfitParts.Count - 1; j >= 0; j--)
-                    {
-                        var outfit = ee.OutfitParts[j];
-                        if (outfit.Special == EquipmentEntity.OutfitPartSpecialType.Backpack)
-                        {
-                            ee.OutfitParts.Remove(outfit);
-                            dirty = true;
-                        }
-                    }
-                }
-            }
             if (characterSettings.hideHelmet)
             {
-                var helmetEE = __instance.ExtractEquipmentEntities(__instance.EntityData.Body.Head).ToList();
-                if (helmetEE.Count > 0)
+                var ee = __instance.ExtractEquipmentEntities(__instance.EntityData.Body.Head).ToList();
+                if (ee.Count > 0)
                 {
-                    __instance.CharacterAvatar.RemoveEquipmentEntities(helmetEE);
+                    __instance.CharacterAvatar.RemoveEquipmentEntities(ee);
                     dirty = true;
+                }
+            }
+            if (characterSettings.hideArmor)
+            {
+                var ee = __instance.ExtractEquipmentEntities(__instance.EntityData.Body.Armor).ToList();
+                if (ee.Count > 0)
+                {
+                    __instance.CharacterAvatar.RemoveEquipmentEntities(ee);
+                    dirty = true;
+                }
+            }
+            if (characterSettings.hideGloves)
+            {
+                var ee = __instance.ExtractEquipmentEntities(__instance.EntityData.Body.Gloves).ToList();
+                if (ee.Count > 0)
+                {
+                    __instance.CharacterAvatar.RemoveEquipmentEntities(ee);
+                    dirty = true;
+                }
+            }
+            if (characterSettings.hideBoots)
+            {
+                var ee = __instance.ExtractEquipmentEntities(__instance.EntityData.Body.Feet).ToList();
+                if (ee.Count > 0)
+                {
+                    __instance.CharacterAvatar.RemoveEquipmentEntities(ee);
+                    dirty = true;
+                }
+            }
+            if (characterSettings.hideEquipCloak)
+            {
+                var ee = __instance.ExtractEquipmentEntities(__instance.EntityData.Body.Shoulders).ToList();
+                if (ee.Count > 0)
+                {
+                    __instance.CharacterAvatar.RemoveEquipmentEntities(ee);
+                    dirty = true;
+                }
+            }
+            if (characterSettings.hideBackpack)
+            {
+                foreach (var ee in __instance.CharacterAvatar.EquipmentEntities.ToArray())
+                {
+                    if(ee.OutfitParts.Exists((outfit) => outfit.Special == EquipmentEntity.OutfitPartSpecialType.Backpack))
+                    {
+                        __instance.CharacterAvatar.EquipmentEntities.Remove(ee);
+                        dirty = true;
+                    }
                 }
             }
             if (characterSettings.hideCloak)
             {
-                foreach (var ee in __instance.CharacterAvatar.EquipmentEntities)
+                foreach (var ee in __instance.CharacterAvatar.EquipmentEntities.ToArray())
                 {
-                    for (int j = ee.OutfitParts.Count - 1; j >= 0; j--)
+                    if (ee.OutfitParts.Exists((outfit) => outfit.Special == EquipmentEntity.OutfitPartSpecialType.Cloak || outfit.Special == EquipmentEntity.OutfitPartSpecialType.CloakSquashed))
                     {
-                        var outfit = ee.OutfitParts[j];
-                        if (outfit.Special == EquipmentEntity.OutfitPartSpecialType.Cloak || outfit.Special == EquipmentEntity.OutfitPartSpecialType.CloakSquashed)
-                        {
-                            ee.OutfitParts.Remove(outfit);
-                            dirty = true;
-                        }
+                        __instance.CharacterAvatar.EquipmentEntities.Remove(ee);
+                        dirty = true;
                     }
                 }
             }
             if (characterSettings.hideCap)
             {
-                foreach (var ee in __instance.CharacterAvatar.EquipmentEntities)
+                foreach (var ee in __instance.CharacterAvatar.EquipmentEntities.ToArray())
                 {
-                    for (int j = ee.BodyParts.Count - 1; j >= 0; j--)
+                    if (ee.BodyParts.Exists((bodypart) => bodypart.Type == BodyPartType.Cap))
                     {
-                        var bodypart = ee.BodyParts[j];
-                        if (bodypart.Type == BodyPartType.Cap)
-                        {
-                            ee.BodyParts.Remove(bodypart);
-                            dirty = true;
-                        }
+                        __instance.CharacterAvatar.EquipmentEntities.Remove(ee);
+                        dirty = true;
                     }
-                    ee.HideBodyParts &= ~(BodyPartType.Ears | BodyPartType.Hair | BodyPartType.Hair2 | BodyPartType.HeadTop); //Show ears, hair, headtop
                 }
             }
             FixColors(__instance);
