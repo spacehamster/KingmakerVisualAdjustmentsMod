@@ -22,8 +22,12 @@ namespace VisualAdjustments
             public bool hideEquipCloak = false;
             public bool hideArmor = false;
             public bool hideBoots = false;
+            public bool hideBracers = false;
             public bool hideGloves = false;
+            public bool hideWeapons = false;
+#if (DEBUG)
             public bool showInfo = false;
+#endif
             public string classOutfit = "Default";
 
         }
