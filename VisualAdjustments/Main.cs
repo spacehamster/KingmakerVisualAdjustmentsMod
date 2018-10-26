@@ -17,11 +17,10 @@ using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Class.LevelUp;
 using Kingmaker.Blueprints.CharGen;
 using Kingmaker.ResourceLinks;
-using Kingmaker.Blueprints.Root;
-using static Kingmaker.Visual.CharacterSystem.EquipmentEntity;
 using static VisualAdjustments.Settings;
 using Kingmaker.Items.Slots;
 using Kingmaker.View.Equipment;
+using Kingmaker.Items;
 
 namespace VisualAdjustments
 {
@@ -501,8 +500,8 @@ namespace VisualAdjustments
                 UpdateModel(__instance);
             }
         }
-        [HarmonyPatch(typeof(UnitViewHandsEquipment), "HandleEquipmentSetChanged")]
-        static class UnitViewHandsEquipment_HandleEquipmentSetChanged_Patch
+        [HarmonyPatch(typeof(UnitViewHandsEquipment), "UpdateVisibility")]
+        static class UnitViewHandsEquipment_UpdateVisibility_Patch
         {
             static void Postfix(UnitViewHandsEquipment __instance)
             {
@@ -512,14 +511,29 @@ namespace VisualAdjustments
                 if (characterSettings == null) return;
                 if (characterSettings.hideWeapons)
                 {
-                    foreach(var kv in __instance.Sets)
+                    foreach (var kv in __instance.Sets)
                     {
-                        var slotView = kv.Value;
-                        if (!slotView.MainHand.IsActiveSet)
-                        {
-                            slotView.MainHand.ShowItem(false);
-                            slotView.OffHand.ShowItem(false);
-                        }
+                        if (kv.Key.PrimaryHand.Active) continue;
+                        kv.Value.MainHand.ShowItem(false);
+                        kv.Value.OffHand.ShowItem(false);
+                    }
+                }
+            }
+        }
+        [HarmonyPatch(typeof(UnitViewHandSlotData), "AttachModel", new Type[] { })]
+        static class UnitViewHandsSlotData_AttachModel_Patch
+        {
+            static void Postfix(UnitViewHandSlotData __instance)
+            {
+                if (!enabled) return;
+                if (!__instance.Owner.IsPlayerFaction) return;
+                Settings.CharacterSettings characterSettings = settings.characterSettings.FirstOrDefault((cs) => cs.characterName == __instance.Owner.CharacterName);
+                if (characterSettings == null) return;
+                if (characterSettings.hideWeapons)
+                {
+                    if (!__instance.IsActiveSet)
+                    {
+                        __instance.ShowItem(false);
                     }
                 }
             }
