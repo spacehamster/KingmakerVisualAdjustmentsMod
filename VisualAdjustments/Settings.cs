@@ -15,15 +15,25 @@ namespace VisualAdjustments
             public bool showClassSelection = false;
             public bool showDollSelection = false;
             public bool showEquipmentSelection = false;
-            public bool hideHelmet = false;
+            public bool showOverrideSelection = false;
             public bool hideBackpack = false;
             public bool hideCap = false;
             public bool hideCloak = false;
+
+            public bool hideHelmet = false;
             public bool hideEquipCloak = false;
             public bool hideArmor = false;
-            public bool hideBoots = false;
             public bool hideBracers = false;
             public bool hideGloves = false;
+            public bool hideBoots = false;
+
+            public string overrideHelm = "";
+            public string overrideCloak = "";
+            public string overrideArmor = "";
+            public string overrideBracers = "";
+            public string overrideGloves = "";
+            public string overrideBoots = "";
+
             public bool hideWeapons = false;
 #if (DEBUG)
             public bool showInfo = false;

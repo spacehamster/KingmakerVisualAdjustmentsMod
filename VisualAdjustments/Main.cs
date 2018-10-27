@@ -20,7 +20,6 @@ using Kingmaker.ResourceLinks;
 using static VisualAdjustments.Settings;
 using Kingmaker.Items.Slots;
 using Kingmaker.View.Equipment;
-using Kingmaker.Items;
 
 namespace VisualAdjustments
 {
@@ -117,6 +116,7 @@ namespace VisualAdjustments
                         characterSettings.showDollSelection = GUILayout.Toggle(characterSettings.showDollSelection, "Select Doll", GUILayout.ExpandWidth(false));
                     }
                     characterSettings.showEquipmentSelection = GUILayout.Toggle(characterSettings.showEquipmentSelection, "Show Equipment Selection", GUILayout.ExpandWidth(false));
+                    if (unitEntityData.Descriptor.Doll != null) characterSettings.showOverrideSelection = GUILayout.Toggle(characterSettings.showOverrideSelection, "Show Override Selection", GUILayout.ExpandWidth(false));
 #if (DEBUG)
                     characterSettings.showInfo = GUILayout.Toggle(characterSettings.showInfo, "Show Info", GUILayout.ExpandWidth(false));
                     if (unitEntityData.Descriptor.Doll == null)
@@ -124,7 +124,7 @@ namespace VisualAdjustments
                         characterSettings.showClassSelection = GUILayout.Toggle(characterSettings.showClassSelection, "Select Outfit!", GUILayout.ExpandWidth(false));
                     }
 #endif
-                        GUILayout.EndHorizontal();
+                    GUILayout.EndHorizontal();
                     if (unitEntityData.Descriptor.Doll != null && characterSettings.showClassSelection)
                     {
                         ChooseClassOutfit(characterSettings, unitEntityData);
@@ -134,12 +134,13 @@ namespace VisualAdjustments
                         ChooseDoll(unitEntityData);
                     }
                     if (characterSettings.showEquipmentSelection) ChooseEquipment(unitEntityData, characterSettings);
+                    if (characterSettings.showOverrideSelection && unitEntityData.Descriptor.Doll != null) ChooseEquipmentOverride(unitEntityData, characterSettings);
 #if (DEBUG)
                     if (unitEntityData.Descriptor.Doll == null && characterSettings.showClassSelection)
                     {
                         ChooseClassOutfit(characterSettings, unitEntityData);
                     }
-                    if (characterSettings.showInfo) EquipmentEntityManager.ShowInfo(unitEntityData);
+                    if (characterSettings.showInfo) InfoManager.ShowInfo(unitEntityData);
 #endif
                 }
             } catch(Exception e)
@@ -197,12 +198,37 @@ namespace VisualAdjustments
             ChooseEquipment(unitEntityData, characterSettings.hideBackpack, "Hide Backpack", (value) => characterSettings.hideBackpack = value);
             ChooseEquipment(unitEntityData, characterSettings.hideCloak, "Hide All Cloaks", (value) => characterSettings.hideCloak = value);
             ChooseEquipment(unitEntityData, characterSettings.hideHelmet, "Hide Helmet", (value) => characterSettings.hideHelmet = value);
+            ChooseEquipment(unitEntityData, characterSettings.hideEquipCloak, "Hide Equip Cloak", (value) => characterSettings.hideEquipCloak = value);
             ChooseEquipment(unitEntityData, characterSettings.hideArmor, "Hide Armor", (value) => characterSettings.hideArmor = value);
             ChooseEquipment(unitEntityData, characterSettings.hideBoots, "Hide Boots", (value) => characterSettings.hideBoots = value);
             ChooseEquipment(unitEntityData, characterSettings.hideBracers, "Hide Bracers", (value) => characterSettings.hideBracers = value);
             ChooseEquipment(unitEntityData, characterSettings.hideGloves, "Hide Gloves", (value) => characterSettings.hideGloves = value);
             ChooseWeapon(unitEntityData, characterSettings.hideWeapons, "Hide Inactive Weapons", (value) => characterSettings.hideWeapons = value);
-
+        }
+        static void ChooseEquipmentOverride(UnitEntityData unitEntityData, string name, SortedList<string, string> items, string currentItem, Action<string> setter)
+        {
+            var currentIndex = items.IndexOfKey(currentItem);
+            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+            GUILayout.Label(name + " ", GUILayout.Width(300));
+            var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, -1, items.Count - 1, GUILayout.Width(300)), 0);
+            var displayText = newIndex == -1 ? "None" : items.Values[newIndex];
+            GUILayout.Label(" " + displayText, GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            if(currentIndex != newIndex)
+            {
+                setter(newIndex == -1 ? "" : items.Keys[newIndex]);
+                if (unitEntityData.Descriptor.Doll != null) RebuildCharacter(unitEntityData);
+                UpdateModel(unitEntityData.View);
+            }
+        }
+        static void ChooseEquipmentOverride(UnitEntityData unitEntityData, CharacterSettings characterSettings)
+        {
+            ChooseEquipmentOverride(unitEntityData, "Override Helm ", EquipmentManager.Helm, characterSettings.overrideHelm, (string id) => characterSettings.overrideHelm = id);
+            ChooseEquipmentOverride(unitEntityData, "Override Cloak ", EquipmentManager.Cloak, characterSettings.overrideCloak, (string id) => characterSettings.overrideCloak = id);
+            ChooseEquipmentOverride(unitEntityData, "Override Armor ", EquipmentManager.Armor, characterSettings.overrideArmor, (string id) => characterSettings.overrideArmor = id);
+            ChooseEquipmentOverride(unitEntityData, "Override Bracers ", EquipmentManager.Bracers, characterSettings.overrideBracers, (string id) => characterSettings.overrideBracers = id);
+            ChooseEquipmentOverride(unitEntityData, "Override Gloves ", EquipmentManager.Gloves, characterSettings.overrideGloves, (string id) => characterSettings.overrideGloves = id);
+            ChooseEquipmentOverride(unitEntityData, "Override Boots ", EquipmentManager.Boots, characterSettings.overrideBoots, (string id) => characterSettings.overrideBoots = id);
         }
         static void ChooseEEL(UnitEntityData unitEntityData, DollState doll, EquipmentEntityLink[] links, EquipmentEntityLink currentLink, string name, Action<EquipmentEntityLink> setter)
         {
@@ -355,6 +381,26 @@ namespace VisualAdjustments
              * We can't do that here because we do not have a list of the companion clothes
              */
         }
+        static void HideSlot(UnitEntityView __instance, ItemSlot slot, ref bool dirty)
+        {
+            var ee = __instance.ExtractEquipmentEntities(slot).ToList();
+            if (ee.Count > 0)
+            {
+                __instance.CharacterAvatar.RemoveEquipmentEntities(ee);
+                dirty = true;
+            }
+        }
+        static bool OverrideEquipment(UnitEntityView __instance, ItemSlot slot, string assetId, ref bool dirty)
+        {
+            var kee = ResourcesLibrary.TryGetBlueprint<KingmakerEquipmentEntity>(assetId);
+            if (kee == null) return false;
+            var ee = kee.Load(__instance.EntityData.Descriptor.Gender, __instance.EntityData.Descriptor.Progression.Race.RaceId);
+            if (ee == null) return false;
+            HideSlot(__instance, slot, ref dirty);
+            __instance.CharacterAvatar.AddEquipmentEntities(ee);
+            dirty = true;
+            return true;
+        }
         static void UpdateModel(UnitEntityView __instance)
         {
             if (__instance.CharacterAvatar == null) return;
@@ -368,56 +414,68 @@ namespace VisualAdjustments
             }
             if (characterSettings.hideHelmet)
             {
-                var ee = __instance.ExtractEquipmentEntities(__instance.EntityData.Body.Head).ToList();
-                if (ee.Count > 0)
-                {
-                    __instance.CharacterAvatar.RemoveEquipmentEntities(ee);
-                    dirty = true;
-                }
-            }
-            if (characterSettings.hideArmor)
-            {
-                var ee = __instance.ExtractEquipmentEntities(__instance.EntityData.Body.Armor).ToList();
-                if (ee.Count > 0)
-                {
-                    __instance.CharacterAvatar.RemoveEquipmentEntities(ee);
-                    dirty = true;
-                }
-            }
-            if (characterSettings.hideGloves)
-            {
-                var ee = __instance.ExtractEquipmentEntities(__instance.EntityData.Body.Gloves).ToList();
-                if (ee.Count > 0)
-                {
-                    __instance.CharacterAvatar.RemoveEquipmentEntities(ee);
-                    dirty = true;
-                }
-            }
-            if (characterSettings.hideBracers)
-            {
-                var ee = __instance.ExtractEquipmentEntities(__instance.EntityData.Body.Wrist).ToList();
-                if (ee.Count > 0)
-                {
-                    __instance.CharacterAvatar.RemoveEquipmentEntities(ee);
-                    dirty = true;
-                }
-            }
-            if (characterSettings.hideBoots)
-            {
-                var ee = __instance.ExtractEquipmentEntities(__instance.EntityData.Body.Feet).ToList();
-                if (ee.Count > 0)
-                {
-                    __instance.CharacterAvatar.RemoveEquipmentEntities(ee);
-                    dirty = true;
-                }
+                HideSlot(__instance, __instance.EntityData.Body.Head, ref dirty);
             }
             if (characterSettings.hideEquipCloak)
             {
-                var ee = __instance.ExtractEquipmentEntities(__instance.EntityData.Body.Shoulders).ToList();
-                if (ee.Count > 0)
+                HideSlot(__instance, __instance.EntityData.Body.Shoulders, ref dirty);
+            }
+            if (characterSettings.hideArmor)
+            {
+                HideSlot(__instance, __instance.EntityData.Body.Armor, ref dirty);
+            }
+            if (characterSettings.hideGloves)
+            {
+                HideSlot(__instance, __instance.EntityData.Body.Gloves, ref dirty);
+            }
+            if (characterSettings.hideBracers)
+            {
+                HideSlot(__instance, __instance.EntityData.Body.Wrist, ref dirty);
+            }
+            if (characterSettings.hideBoots)
+            {
+                HideSlot(__instance, __instance.EntityData.Body.Feet, ref dirty);
+            }
+            if(characterSettings.overrideHelm != "" && !characterSettings.hideHelmet)
+            {
+                if (!OverrideEquipment(__instance, __instance.EntityData.Body.Head, characterSettings.overrideHelm, ref dirty))
                 {
-                    __instance.CharacterAvatar.RemoveEquipmentEntities(ee);
-                    dirty = true;
+                    characterSettings.overrideHelm = "";
+                }
+            }
+            if (characterSettings.overrideCloak != "" && !characterSettings.hideEquipCloak)
+            {
+                if (!OverrideEquipment(__instance, __instance.EntityData.Body.Shoulders, characterSettings.overrideCloak, ref dirty))
+                {
+                    characterSettings.overrideCloak = "";
+                }
+            }
+            if (characterSettings.overrideArmor != "" && !characterSettings.hideArmor)
+            {
+                if (!OverrideEquipment(__instance, __instance.EntityData.Body.Armor, characterSettings.overrideArmor, ref dirty))
+                {
+                    characterSettings.overrideArmor = "";
+                }
+            }
+            if (characterSettings.overrideBracers != "" && !characterSettings.hideBracers)
+            {
+                if (!OverrideEquipment(__instance, __instance.EntityData.Body.Wrist, characterSettings.overrideBracers, ref dirty))
+                {
+                    characterSettings.overrideBracers = "";
+                }
+            }
+            if (characterSettings.overrideGloves != "" && !characterSettings.hideGloves)
+            {
+                if (!OverrideEquipment(__instance, __instance.EntityData.Body.Gloves, characterSettings.overrideGloves, ref dirty))
+                {
+                    characterSettings.overrideGloves = "";
+                }
+            }
+            if (characterSettings.overrideBoots != "" && !characterSettings.hideBoots)
+            {
+                if (!OverrideEquipment(__instance, __instance.EntityData.Body.Feet, characterSettings.overrideBoots, ref dirty))
+                {
+                    characterSettings.overrideBoots = "";
                 }
             }
             if (characterSettings.hideBackpack)
