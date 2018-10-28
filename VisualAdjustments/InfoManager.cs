@@ -133,14 +133,18 @@ namespace VisualAdjustments
             {
                 unitEntityData.View.CharacterAvatar.IsDirty = true;
             }
+            if (GUILayout.Button("Update Model"))
+            {
+                Main.UpdateModel(unitEntityData.View);
+            }
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
             showArmor = GUILayout.Toggle(showArmor, "Show Armor");
             showWeapons = GUILayout.Toggle(showWeapons, "Show Weapons");
             GUILayout.EndHorizontal();
-            if (showArmor) showArmorInfo(unitEntityData);
+            if (showArmor) ShowArmorInfo(unitEntityData);
             if (showWeapons) ShowWeaponInfo(unitEntityData);
         }
-        static void showArmorInfo(UnitEntityData unitEntityData)
+        static void ShowArmorInfo(UnitEntityData unitEntityData)
         {
             var character = unitEntityData.View.CharacterAvatar;
             GUILayout.Label("Equipment", GUILayout.Width(300));
@@ -149,7 +153,8 @@ namespace VisualAdjustments
                 EquipmentEntityInfo settings = lookup.ContainsKey(ee.name) ? lookup[ee.name] : new EquipmentEntityInfo();
                 GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
                 GUILayout.Label(
-                        String.Format("{0}:{1}:{2}:{3}", ee.name, settings.type, ee.BodyParts.Count, ee.OutfitParts.Count),
+                        String.Format("{0}:{1}:{2}:{3}:P{4}:S{5}", ee.name, settings.type, ee.BodyParts.Count, ee.OutfitParts.Count, 
+                            character.GetPrimaryRampIndex(ee), character.GetSecondaryRampIndex(ee)),
                         GUILayout.ExpandWidth(false));
                 if (GUILayout.Button("Remove"))
                 {

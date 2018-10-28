@@ -107,39 +107,40 @@ namespace VisualAdjustments
                         settings.characterSettings.Add(characterSettings);
                         settingsLookup[characterSettings.characterName] = characterSettings;
                     }
-
+                    if (unitEntityData.Descriptor.IsPet)
+                    {
+                        GUILayout.Label(string.Format("{0}", unitEntityData.CharacterName), "box", GUILayout.Width(300f));
+                        return;
+                    }
                     GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
                     GUILayout.Label(string.Format("{0}", unitEntityData.CharacterName), "box", GUILayout.Width(300f));
+                    characterSettings.showClassSelection = GUILayout.Toggle(characterSettings.showClassSelection, "Select Outfit", GUILayout.ExpandWidth(false));
                     if (unitEntityData.Descriptor.Doll != null)
                     {
-                        characterSettings.showClassSelection = GUILayout.Toggle(characterSettings.showClassSelection, "Select Outfit", GUILayout.ExpandWidth(false));
                         characterSettings.showDollSelection = GUILayout.Toggle(characterSettings.showDollSelection, "Select Doll", GUILayout.ExpandWidth(false));
                     }
+                    else
+                    {
+                        characterSettings.showDollSelection = GUILayout.Toggle(characterSettings.showDollSelection, "Select Colors", GUILayout.ExpandWidth(false));
+                    }
                     characterSettings.showEquipmentSelection = GUILayout.Toggle(characterSettings.showEquipmentSelection, "Show Equipment Selection", GUILayout.ExpandWidth(false));
-                    if (unitEntityData.Descriptor.Doll != null) characterSettings.showOverrideSelection = GUILayout.Toggle(characterSettings.showOverrideSelection, "Show Override Selection", GUILayout.ExpandWidth(false));
+                    characterSettings.showOverrideSelection = GUILayout.Toggle(characterSettings.showOverrideSelection, "Show Override Selection", GUILayout.ExpandWidth(false));
 #if (DEBUG)
                     characterSettings.showInfo = GUILayout.Toggle(characterSettings.showInfo, "Show Info", GUILayout.ExpandWidth(false));
-                    if (unitEntityData.Descriptor.Doll == null)
-                    {
-                        characterSettings.showClassSelection = GUILayout.Toggle(characterSettings.showClassSelection, "Select Outfit!", GUILayout.ExpandWidth(false));
-                    }
 #endif
                     GUILayout.EndHorizontal();
-                    if (unitEntityData.Descriptor.Doll != null && characterSettings.showClassSelection)
-                    {
-                        ChooseClassOutfit(characterSettings, unitEntityData);
-                    }
+                    if (characterSettings.showClassSelection) ChooseClassOutfit(characterSettings, unitEntityData);
                     if (unitEntityData.Descriptor.Doll != null && characterSettings.showDollSelection)
                     {
                         ChooseDoll(unitEntityData);
                     }
-                    if (characterSettings.showEquipmentSelection) ChooseEquipment(unitEntityData, characterSettings);
-                    if (characterSettings.showOverrideSelection && unitEntityData.Descriptor.Doll != null) ChooseEquipmentOverride(unitEntityData, characterSettings);
-#if (DEBUG)
-                    if (unitEntityData.Descriptor.Doll == null && characterSettings.showClassSelection)
+                    if (unitEntityData.Descriptor.Doll == null && characterSettings.showDollSelection)
                     {
-                        ChooseClassOutfit(characterSettings, unitEntityData);
+                        ChooseCompanionColor(characterSettings, unitEntityData);
                     }
+                    if (characterSettings.showEquipmentSelection) ChooseEquipment(unitEntityData, characterSettings);
+                    if (characterSettings.showOverrideSelection) ChooseEquipmentOverride(unitEntityData, characterSettings);
+#if (DEBUG)
                     if (characterSettings.showInfo) InfoManager.ShowInfo(unitEntityData);
 #endif
                 }
@@ -167,9 +168,12 @@ namespace VisualAdjustments
                 if (GUILayout.Button(_class, Array.Empty<GUILayoutOption>()))
                 {
                     characterSettings.classOutfit = _class;
+                    RebuildCharacter(unitEntityData);
                     unitEntityData.View.UpdateClassEquipment();
                 }
             }
+            GUI.skin.button.normal.textColor = normalColor;
+            GUI.skin.button.focused.textColor = focusedColor;
             GUILayout.EndHorizontal();
         }
         static void ChooseEquipment(UnitEntityData unitEntityData, bool currentValue, string display, Action<bool> onSelect)
@@ -178,7 +182,7 @@ namespace VisualAdjustments
             if(newValue != currentValue)
             {
                 onSelect(newValue);
-                if(unitEntityData.Descriptor.Doll != null) RebuildCharacter(unitEntityData);
+                RebuildCharacter(unitEntityData);
                 UpdateModel(unitEntityData.View);
             }
         }
@@ -188,7 +192,6 @@ namespace VisualAdjustments
             if (newValue != currentValue)
             {
                 onSelect(newValue);
-                if (unitEntityData.Descriptor.Doll != null) RebuildCharacter(unitEntityData);
                 unitEntityData.View.HandsEquipment.HandleEquipmentSetChanged();
             }
         }
@@ -217,7 +220,7 @@ namespace VisualAdjustments
             if(currentIndex != newIndex)
             {
                 setter(newIndex == -1 ? "" : items.Keys[newIndex]);
-                if (unitEntityData.Descriptor.Doll != null) RebuildCharacter(unitEntityData);
+                RebuildCharacter(unitEntityData);
                 UpdateModel(unitEntityData.View);
             }
         }
@@ -275,6 +278,34 @@ namespace VisualAdjustments
             ChooseEELRamp(unitEntityData, doll, doll.GetOutfitRampsPrimary(), doll.EquipmentRampIndex, "Primary Outfit Color", (int index) => doll.SetEquipColors(index, doll.EquipmentRampIndexSecondary));
             ChooseEELRamp(unitEntityData, doll, doll.GetOutfitRampsSecondary(), doll.EquipmentRampIndexSecondary, "Secondary Outfit Color", (int index) => doll.SetEquipColors(doll.EquipmentRampIndex, index));
             //ChooseEELRamp(unitEntityData, doll, (new int[] { 0, 1 }).ToList(), doll.LeftHanded ? 1 : 0, "Left Handed", (int value) => doll.SetLeftHanded(value > 0)); //TODO
+        }
+        static void ChooseCompanionColor(CharacterSettings characterSettings, UnitEntityData unitEntityData)
+        {
+            GUILayout.Label("Note: Only applies to non-default outfits");
+            {
+                GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+                GUILayout.Label("Primary Outfit Color ", GUILayout.Width(300));
+                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(characterSettings.companionPrimary, 0, 35, GUILayout.Width(300)), 0);
+                GUILayout.Label(" " + newIndex, GUILayout.ExpandWidth(false));
+                GUILayout.EndHorizontal();
+                if (newIndex != characterSettings.companionPrimary)
+                {
+                    characterSettings.companionPrimary = newIndex;
+                    UpdateModel(unitEntityData.View);
+                }
+            }
+            {
+                GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+                GUILayout.Label("Secondary Outfit Color ", GUILayout.Width(300));
+                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(characterSettings.companionSecondary, 0, 35, GUILayout.Width(300)), 0);
+                GUILayout.Label(" " + newIndex, GUILayout.ExpandWidth(false));
+                GUILayout.EndHorizontal();
+                if(newIndex != characterSettings.companionSecondary)
+                {
+                    characterSettings.companionSecondary = newIndex;
+                    UpdateModel(unitEntityData.View);
+                }
+            }
         }
         static int GetPrimaryColor(UnitEntityData unitEntityData)
         {
@@ -346,40 +377,79 @@ namespace VisualAdjustments
                 unitEntityData.View.UpdateClassEquipment();
             } else
             {
-                //Refer Kingmaker UnitCreationController
                 UnitEntityView viewTemplate = (!string.IsNullOrEmpty(unitEntityData.Descriptor.CustomPrefabGuid)) ? 
                     ResourcesLibrary.TryGetResource<UnitEntityView>(unitEntityData.Descriptor.CustomPrefabGuid) :
                     unitEntityData.Blueprint.Prefab.Load();
-                UnitEntityView viewInstance = UnityEngine.Object.Instantiate(viewTemplate, unitEntityData.Position, Quaternion.identity);
-                viewInstance.Blueprint = unitEntityData.Blueprint; //Do we need to set the Blueprint?
-                viewInstance.UniqueId = Guid.NewGuid().ToString(); //Do we need to set the UniqueID?
-                viewInstance.Data = viewInstance.CreateEntityData(false);
-                var characterBase = viewInstance.GetComponentInChildren<Character>();
-                characterBase.RemoveEquipmentEntities(viewInstance.ExtractEquipmentEntities(viewInstance.EntityData.Body.Armor));
+
+                var characterBase = viewTemplate.GetComponentInChildren<Character>();
                 character.CopyEquipmentFrom(characterBase);
 
                 //Note UpdateBodyEquipmentModel does nothing for baked characters
                 IEnumerable<EquipmentEntity> ees = unitEntityData.Body.AllSlots.SelectMany(new Func<ItemSlot, IEnumerable<EquipmentEntity>>(unitEntityData.View.ExtractEquipmentEntities));
                 unitEntityData.View.CharacterAvatar.AddEquipmentEntities(ees, false);
-                try
-                {
-                    viewInstance.Destroy();
-                } catch(SystemException e)
-                {
-                    DebugLog(e.ToString());
-                    //Can't destroy: invalid state
-                    //TODO: figure out why viewInstance state is invalid
-                }
-
             }
         }
-        static void ChangeCompanionOutfit(UnitEntityView __instance)
+        static void ChangeCompanionOutfit(UnitEntityView __instance, CharacterSettings characterSettings)
         {
-            //TODO Remove Outfit and add new outfit
             /*
              * Note UpdateClassEquipment() works by removing the clothes of the old class, and loading the clothes of the new class
-             * We can't do that here because we do not have a list of the companion clothes
+             * We can't do that here because we do not have a list of the companion clothes.
              */
+            void FilterOutfit(string name)
+            {
+                __instance.CharacterAvatar.RemoveEquipmentEntities(
+                   __instance.CharacterAvatar.EquipmentEntities.Where((ee) => ee.name.Contains(name)).ToArray()
+                );
+            }
+            switch (__instance.EntityData.Blueprint.AssetGuid)
+            {
+                case "77c11edb92ce0fd408ad96b40fd27121": //"Linzi",
+                    FilterOutfit("Bard");
+                    break;
+                case "5455cd3cd375d7a459ca47ea9ff2de78": //"Tartuccio",
+                    FilterOutfit("Sorcerer");
+                    break;
+                case "54be53f0b35bf3c4592a97ae335fe765": //"Valerie",
+                    FilterOutfit("Fighter");
+                    break;
+                case "b3f29faef0a82b941af04f08ceb47fa2": //"Amiri",
+                    FilterOutfit("Barbarian");
+                    break;
+                case "aab03d0ab5262da498b32daa6a99b507": //"Harrim",
+                    FilterOutfit("Cleric");
+                    break;
+                case "32d2801eddf236b499d42e4a7d34de23": //"Jaethal",
+                    FilterOutfit("Inquistor");
+                    break;
+                case "b090918d7e9010a45b96465de7a104c3": //"Regongar",
+                    FilterOutfit("Magus");
+                    break;
+                case "f9161aa0b3f519c47acbce01f53ee217": //"Octavia",
+                    FilterOutfit("Wizard");
+                    break;
+                case "f6c23e93512e1b54dba11560446a9e02": //"Tristian",
+                    FilterOutfit("Cleric");
+                    break;
+                case "d5bc1d94cd3e5be4bbc03f3366f67afc": //"Ekundayo",
+                    FilterOutfit("Ranger");
+                    break;
+                case "3f5777b51d301524c9b912812955ee1e": //"Jubilost",
+                    FilterOutfit("Alchemist");
+                    break;
+                case "f9417988783876044b76f918f8636455": //"Nok-Nok",
+                    FilterOutfit("Rogue");
+                    break;
+            }
+            var _class = __instance.EntityData.Descriptor.Progression.GetEquipmentClass();
+            var gender = __instance.EntityData.Descriptor.Gender;
+            var race = __instance.EntityData.Descriptor.Progression.Race;
+            var ees = _class.LoadClothes(gender, race);
+            __instance.CharacterAvatar.AddEquipmentEntities(ees);
+            foreach(var ee in ees)
+            {
+                __instance.CharacterAvatar.SetPrimaryRampIndex(ee, characterSettings.companionPrimary);
+                __instance.CharacterAvatar.SetSecondaryRampIndex(ee, characterSettings.companionSecondary);
+            }
         }
         static void HideSlot(UnitEntityView __instance, ItemSlot slot, ref bool dirty)
         {
@@ -401,7 +471,7 @@ namespace VisualAdjustments
             dirty = true;
             return true;
         }
-        static void UpdateModel(UnitEntityView __instance)
+        public static void UpdateModel(UnitEntityView __instance)
         {
             if (__instance.CharacterAvatar == null) return;
             if (!__instance.EntityData.IsPlayerFaction) return;
@@ -410,7 +480,7 @@ namespace VisualAdjustments
             bool dirty = __instance.CharacterAvatar.IsDirty;
             if(__instance.EntityData.Descriptor.Doll == null && characterSettings.classOutfit != "Default")
             {
-                ChangeCompanionOutfit(__instance);
+                ChangeCompanionOutfit(__instance, characterSettings);
             }
             if (characterSettings.hideHelmet)
             {
@@ -511,7 +581,7 @@ namespace VisualAdjustments
                     }
                 }
             }
-            FixColors(__instance);
+            if(__instance.EntityData.Descriptor.Doll != null) FixColors(__instance);
             __instance.CharacterAvatar.IsDirty = dirty;                
         }
         /*

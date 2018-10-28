@@ -39,6 +39,8 @@ namespace VisualAdjustments
             public bool showInfo = false;
 #endif
             public string classOutfit = "Default";
+            public int companionPrimary = 0;
+            public int companionSecondary = 0;
 
         }
         public List<CharacterSettings> characterSettings = new List<CharacterSettings>();
