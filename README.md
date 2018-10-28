@@ -1,6 +1,9 @@
 # KingmakerVisualAdjustmentsMod
-Mod to remove backpacks, helmets, cloaks, armor and change class outfits for the Game Pathfinder Kingmaker.
-Currently hidden companion equipment will stay hidden until a save is reloaded.
+Mod to adjust character appearnce for the Game Pathfinder Kingmaker.
+* Change Class Outfit
+* Change Doll Features (Companions and prebuilt characters can only change outfit colors)
+* Hide Equipment (Backpacks, Hoods, Helemts, Inactive Weapons, etc)
+* Override Armor Appearance
 ## Install
 1. Download and install [Unity Mod Manager](https://www.nexusmods.com/site/mods/21)
 2. Download the [mod](https://github.com/spacehamster/KingmakerVisualAdjustmentsMod/releases)
