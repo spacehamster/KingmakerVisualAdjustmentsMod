@@ -7,6 +7,7 @@ using Kingmaker.Items.Slots;
 using Kingmaker.ResourceLinks;
 using Kingmaker.View.Equipment;
 using Kingmaker.Visual.CharacterSystem;
+using Kingmaker.Visual.Sound;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -26,6 +27,8 @@ namespace VisualAdjustments
         static bool loaded = false;
         static bool showWeapons = false;
         static bool showArmor = false;
+        static bool showAsks = false;
+        static bool showPortrait = false;
         static void AddLinks(EquipmentEntityLink[] links, string type, Race race, Gender gender)
         {
             foreach (var link in links)
@@ -97,6 +100,7 @@ namespace VisualAdjustments
         public static void ShowInfo(UnitEntityData unitEntityData)
         {
             if (!loaded) Init();
+            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
             if (GUILayout.Button("Rebuild Character"))
             {
                 Main.RebuildCharacter(unitEntityData);
@@ -137,12 +141,17 @@ namespace VisualAdjustments
             {
                 Main.UpdateModel(unitEntityData.View);
             }
+            GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
             showArmor = GUILayout.Toggle(showArmor, "Show Armor");
             showWeapons = GUILayout.Toggle(showWeapons, "Show Weapons");
+            showPortrait = GUILayout.Toggle(showPortrait, "Show Portrait");
+            showAsks = GUILayout.Toggle(showAsks, "Show Asks");
             GUILayout.EndHorizontal();
             if (showArmor) ShowArmorInfo(unitEntityData);
             if (showWeapons) ShowWeaponInfo(unitEntityData);
+            if (showPortrait) ShowPortraitInfo(unitEntityData);
+            if (showAsks) ShowAsksInfo(unitEntityData);
         }
         static void ShowArmorInfo(UnitEntityData unitEntityData)
         {
@@ -163,13 +172,6 @@ namespace VisualAdjustments
                 if (GUILayout.Button("Log Parts"))
                 {
                     LogEquipmentEntity(ee, settings.raceGenderCombos);
-                }
-                if (GUILayout.Button("Reload Equipment"))
-                {
-
-                    character.RemoveEquipmentEntity(ee);
-                    var eel = lookup[ee.name].eel;
-                    character.AddEquipmentEntity(eel.Load());
                 }
                 settings.expanded = GUILayout.Toggle(settings.expanded, "Expand", GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
@@ -198,6 +200,35 @@ namespace VisualAdjustments
                 }
             }
         }
+        static void ShowAsksInfo(UnitEntityData unitEntityData)
+        {
+            var asks = unitEntityData.Descriptor.Asks;
+            var customAsks = unitEntityData.Descriptor.CustomAsks;
+            var overrideAsks = unitEntityData.Descriptor.OverrideAsks;
+            GUILayout.Label($"Current Asks: {asks?.name}, Display: {asks?.DisplayName}");
+            GUILayout.Label($"Current CustomAsks: {customAsks?.name}, Display: {customAsks?.DisplayName}");
+            GUILayout.Label($"Current OverrideAsks: {overrideAsks?.name}, Display: {overrideAsks?.DisplayName}");
+            foreach (var blueprint in ResourcesLibrary.GetBlueprints<BlueprintUnitAsksList>())
+            {
+                GUILayout.Label($"Asks: {blueprint}, Display: {blueprint.DisplayName}");
+            }
+
+        }
+        static void ShowPortraitInfo(UnitEntityData unitEntityData)
+        {
+            var portrait = unitEntityData.Descriptor.Portrait;
+            var portraitBP = unitEntityData.Descriptor.UISettings.PortraitBlueprint;
+            var uiPortrait = unitEntityData.Descriptor.UISettings.Portrait;
+            var CustomPortrait = unitEntityData.Descriptor.UISettings.CustomPortrait;
+            GUILayout.Label($"Portrait Blueprint: {portraitBP}, {portraitBP?.name}");
+            GUILayout.Label($"Descriptor Portrait: {portrait}, isCustom {portrait?.IsCustom}");
+            GUILayout.Label($"UI Portrait: {portrait}, isCustom {portrait?.IsCustom}");
+            GUILayout.Label($"Custom Portrait: {portrait}, isCustom {portrait?.IsCustom}");
+            foreach (var blueprint in DollManager.Portrait.Values)
+            {
+                GUILayout.Label($"Portrait Blueprint: {blueprint}");
+            }
+        }
         static void ShowHandslotInfo(HandSlot handSlot)
         {
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
@@ -217,7 +248,7 @@ namespace VisualAdjustments
             }
             GUILayout.EndHorizontal();
         }
-        static void ShowUnitViewHandSlotData(UnitViewHandSlotData handData)
+            static void ShowUnitViewHandSlotData(UnitViewHandSlotData handData)
         {
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
             GUILayout.Label(string.Format("Primary {0} Item {1} Active {2}", handData, handData.VisibleItem.Name, handData.IsActiveSet), GUILayout.Width(300));

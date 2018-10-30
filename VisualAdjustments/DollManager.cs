@@ -4,6 +4,7 @@ using Kingmaker.Blueprints.Classes;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.ResourceLinks;
 using Kingmaker.UnitLogic.Class.LevelUp;
+using Kingmaker.Visual.Sound;
 using System;
 using System.Collections.Generic;
 
@@ -17,7 +18,25 @@ namespace VisualAdjustments
         static private Dictionary<string, EquipmentEntityLink> eyebrows = new Dictionary<string, EquipmentEntityLink>();
         static private Dictionary<string, EquipmentEntityLink> skin = new Dictionary<string, EquipmentEntityLink>();
         static private Dictionary<string, EquipmentEntityLink> classOutfits = new Dictionary<string, EquipmentEntityLink>();
+        static private SortedList<string, BlueprintPortrait> portraits = new SortedList<string, BlueprintPortrait>();
+        static private SortedList<string, BlueprintUnitAsksList> asks = new SortedList<string, BlueprintUnitAsksList>();
         static private Dictionary<string, DollState> characterDolls = new Dictionary<string, DollState>();
+        static public SortedList<string, BlueprintPortrait> Portrait
+        {
+            get
+            {
+                if (!loaded) Init();
+                return portraits;
+            }
+        }
+        static public SortedList<string, BlueprintUnitAsksList> Asks
+        {
+            get
+            {
+                if(!loaded) Init();
+                return asks;
+            }
+        }
         static private bool loaded = false;
         static private void AddLinks(Dictionary<string, EquipmentEntityLink> dict, EquipmentEntityLink[] links)
         {
@@ -60,6 +79,15 @@ namespace VisualAdjustments
                         AddLinks(classOutfits, _class.GetClothesLinks(gender, race.RaceId).ToArray());
                     }
                 }
+            }
+            foreach(var bp in ResourcesLibrary.GetBlueprints<BlueprintPortrait>())
+            {
+                //Note there are two wolf portraits
+                if(!portraits.ContainsKey(bp.name) && bp.name != "CustomPortrait") portraits.Add(bp.name, bp);
+            }
+            foreach (var bp in ResourcesLibrary.GetBlueprints<BlueprintUnitAsksList>())
+            {
+                if(bp.DisplayName != "" || bp.name == "PC_None_Barks") asks.Add(bp.name, bp);
             }
             loaded = true;
         }

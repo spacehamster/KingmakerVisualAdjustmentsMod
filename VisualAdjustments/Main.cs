@@ -20,6 +20,7 @@ using Kingmaker.ResourceLinks;
 using static VisualAdjustments.Settings;
 using Kingmaker.Items.Slots;
 using Kingmaker.View.Equipment;
+using Kingmaker.Visual.Sound;
 
 namespace VisualAdjustments
 {
@@ -203,9 +204,9 @@ namespace VisualAdjustments
             ChooseEquipment(unitEntityData, characterSettings.hideHelmet, "Hide Helmet", (value) => characterSettings.hideHelmet = value);
             ChooseEquipment(unitEntityData, characterSettings.hideEquipCloak, "Hide Equip Cloak", (value) => characterSettings.hideEquipCloak = value);
             ChooseEquipment(unitEntityData, characterSettings.hideArmor, "Hide Armor", (value) => characterSettings.hideArmor = value);
-            ChooseEquipment(unitEntityData, characterSettings.hideBoots, "Hide Boots", (value) => characterSettings.hideBoots = value);
             ChooseEquipment(unitEntityData, characterSettings.hideBracers, "Hide Bracers", (value) => characterSettings.hideBracers = value);
             ChooseEquipment(unitEntityData, characterSettings.hideGloves, "Hide Gloves", (value) => characterSettings.hideGloves = value);
+            ChooseEquipment(unitEntityData, characterSettings.hideBoots, "Hide Boots", (value) => characterSettings.hideBoots = value);
             ChooseWeapon(unitEntityData, characterSettings.hideWeapons, "Hide Inactive Weapons", (value) => characterSettings.hideWeapons = value);
         }
         static void ChooseEquipmentOverride(UnitEntityData unitEntityData, string name, SortedList<string, string> items, string currentItem, Action<string> setter)
@@ -264,6 +265,41 @@ namespace VisualAdjustments
                 RebuildCharacter(unitEntityData);
             }
         }
+        static void ChoosePortrait(UnitEntityData unitEntityData)
+        {
+            var key = unitEntityData.Descriptor.UISettings.PortraitBlueprint?.name;
+            var oldIndex = DollManager.Portrait.IndexOfKey(key != null ? key: "");
+            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+            GUILayout.Label("Portrait:  ", GUILayout.Width(300));
+            var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollManager.Portrait.Count, GUILayout.Width(300)), 0);
+            var value = newIndex >= 0 && newIndex < DollManager.Portrait.Count ? DollManager.Portrait.Values[newIndex] : null;
+            GUILayout.Label(" " + value, GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            if (newIndex != oldIndex && value != null)
+            {
+                unitEntityData.Descriptor.UISettings.SetPortrait(value);
+            }
+        }
+        static void ChooseAsks(UnitEntityData unitEntityData)
+        {
+            var oldIndex = DollManager.Asks.IndexOfKey(unitEntityData.Descriptor.CustomAsks.name);
+            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+            GUILayout.Label("Asks:  ", GUILayout.Width(300));
+            var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollManager.Asks.Count, GUILayout.Width(300)), 0);
+            var value = (newIndex >= 0 && newIndex < DollManager.Asks.Count) ? DollManager.Asks.Values[newIndex] : null;
+            GUILayout.Label(" " + value, GUILayout.ExpandWidth(false));
+            /*if (GUILayout.Button("Preview", GUILayout.ExpandWidth(false)))
+            {
+                var barks = value?.GetComponent<UnitAsksComponent>();
+                if (barks != null) barks.PlayPreview();
+                else DebugLog("Missing Backs");
+            }*/
+            GUILayout.EndHorizontal();
+            if (newIndex != oldIndex && value != null)
+            {
+                unitEntityData.Descriptor.CustomAsks = value;
+            }
+        }
         static void ChooseDoll(UnitEntityData unitEntityData)
         {
             var doll = DollManager.GetDoll(unitEntityData);
@@ -278,6 +314,9 @@ namespace VisualAdjustments
             ChooseEELRamp(unitEntityData, doll, doll.GetOutfitRampsPrimary(), doll.EquipmentRampIndex, "Primary Outfit Color", (int index) => doll.SetEquipColors(index, doll.EquipmentRampIndexSecondary));
             ChooseEELRamp(unitEntityData, doll, doll.GetOutfitRampsSecondary(), doll.EquipmentRampIndexSecondary, "Secondary Outfit Color", (int index) => doll.SetEquipColors(doll.EquipmentRampIndex, index));
             //ChooseEELRamp(unitEntityData, doll, (new int[] { 0, 1 }).ToList(), doll.LeftHanded ? 1 : 0, "Left Handed", (int value) => doll.SetLeftHanded(value > 0)); //TODO
+            ChoosePortrait(unitEntityData);
+            ChooseAsks(unitEntityData);
+           
         }
         static void ChooseCompanionColor(CharacterSettings characterSettings, UnitEntityData unitEntityData)
         {
