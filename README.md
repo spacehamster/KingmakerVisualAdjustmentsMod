@@ -1,8 +1,8 @@
 # KingmakerVisualAdjustmentsMod
-Mod to adjust character appearnce for the Game Pathfinder Kingmaker.
+Mod to adjust character appearance for the Game Pathfinder Kingmaker.
 * Change Class Outfit
 * Change Doll Features (Companions and prebuilt characters can only change outfit colors)
-* Hide Equipment (Backpacks, Hoods, Helemts, Inactive Weapons, etc)
+* Hide Equipment (Backpacks, Hoods, Helmets, Inactive Weapons, etc)
 * Override Armor Appearance
 ## Install
 1. Download and install [Unity Mod Manager](https://www.nexusmods.com/site/mods/21)
