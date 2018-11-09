@@ -21,6 +21,8 @@ using static VisualAdjustments.Settings;
 using Kingmaker.Items.Slots;
 using Kingmaker.View.Equipment;
 using Kingmaker.Visual.Sound;
+using Kingmaker.UI.Selection;
+using System.Threading.Tasks;
 
 namespace VisualAdjustments
 {
@@ -75,7 +77,8 @@ namespace VisualAdjustments
                 logger = modEntry.Logger;
             }
             catch (Exception e){
-                modEntry.Logger.Log(e.ToString());
+                modEntry.Logger.Log(e.ToString() + "\n" + e.StackTrace);
+                throw e;
             }
             return true;
         }
@@ -233,6 +236,73 @@ namespace VisualAdjustments
             ChooseEquipmentOverride(unitEntityData, "Override Bracers ", EquipmentManager.Bracers, characterSettings.overrideBracers, (string id) => characterSettings.overrideBracers = id);
             ChooseEquipmentOverride(unitEntityData, "Override Gloves ", EquipmentManager.Gloves, characterSettings.overrideGloves, (string id) => characterSettings.overrideGloves = id);
             ChooseEquipmentOverride(unitEntityData, "Override Boots ", EquipmentManager.Boots, characterSettings.overrideBoots, (string id) => characterSettings.overrideBoots = id);
+            GUILayout.BeginHorizontal();
+            ChooseEquipmentOverride(unitEntityData, "Override View ", EquipmentManager.Views, characterSettings.overrideView, 
+                (string id) => {
+                    characterSettings.overrideView = id;
+                    ReplaceView(unitEntityData, id);
+                    });
+            if (GUILayout.Button("PrevView"))
+            {
+                var currentIndex = EquipmentManager.Views.IndexOfKey(characterSettings.overrideView);
+                if (currentIndex == 0) return;
+                characterSettings.overrideView = EquipmentManager.Views.Keys[currentIndex - 1];
+                ReplaceView(unitEntityData, characterSettings.overrideView);
+            }
+            if (GUILayout.Button("NextView"))
+            {
+                var currentIndex = EquipmentManager.Views.IndexOfKey(characterSettings.overrideView);
+                if (currentIndex == EquipmentManager.Views.Count) return;
+                characterSettings.overrideView = EquipmentManager.Views.Keys[currentIndex + 1];
+                ReplaceView(unitEntityData, characterSettings.overrideView);
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Override Scale", GUILayout.Width(300));
+            var currentScale = Traverse.Create(unitEntityData.View).Field("m_Scale").GetValue<float>();
+            var originalScale = Traverse.Create(unitEntityData.View).Field("m_OriginalScale").GetValue<Vector3>();
+            var newScale = GUILayout.HorizontalSlider(currentScale, 0.1f, 5, GUILayout.Width(300));
+            Traverse.Create(unitEntityData.View).Field("m_Scale").SetValue(newScale);
+            unitEntityData.View.transform.localScale = originalScale * newScale;
+            var sizeDiff = Math.Log(1 / newScale, 0.66);
+            var size = unitEntityData.Descriptor.OriginalSize + (int)Math.Round(sizeDiff, 0);
+            
+            GUILayout.Label($" Scale {newScale} sizeChange {sizeDiff} sizeCategory {size}", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+        }
+        static void ReplaceView(UnitEntityData unit, string id)
+        {
+            var original = unit.View;
+            if (original == null) return;
+            UnitEntityView template;
+            if (id == null || id == "") {
+                template = unit.Blueprint.Prefab.Load();
+            } else
+            {
+                var templateUnit = ResourcesLibrary.TryGetBlueprint<BlueprintUnit>(id);
+                if (templateUnit == null) {
+                    Main.DebugLog("Unit is null " + id);
+                    return;
+                }
+                template = templateUnit.Prefab.Load();
+            }
+            var instance = UnityEngine.Object.Instantiate<UnitEntityView>(template).GetComponent<UnitEntityView>();
+            instance.UniqueId = unit.UniqueId;
+            
+            instance.transform.SetParent(original.transform.parent);
+            instance.transform.position = original.transform.position;
+            instance.transform.rotation = original.transform.rotation;
+            if (id != null && id != "") instance.DisableSizeScaling = true;
+            instance.Blueprint = unit.Blueprint;
+            unit.AttachToViewOnLoad(instance);
+            //base.Owner.Unit.Commands.InterruptAll((UnitCommand cmd) => !(cmd is UnitMoveTo));
+            SelectionManager selectionManager = Game.Instance.UI.SelectionManager;
+            if (selectionManager != null)
+            {
+                selectionManager.ForceCreateMarks();
+            }
+            UnityEngine.Object.Destroy(original.gameObject);
+
         }
         static void ChooseEEL(UnitEntityData unitEntityData, DollState doll, EquipmentEntityLink[] links, EquipmentEntityLink currentLink, string name, Action<EquipmentEntityLink> setter)
         {
@@ -394,7 +464,7 @@ namespace VisualAdjustments
         public static void RebuildCharacter(UnitEntityData unitEntityData)
         {
             var character = unitEntityData.View.CharacterAvatar;
-            if (unitEntityData.Descriptor.Doll != null)
+            if (unitEntityData.Descriptor.Doll != null && character != null)
             {
                 var doll = unitEntityData.Descriptor.Doll;
                 var savedEquipment = true;
@@ -510,118 +580,142 @@ namespace VisualAdjustments
             dirty = true;
             return true;
         }
-        public static void UpdateModel(UnitEntityView __instance)
+
+            public static void UpdateModel(UnitEntityView view)
         {
-            if (__instance.CharacterAvatar == null) return;
-            if (!__instance.EntityData.IsPlayerFaction) return;
-            Settings.CharacterSettings characterSettings = settings.characterSettings.FirstOrDefault((cs) => cs.characterName == __instance.EntityData.CharacterName);
+            if (view.CharacterAvatar == null) return;
+            if (!view.EntityData.IsPlayerFaction) return;
+            Settings.CharacterSettings characterSettings = settings.characterSettings.FirstOrDefault((cs) => cs.characterName == view.EntityData.CharacterName);
             if (characterSettings == null) return;            
-            bool dirty = __instance.CharacterAvatar.IsDirty;
-            if(__instance.EntityData.Descriptor.Doll == null && characterSettings.classOutfit != "Default")
+            bool dirty = view.CharacterAvatar.IsDirty;
+            if(view.EntityData.Descriptor.Doll == null && characterSettings.classOutfit != "Default")
             {
-                ChangeCompanionOutfit(__instance, characterSettings);
+                ChangeCompanionOutfit(view, characterSettings);
             }
             if (characterSettings.hideHelmet)
             {
-                HideSlot(__instance, __instance.EntityData.Body.Head, ref dirty);
+                HideSlot(view, view.EntityData.Body.Head, ref dirty);
             }
             if (characterSettings.hideEquipCloak)
             {
-                HideSlot(__instance, __instance.EntityData.Body.Shoulders, ref dirty);
+                HideSlot(view, view.EntityData.Body.Shoulders, ref dirty);
             }
             if (characterSettings.hideArmor)
             {
-                HideSlot(__instance, __instance.EntityData.Body.Armor, ref dirty);
+                HideSlot(view, view.EntityData.Body.Armor, ref dirty);
             }
             if (characterSettings.hideGloves)
             {
-                HideSlot(__instance, __instance.EntityData.Body.Gloves, ref dirty);
+                HideSlot(view, view.EntityData.Body.Gloves, ref dirty);
             }
             if (characterSettings.hideBracers)
             {
-                HideSlot(__instance, __instance.EntityData.Body.Wrist, ref dirty);
+                HideSlot(view, view.EntityData.Body.Wrist, ref dirty);
             }
             if (characterSettings.hideBoots)
             {
-                HideSlot(__instance, __instance.EntityData.Body.Feet, ref dirty);
+                HideSlot(view, view.EntityData.Body.Feet, ref dirty);
             }
             if(characterSettings.overrideHelm != "" && !characterSettings.hideHelmet)
             {
-                if (!OverrideEquipment(__instance, __instance.EntityData.Body.Head, characterSettings.overrideHelm, ref dirty))
+                if (!OverrideEquipment(view, view.EntityData.Body.Head, characterSettings.overrideHelm, ref dirty))
                 {
                     characterSettings.overrideHelm = "";
                 }
             }
             if (characterSettings.overrideCloak != "" && !characterSettings.hideEquipCloak)
             {
-                if (!OverrideEquipment(__instance, __instance.EntityData.Body.Shoulders, characterSettings.overrideCloak, ref dirty))
+                if (!OverrideEquipment(view, view.EntityData.Body.Shoulders, characterSettings.overrideCloak, ref dirty))
                 {
                     characterSettings.overrideCloak = "";
                 }
             }
             if (characterSettings.overrideArmor != "" && !characterSettings.hideArmor)
             {
-                if (!OverrideEquipment(__instance, __instance.EntityData.Body.Armor, characterSettings.overrideArmor, ref dirty))
+                if (!OverrideEquipment(view, view.EntityData.Body.Armor, characterSettings.overrideArmor, ref dirty))
                 {
                     characterSettings.overrideArmor = "";
                 }
             }
             if (characterSettings.overrideBracers != "" && !characterSettings.hideBracers)
             {
-                if (!OverrideEquipment(__instance, __instance.EntityData.Body.Wrist, characterSettings.overrideBracers, ref dirty))
+                if (!OverrideEquipment(view, view.EntityData.Body.Wrist, characterSettings.overrideBracers, ref dirty))
                 {
                     characterSettings.overrideBracers = "";
                 }
             }
             if (characterSettings.overrideGloves != "" && !characterSettings.hideGloves)
             {
-                if (!OverrideEquipment(__instance, __instance.EntityData.Body.Gloves, characterSettings.overrideGloves, ref dirty))
+                if (!OverrideEquipment(view, view.EntityData.Body.Gloves, characterSettings.overrideGloves, ref dirty))
                 {
                     characterSettings.overrideGloves = "";
                 }
             }
             if (characterSettings.overrideBoots != "" && !characterSettings.hideBoots)
             {
-                if (!OverrideEquipment(__instance, __instance.EntityData.Body.Feet, characterSettings.overrideBoots, ref dirty))
+                if (!OverrideEquipment(view, view.EntityData.Body.Feet, characterSettings.overrideBoots, ref dirty))
                 {
                     characterSettings.overrideBoots = "";
                 }
             }
             if (characterSettings.hideBackpack)
             {
-                foreach (var ee in __instance.CharacterAvatar.EquipmentEntities.ToArray())
+                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
                 {
                     if(ee.OutfitParts.Exists((outfit) => outfit.Special == EquipmentEntity.OutfitPartSpecialType.Backpack))
                     {
-                        __instance.CharacterAvatar.EquipmentEntities.Remove(ee);
+                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
                         dirty = true;
                     }
                 }
             }
             if (characterSettings.hideCloak)
             {
-                foreach (var ee in __instance.CharacterAvatar.EquipmentEntities.ToArray())
+                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
                 {
-                    if (ee.OutfitParts.Exists((outfit) => outfit.Special == EquipmentEntity.OutfitPartSpecialType.Cloak || outfit.Special == EquipmentEntity.OutfitPartSpecialType.CloakSquashed))
+                    if (ee.OutfitParts.Exists((outfit) => {
+                        return outfit.Special == EquipmentEntity.OutfitPartSpecialType.Cloak ||
+                            outfit.Special == EquipmentEntity.OutfitPartSpecialType.CloakSquashed;
+                        }) && !view.ExtractEquipmentEntities(view.EntityData.Body.Shoulders).Contains(ee))
                     {
-                        __instance.CharacterAvatar.EquipmentEntities.Remove(ee);
+                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
                         dirty = true;
                     }
                 }
             }
             if (characterSettings.hideCap)
             {
-                foreach (var ee in __instance.CharacterAvatar.EquipmentEntities.ToArray())
+                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
                 {
-                    if (ee.BodyParts.Exists((bodypart) => bodypart.Type == BodyPartType.Cap))
+                    if (ee.BodyParts.Exists((bodypart) => bodypart.Type == BodyPartType.Cap) &&
+                        !view.ExtractEquipmentEntities(view.EntityData.Body.Head).Contains(ee))
                     {
-                        __instance.CharacterAvatar.EquipmentEntities.Remove(ee);
+                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
                         dirty = true;
                     }
                 }
             }
-            if(__instance.EntityData.Descriptor.Doll != null) FixColors(__instance);
-            __instance.CharacterAvatar.IsDirty = dirty;                
+            if(view.EntityData.Descriptor.Doll != null) FixColors(view);
+            view.CharacterAvatar.IsDirty = dirty;                
+        }
+        static void DoReplaceView(UnitEntityData __instance)
+        {
+            if (!__instance.IsPlayerFaction) return;
+            if (!settingsLookup.ContainsKey(__instance.CharacterName)) return;
+            var characterSettings = settingsLookup[__instance.CharacterName];
+            if (characterSettings.overrideView == null || characterSettings.overrideView == "") return;
+            Main.DebugLog("Replacing View");
+            ReplaceView(__instance, characterSettings.overrideView);
+
+        }
+        [HarmonyPatch(typeof(UnitEntityData), "CreateView")]
+        static class UnitEntityData_CreateView_Patch
+        {
+            static void Postfix(UnitEntityData __instance)
+            {
+                Main.DebugLog("Creating View");
+                //Task.Delay(100).ContinueWith(t => DoReplaceView(__instance));
+            }
         }
         /*
          * Called by CheatsSilly.UpdatePartyNoArmor and OnDataAttached

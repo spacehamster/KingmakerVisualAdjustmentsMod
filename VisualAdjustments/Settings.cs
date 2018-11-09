@@ -33,6 +33,7 @@ namespace VisualAdjustments
             public string overrideBracers = "";
             public string overrideGloves = "";
             public string overrideBoots = "";
+            public string overrideView = "";
 
             public bool hideWeapons = false;
 #if (DEBUG)

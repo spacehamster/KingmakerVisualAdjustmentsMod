@@ -55,12 +55,21 @@ namespace VisualAdjustments
                 return m_Boots;
             }
         }
+        public static SortedList<string, string> Views
+        {
+            get
+            {
+                if (!loaded) Init();
+                return m_Views; ;
+            }
+        }
         private static SortedList<string, string> m_Helm = new SortedList<string, string>();
         private static SortedList<string, string> m_Cloak = new SortedList<string, string>();
         private static SortedList<string, string> m_Armor = new SortedList<string, string>();
         private static SortedList<string, string> m_Bracers = new SortedList<string, string>();
         private static SortedList<string, string> m_Gloves = new SortedList<string, string>();
         private static SortedList<string, string> m_Boots = new SortedList<string, string>();
+        private static SortedList<string, string> m_Views = new SortedList<string, string>();
         private static bool loaded = false;
         static void Init()
         {
@@ -97,6 +106,11 @@ namespace VisualAdjustments
                     default:
                         break;
                 }
+            }
+            var units = ResourcesLibrary.GetBlueprints<BlueprintUnit>();
+            foreach (var bp in units)
+            {
+                m_Views[bp.AssetGuid] = bp.name;
             }
             loaded = true;
         }
