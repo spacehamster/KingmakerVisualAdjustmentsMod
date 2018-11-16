@@ -21,6 +21,8 @@ using Kingmaker.View.Equipment;
 using Kingmaker.UI.Selection;
 using Kingmaker.Blueprints.Facts;
 using Kingmaker.UnitLogic.Buffs;
+using Kingmaker.UnitLogic.Commands.Base;
+using Kingmaker.UnitLogic.Commands;
 
 namespace VisualAdjustments
 {
@@ -278,17 +280,21 @@ namespace VisualAdjustments
         static void ReplaceView(UnitEntityData unit, string id)
         {
             var original = unit.View;
-            if (original == null) return;
+            foreach (Buff buff in unit.Buffs)
+            {
+                buff.ClearParticleEffect();
+            }
             UnitEntityView template = GetView(id);
             if(template == null) template = unit.Blueprint.Prefab.Load();
             var instance = UnityEngine.Object.Instantiate<UnitEntityView>(template).GetComponent<UnitEntityView>();
+            instance.UniqueId = unit.UniqueId;
             instance.transform.SetParent(original.transform.parent);
             instance.transform.position = original.transform.position;
             instance.transform.rotation = original.transform.rotation;
             if (id != null && id != "") instance.DisableSizeScaling = true;
             instance.Blueprint = unit.Blueprint;
             unit.AttachToViewOnLoad(instance);
-            //base.Owner.Unit.Commands.InterruptAll((UnitCommand cmd) => !(cmd is UnitMoveTo));
+            unit.Commands.InterruptAll((UnitCommand cmd) => !(cmd is UnitMoveTo));
             SelectionManager selectionManager = Game.Instance.UI.SelectionManager;
             if (selectionManager != null)
             {
@@ -710,7 +716,6 @@ namespace VisualAdjustments
                         }
                     }
                 }
-
                 UnitEntityView unitEntityView4 = GetView(characterSettings.overrideView);
                 if (unitEntityView4 == null)
                 {
