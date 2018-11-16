@@ -55,12 +55,12 @@ namespace VisualAdjustments
                 return m_Boots;
             }
         }
-        public static SortedList<string, string> Views
+        public static SortedList<string, string> Units
         {
             get
             {
                 if (!loaded) Init();
-                return m_Views; ;
+                return m_Units; ;
             }
         }
         private static SortedList<string, string> m_Helm = new SortedList<string, string>();
@@ -69,7 +69,7 @@ namespace VisualAdjustments
         private static SortedList<string, string> m_Bracers = new SortedList<string, string>();
         private static SortedList<string, string> m_Gloves = new SortedList<string, string>();
         private static SortedList<string, string> m_Boots = new SortedList<string, string>();
-        private static SortedList<string, string> m_Views = new SortedList<string, string>();
+        private static SortedList<string, string> m_Units = new SortedList<string, string>();
         private static bool loaded = false;
         static void Init()
         {
@@ -110,8 +110,16 @@ namespace VisualAdjustments
             var units = ResourcesLibrary.GetBlueprints<BlueprintUnit>();
             foreach (var bp in units)
             {
-                m_Views[bp.AssetGuid] = bp.name;
+                if (bp.Prefab.AssetId == "") continue;
+                m_Units[bp.Prefab.AssetId] = bp.name;
             }
+            /*foreach (var kv in ResourcesLibrary.LibraryObject.BlueprintsByAssetId)
+            {
+                var resource = ResourcesLibrary.TryGetResource<UnitEntityView>(kv.Key);
+                if (resource == null) continue;
+                m_Units[kv.Key] = resource.name;
+            }*/
+            Main.DebugLog($"Loaded {m_Units.Count}");
             loaded = true;
         }
     }

@@ -4,8 +4,6 @@ using UnityModManagerNet;
 using Kingmaker.Blueprints;
 using System.Reflection;
 using System;
-using Debug = System.Diagnostics.Debug;
-using System.Diagnostics;
 using System.Linq;
 using Kingmaker.Visual.CharacterSystem;
 using System.Collections.Generic;
@@ -20,9 +18,9 @@ using Kingmaker.ResourceLinks;
 using static VisualAdjustments.Settings;
 using Kingmaker.Items.Slots;
 using Kingmaker.View.Equipment;
-using Kingmaker.Visual.Sound;
 using Kingmaker.UI.Selection;
-using System.Threading.Tasks;
+using Kingmaker.Blueprints.Facts;
+using Kingmaker.UnitLogic.Buffs;
 
 namespace VisualAdjustments
 {
@@ -33,7 +31,6 @@ namespace VisualAdjustments
         [System.Diagnostics.Conditional("DEBUG")]
         public static void DebugLog(string msg)
         {
-            Debug.WriteLine(nameof(VisualAdjustments) + ": " + msg);
             if(logger != null) logger.Log(msg);
         }
         public static bool enabled;
@@ -61,8 +58,6 @@ namespace VisualAdjustments
         {
             try
             {
-                Debug.Listeners.Add(new TextWriterTraceListener("Mods/VisualAdjustments/VisualAdjustments.log"));
-                Debug.AutoFlush = true;
                 settings = UnityModManager.ModSettings.Load<Settings>(modEntry);
                 var harmony = HarmonyInstance.Create(modEntry.Info.Id);
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
@@ -73,11 +68,10 @@ namespace VisualAdjustments
                 modEntry.OnToggle = OnToggle;
                 modEntry.OnGUI = OnGUI;
                 modEntry.OnSaveGUI = OnSaveGUI;
-                modEntry.Logger.Log("Loaded VisualAdjustments");
                 logger = modEntry.Logger;
             }
             catch (Exception e){
-                modEntry.Logger.Log(e.ToString() + "\n" + e.StackTrace);
+                DebugLog(e.ToString() + "\n" + e.StackTrace);
                 throw e;
             }
             return true;
@@ -237,23 +231,29 @@ namespace VisualAdjustments
             ChooseEquipmentOverride(unitEntityData, "Override Gloves ", EquipmentManager.Gloves, characterSettings.overrideGloves, (string id) => characterSettings.overrideGloves = id);
             ChooseEquipmentOverride(unitEntityData, "Override Boots ", EquipmentManager.Boots, characterSettings.overrideBoots, (string id) => characterSettings.overrideBoots = id);
             GUILayout.BeginHorizontal();
-            ChooseEquipmentOverride(unitEntityData, "Override View ", EquipmentManager.Views, characterSettings.overrideView, 
+            ChooseEquipmentOverride(unitEntityData, "Override View ", EquipmentManager.Units, characterSettings.overrideView, 
                 (string id) => {
                     characterSettings.overrideView = id;
                     ReplaceView(unitEntityData, id);
                     });
             if (GUILayout.Button("PrevView"))
             {
-                var currentIndex = EquipmentManager.Views.IndexOfKey(characterSettings.overrideView);
-                if (currentIndex == 0) return;
-                characterSettings.overrideView = EquipmentManager.Views.Keys[currentIndex - 1];
+                var currentIndex = EquipmentManager.Units.IndexOfKey(characterSettings.overrideView);
+                if (currentIndex == 0)
+                {
+                    characterSettings.overrideView = "";
+                }
+                else
+                {
+                    characterSettings.overrideView = EquipmentManager.Units.Keys[currentIndex - 1];
+                }
                 ReplaceView(unitEntityData, characterSettings.overrideView);
             }
             if (GUILayout.Button("NextView"))
             {
-                var currentIndex = EquipmentManager.Views.IndexOfKey(characterSettings.overrideView);
-                if (currentIndex == EquipmentManager.Views.Count) return;
-                characterSettings.overrideView = EquipmentManager.Views.Keys[currentIndex + 1];
+                var currentIndex = EquipmentManager.Units.IndexOfKey(characterSettings.overrideView);
+                if (currentIndex == EquipmentManager.Units.Count) return;
+                characterSettings.overrideView = EquipmentManager.Units.Keys[currentIndex + 1];
                 ReplaceView(unitEntityData, characterSettings.overrideView);
             }
             GUILayout.EndHorizontal();
@@ -270,25 +270,18 @@ namespace VisualAdjustments
             GUILayout.Label($" Scale {newScale} sizeChange {sizeDiff} sizeCategory {size}", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
         }
+        static UnitEntityView GetView(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            return ResourcesLibrary.TryGetResource<UnitEntityView>(id);
+        }
         static void ReplaceView(UnitEntityData unit, string id)
         {
             var original = unit.View;
             if (original == null) return;
-            UnitEntityView template;
-            if (id == null || id == "") {
-                template = unit.Blueprint.Prefab.Load();
-            } else
-            {
-                var templateUnit = ResourcesLibrary.TryGetBlueprint<BlueprintUnit>(id);
-                if (templateUnit == null) {
-                    Main.DebugLog("Unit is null " + id);
-                    return;
-                }
-                template = templateUnit.Prefab.Load();
-            }
+            UnitEntityView template = GetView(id);
+            if(template == null) template = unit.Blueprint.Prefab.Load();
             var instance = UnityEngine.Object.Instantiate<UnitEntityView>(template).GetComponent<UnitEntityView>();
-            instance.UniqueId = unit.UniqueId;
-            
             instance.transform.SetParent(original.transform.parent);
             instance.transform.position = original.transform.position;
             instance.transform.rotation = original.transform.rotation;
@@ -302,8 +295,8 @@ namespace VisualAdjustments
                 selectionManager.ForceCreateMarks();
             }
             UnityEngine.Object.Destroy(original.gameObject);
-
         }
+
         static void ChooseEEL(UnitEntityData unitEntityData, DollState doll, EquipmentEntityLink[] links, EquipmentEntityLink currentLink, string name, Action<EquipmentEntityLink> setter)
         {
             if (links.Length == 0) return;
@@ -464,7 +457,8 @@ namespace VisualAdjustments
         public static void RebuildCharacter(UnitEntityData unitEntityData)
         {
             var character = unitEntityData.View.CharacterAvatar;
-            if (unitEntityData.Descriptor.Doll != null && character != null)
+            if (character == null) return; // Happens when overriding view
+            if (unitEntityData.Descriptor.Doll != null)
             {
                 var doll = unitEntityData.Descriptor.Doll;
                 var savedEquipment = true;
@@ -489,10 +483,8 @@ namespace VisualAdjustments
                 UnitEntityView viewTemplate = (!string.IsNullOrEmpty(unitEntityData.Descriptor.CustomPrefabGuid)) ? 
                     ResourcesLibrary.TryGetResource<UnitEntityView>(unitEntityData.Descriptor.CustomPrefabGuid) :
                     unitEntityData.Blueprint.Prefab.Load();
-
                 var characterBase = viewTemplate.GetComponentInChildren<Character>();
                 character.CopyEquipmentFrom(characterBase);
-
                 //Note UpdateBodyEquipmentModel does nothing for baked characters
                 IEnumerable<EquipmentEntity> ees = unitEntityData.Body.AllSlots.SelectMany(new Func<ItemSlot, IEnumerable<EquipmentEntity>>(unitEntityData.View.ExtractEquipmentEntities));
                 unitEntityData.View.CharacterAvatar.AddEquipmentEntities(ees, false);
@@ -580,8 +572,7 @@ namespace VisualAdjustments
             dirty = true;
             return true;
         }
-
-            public static void UpdateModel(UnitEntityView view)
+        public static void UpdateModel(UnitEntityView view)
         {
             if (view.CharacterAvatar == null) return;
             if (!view.EntityData.IsPlayerFaction) return;
@@ -698,23 +689,37 @@ namespace VisualAdjustments
             if(view.EntityData.Descriptor.Doll != null) FixColors(view);
             view.CharacterAvatar.IsDirty = dirty;                
         }
-        static void DoReplaceView(UnitEntityData __instance)
-        {
-            if (!__instance.IsPlayerFaction) return;
-            if (!settingsLookup.ContainsKey(__instance.CharacterName)) return;
-            var characterSettings = settingsLookup[__instance.CharacterName];
-            if (characterSettings.overrideView == null || characterSettings.overrideView == "") return;
-            Main.DebugLog("Replacing View");
-            ReplaceView(__instance, characterSettings.overrideView);
-
-        }
         [HarmonyPatch(typeof(UnitEntityData), "CreateView")]
         static class UnitEntityData_CreateView_Patch
         {
-            static void Postfix(UnitEntityData __instance)
+            static bool Prefix(UnitEntityData __instance, ref UnitEntityView __result)
             {
-                Main.DebugLog("Creating View");
-                //Task.Delay(100).ContinueWith(t => DoReplaceView(__instance));
+                if (!enabled) return true;
+                if (!__instance.IsPlayerFaction) return true; ;
+                if (!settingsLookup.ContainsKey(__instance.CharacterName)) return true;
+                var characterSettings = settingsLookup[__instance.CharacterName];
+                if (characterSettings.overrideView == null || characterSettings.overrideView == "") return true;
+                foreach (Fact fact in __instance.Buffs.RawFacts)
+                {
+                    if (fact.Active && !fact.Deactivating)
+                    {
+                        Buff buff = (Buff)fact;
+                        if (buff.Get<Polymorph>() != null)
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                UnitEntityView unitEntityView4 = GetView(characterSettings.overrideView);
+                if (unitEntityView4 == null)
+                {
+                    DebugLog("Overriding invalid view " + characterSettings.overrideView);
+                    return true;
+                }
+                Quaternion rotation2 = (!unitEntityView4.ForbidRotation) ? Quaternion.Euler(0f, __instance.Orientation, 0f) : Quaternion.identity;
+                __result = UnityEngine.Object.Instantiate<UnitEntityView>(unitEntityView4, __instance.Position, rotation2);
+                return false;
             }
         }
         /*

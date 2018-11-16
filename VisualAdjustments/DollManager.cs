@@ -5,7 +5,6 @@ using Kingmaker.EntitySystem.Entities;
 using Kingmaker.ResourceLinks;
 using Kingmaker.UnitLogic.Class.LevelUp;
 using Kingmaker.Visual.Sound;
-using System;
 using System.Collections.Generic;
 
 namespace VisualAdjustments

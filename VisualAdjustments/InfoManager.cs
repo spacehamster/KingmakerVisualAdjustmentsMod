@@ -7,11 +7,12 @@ using Kingmaker.Items.Slots;
 using Kingmaker.ResourceLinks;
 using Kingmaker.View.Equipment;
 using Kingmaker.Visual.CharacterSystem;
+using Kingmaker.Visual.Decals;
+using Kingmaker.Visual.Particles;
 using Kingmaker.Visual.Sound;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using VisualAdjustments;
 namespace VisualAdjustments
 {
     public class InfoManager
@@ -27,6 +28,7 @@ namespace VisualAdjustments
         static bool loaded = false;
         static bool showWeapons = false;
         static bool showArmor = false;
+        static bool showFx = false;
         static bool showAsks = false;
         static bool showPortrait = false;
         static void AddLinks(EquipmentEntityLink[] links, string type, Race race, Gender gender)
@@ -141,17 +143,21 @@ namespace VisualAdjustments
             {
                 Main.UpdateModel(unitEntityData.View);
             }
+
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
             showArmor = GUILayout.Toggle(showArmor, "Show Armor");
             showWeapons = GUILayout.Toggle(showWeapons, "Show Weapons");
+            showFx = GUILayout.Toggle(showFx, "Show FX");
             showPortrait = GUILayout.Toggle(showPortrait, "Show Portrait");
             showAsks = GUILayout.Toggle(showAsks, "Show Asks");
             GUILayout.EndHorizontal();
             if (showArmor) ShowArmorInfo(unitEntityData);
             if (showWeapons) ShowWeaponInfo(unitEntityData);
+            if (showFx) ShowFxInfo(unitEntityData);
             if (showPortrait) ShowPortraitInfo(unitEntityData);
             if (showAsks) ShowAsksInfo(unitEntityData);
+
         }
         static void ShowArmorInfo(UnitEntityData unitEntityData)
         {
@@ -180,7 +186,7 @@ namespace VisualAdjustments
                     foreach (var bodypart in ee.BodyParts.ToArray())
                     {
                         GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-                        GUILayout.Label(String.Format(" BP {0}:{1}", bodypart.ToString(), bodypart.Type), GUILayout.ExpandWidth(false));
+                        GUILayout.Label(String.Format(" BP {0}:{1}", bodypart.RendererPrefab.name, bodypart.Type), GUILayout.ExpandWidth(false));
                         if (GUILayout.Button("Remove"))
                         {
                             ee.BodyParts.Remove(bodypart);
@@ -190,7 +196,8 @@ namespace VisualAdjustments
                     foreach (var outfitpart in ee.OutfitParts.ToArray())
                     {
                         GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-                        GUILayout.Label(String.Format(" OP {0}:{1}", outfitpart.ToString(), outfitpart.Special), GUILayout.ExpandWidth(false));
+                        var prefab = Traverse.Create(outfitpart).Field("m_Prefab").GetValue<GameObject>();
+                        GUILayout.Label(String.Format(" OP {0}:{1}", prefab?.name, outfitpart.Special), GUILayout.ExpandWidth(false));
                         if (GUILayout.Button("Remove"))
                         {
                             ee.OutfitParts.Remove(outfitpart);
@@ -232,16 +239,17 @@ namespace VisualAdjustments
         static void ShowHandslotInfo(HandSlot handSlot)
         {
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-            var pItem = handSlot.HasItem ? handSlot.Item : null;
-            GUILayout.Label(string.Format("Primary {0}, {1}, hasWeapon {2}, hasShield {3}, Active {4}", handSlot, pItem?.Name, handSlot.HasWeapon, handSlot.HasShield, handSlot.Active), GUILayout.Width(300));
-            if (GUILayout.Button("Active"))
+            var pItem = handSlot != null && handSlot.HasItem ? handSlot.Item : null;
+            GUILayout.Label(string.Format("Slot {0}, {1}, Active {2}", 
+                pItem?.Name, pItem?.GetType(), handSlot?.Active), GUILayout.Width(500));
+            /*if (GUILayout.Button("Active"))
             {
                 Traverse.Create(handSlot).Property("Active").SetValue(!handSlot.Active);
             }
             if (GUILayout.Button("Disabled"))
             {
                 Traverse.Create(handSlot).Property("Disabled").SetValue(!handSlot.Disabled);
-            }
+            }*/
             if (GUILayout.Button("Remove"))
             {
                 handSlot.RemoveItem();
@@ -251,16 +259,23 @@ namespace VisualAdjustments
             static void ShowUnitViewHandSlotData(UnitViewHandSlotData handData)
         {
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-            GUILayout.Label(string.Format("Primary {0} Item {1} Active {2}", handData, handData.VisibleItem.Name, handData.IsActiveSet), GUILayout.Width(300));
+            
+            GUILayout.Label(string.Format("Data {0} Slot {1} Active {2}", handData?.VisibleItem?.Name, handData?.VisualSlot, handData?.IsActiveSet), GUILayout.Width(500));
             if (GUILayout.Button("Unequip"))
             {
                 handData.Unequip();
             }
-            if (GUILayout.Button("ShowItem False"))
+            if (GUILayout.Button("Swap Slot"))
+            {
+                handData.VisualSlot += 1;
+                if(handData.VisualSlot == UnitEquipmentVisualSlotType.Quiver) handData.VisualSlot = 0;
+                handData.Owner.View.HandsEquipment.UpdateAll();
+            }
+            if (GUILayout.Button("ShowItem 0"))
             {
                 handData.ShowItem(false);
             }
-            if (GUILayout.Button("ShowItem True"))
+            if (GUILayout.Button("ShowItem 1"))
             {
                 handData.ShowItem(true);
             }
@@ -292,6 +307,42 @@ namespace VisualAdjustments
                 Main.DebugLog(string.Format("\t\toutfitpart: {0}:{1}:{2}", outfitpart.ToString(), outfitpart.Special, go));
             }
             //Main.DebugLog(JsonUtility.ToJson(ee));
+        }
+        //Refer FxHelper.SpawnFxOnGameObject
+        static void ShowFxInfo(UnitEntityData unitEntityData)
+        {
+            GUILayout.Label("Global");
+            for (int i = FxHelper.FxRoot.childCount - 1; i >= 0; i--)
+            {
+                var fx = FxHelper.FxRoot.GetChild(i);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("FX: " + fx.name, GUILayout.Width(400));
+                if (GUILayout.Button("Destroy"))
+                {
+                    GameObject.Destroy(fx.gameObject);
+                }
+                GUILayout.EndHorizontal();
+            }
+
+            var spawnOnStart = unitEntityData.View.GetComponent<SpawnFxOnStart>();
+            if (spawnOnStart)
+            {
+                GUILayout.Label("Spawn on Start");
+                GUILayout.Label("FxOnStart " + spawnOnStart.FxOnStart?.Load()?.name, GUILayout.Width(400));
+                GUILayout.Label("FXFxOnDeath " + spawnOnStart.FxOnStart?.Load()?.name, GUILayout.Width(400));
+            }
+            GUILayout.Label("Decals");
+            var decals = Traverse.Create(unitEntityData.View).Field("m_Decals").GetValue<List<FxDecal>>();
+            for (int i = decals.Count - 1; i >= 0; i--)
+            {
+                var decal = decals[i];
+                GUILayout.Label("Decal: " + decal.name, GUILayout.Width(400));
+                if (GUILayout.Button("Destroy"))
+                {
+                    GameObject.Destroy(decal.gameObject);
+                    decals.RemoveAt(i);
+                }
+            }
         }
     }
 }
