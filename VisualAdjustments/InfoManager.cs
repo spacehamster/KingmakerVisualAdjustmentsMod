@@ -2,9 +2,11 @@ using Harmony12;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.CharGen;
 using Kingmaker.Blueprints.Classes;
+using Kingmaker.Designers;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Items.Slots;
 using Kingmaker.ResourceLinks;
+using Kingmaker.UnitLogic.Buffs.Blueprints;
 using Kingmaker.View.Equipment;
 using Kingmaker.Visual.CharacterSystem;
 using Kingmaker.Visual.Decals;
@@ -12,6 +14,7 @@ using Kingmaker.Visual.Particles;
 using Kingmaker.Visual.Sound;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 namespace VisualAdjustments
 {
@@ -25,11 +28,14 @@ namespace VisualAdjustments
             public bool expanded = false;
         }
         static readonly Dictionary<string, EquipmentEntityInfo> lookup = new Dictionary<string, EquipmentEntityInfo>();
+        static BlueprintBuff[] blueprintBuffs = new BlueprintBuff[] { };
         static bool loaded = false;
         static bool showWeapons = false;
         static bool showArmor = false;
+        static bool showBuffs = false;
         static bool showFx = false;
         static bool showAsks = false;
+        static bool showDoll = false;
         static bool showPortrait = false;
         static void AddLinks(EquipmentEntityLink[] links, string type, Race race, Gender gender)
         {
@@ -97,6 +103,7 @@ namespace VisualAdjustments
                     }
                 }
             }
+            blueprintBuffs = ResourcesLibrary.GetBlueprints<BlueprintBuff>().ToArray();
             loaded = true;
         }
         public static void ShowInfo(UnitEntityData unitEntityData)
@@ -148,12 +155,17 @@ namespace VisualAdjustments
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
             showArmor = GUILayout.Toggle(showArmor, "Show Armor");
             showWeapons = GUILayout.Toggle(showWeapons, "Show Weapons");
+            showDoll = GUILayout.Toggle(showDoll, "Show Doll");
+            showBuffs = GUILayout.Toggle(showBuffs, "Show Buffs");
             showFx = GUILayout.Toggle(showFx, "Show FX");
             showPortrait = GUILayout.Toggle(showPortrait, "Show Portrait");
             showAsks = GUILayout.Toggle(showAsks, "Show Asks");
+
             GUILayout.EndHorizontal();
             if (showArmor) ShowArmorInfo(unitEntityData);
             if (showWeapons) ShowWeaponInfo(unitEntityData);
+            if (showDoll) ShowDollInfo(unitEntityData);
+            if (showBuffs) ShowBuffInfo(unitEntityData);
             if (showFx) ShowFxInfo(unitEntityData);
             if (showPortrait) ShowPortraitInfo(unitEntityData);
             if (showAsks) ShowAsksInfo(unitEntityData);
@@ -174,10 +186,6 @@ namespace VisualAdjustments
                 if (GUILayout.Button("Remove"))
                 {
                     character.RemoveEquipmentEntity(ee);
-                }
-                if (GUILayout.Button("Log Parts"))
-                {
-                    LogEquipmentEntity(ee, settings.raceGenderCombos);
                 }
                 settings.expanded = GUILayout.Toggle(settings.expanded, "Expand", GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
@@ -293,23 +301,59 @@ namespace VisualAdjustments
                 ShowUnitViewHandSlotData(kv.Value.OffHand);
             }
         }
-        static void LogEquipmentEntity(EquipmentEntity ee, string raceGenderCombo)
+        static int buffIndex = 0;
+        static void ShowBuffInfo(UnitEntityData unitEntityData)
         {
-            Main.DebugLog(string.Format("\tee: {0}", ee.name, raceGenderCombo));
-            foreach (var bodypart in ee.BodyParts)
+            GUILayout.BeginHorizontal();
+            buffIndex = (int)GUILayout.HorizontalSlider(buffIndex, 0, blueprintBuffs.Length - 1, GUILayout.Width(300));
+            if(GUILayout.Button("Prev", GUILayout.Width(45)))
             {
-                var renderer = bodypart.SkinnedRenderer;
-                Main.DebugLog(string.Format("\t\tbodypart: {0}:{1}:{2}", bodypart.ToString(), bodypart.Type, renderer?.ToString()));
+                buffIndex = buffIndex == 0 ? 0 : buffIndex - 1;
             }
-            foreach (var outfitpart in ee.OutfitParts)
+            if (GUILayout.Button("Next", GUILayout.Width(45)))
             {
-                var go = Traverse.Create(outfitpart).Field("m_Prefab").GetValue<GameObject>();
-                Main.DebugLog(string.Format("\t\toutfitpart: {0}:{1}:{2}", outfitpart.ToString(), outfitpart.Special, go));
+                buffIndex = buffIndex >= blueprintBuffs.Length - 1 ? blueprintBuffs.Length - 1 : buffIndex + 1;
             }
-            //Main.DebugLog(JsonUtility.ToJson(ee));
+            GUILayout.Label($"{blueprintBuffs[buffIndex].Name}, {blueprintBuffs[buffIndex].name}");
+            if (GUILayout.Button("Apply"))
+            {
+                GameHelper.ApplyBuff(unitEntityData, blueprintBuffs[buffIndex]);
+            }
+            GUILayout.EndHorizontal();
+            foreach(var buff in unitEntityData.Buffs)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"{buff.Blueprint.name}, {buff.Name}");
+                if (GUILayout.Button("Remove"))
+                {
+                    GameHelper.RemoveBuff(unitEntityData, buff.Blueprint);   
+                }
+                GUILayout.EndHorizontal();
+            }
         }
-        //Refer FxHelper.SpawnFxOnGameObject
-        static void ShowFxInfo(UnitEntityData unitEntityData)
+        static void ShowDollInfo(UnitEntityData unitEntityData)
+        {
+            var doll = unitEntityData.Descriptor.Doll;
+            if(doll == null)
+            {
+                GUILayout.Label("No Doll");
+                return;
+            }
+            GUILayout.Label("Indices");
+            foreach(var kv in doll.EntityRampIdices)
+            {
+                var ee = ResourcesLibrary.TryGetResource<EquipmentEntity>(kv.Key);
+                GUILayout.Label($"{kv.Key} - {ee?.name} - {kv.Value}");
+            }
+            GUILayout.Label("EquipmentEntities");
+            foreach (var id in doll.EquipmentEntityIds)
+            {
+                var ee = ResourcesLibrary.TryGetResource<EquipmentEntity>(id);
+                GUILayout.Label($"{id} - {ee?.name}");
+            }
+        }
+            //Refer FxHelper.SpawnFxOnGameObject
+            static void ShowFxInfo(UnitEntityData unitEntityData)
         {
             GUILayout.Label("Global");
             for (int i = FxHelper.FxRoot.childCount - 1; i >= 0; i--)

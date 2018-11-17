@@ -346,14 +346,14 @@ namespace VisualAdjustments
             };
             ChooseToggle("Hide Cap", ref characterSettings.hideCap, onHideEquipment);
             ChooseToggle("Hide Backpack", ref characterSettings.hideBackpack, onHideEquipment);
-            ChooseToggle("Hide Cloaks", ref characterSettings.hideCloak, onHideEquipment);
+            ChooseToggle("Hide Class Cloak", ref characterSettings.hideClassCloak, onHideEquipment);
             ChooseToggle("Hide Helmet", ref characterSettings.hideHelmet, onHideEquipment);
-            ChooseToggle("Hide Equip Cloak", ref characterSettings.hideEquipCloak, onHideEquipment);
+            ChooseToggle("Hide Item Cloak", ref characterSettings.hideItemCloak, onHideEquipment);
             ChooseToggle("Hide Armor", ref characterSettings.hideArmor, onHideEquipment);
             ChooseToggle("Hide Bracers", ref characterSettings.hideBracers, onHideEquipment);
             ChooseToggle("Hide Gloves", ref characterSettings.hideGloves, onHideEquipment);
             ChooseToggle("Hide Boots", ref characterSettings.hideBoots, onHideEquipment);
-            ChooseToggle("Hide Inactive Weapons", ref characterSettings.hideBoots, onHideWeapon);
+            ChooseToggle("Hide Inactive Weapons", ref characterSettings.hideWeapons, onHideWeapon);
         }
         static void ChooseSlider(string name, SortedList<string, string> items, ref string currentItem, Action onChoose)
         {

@@ -188,6 +188,16 @@ namespace VisualAdjustments
             dirty = true;
             return true;
         }
+        static void FixRangerCloak(UnitEntityView view)
+        {
+            foreach(var ee in view.CharacterAvatar.EquipmentEntities)
+            {
+                if(ee.name == "EE_Ranger_M_Cape")
+                {
+                    ee.HideBodyParts &= ~(BodyPartType.Hair | BodyPartType.Hair2);
+                }
+            }
+        }
         public static void UpdateModel(UnitEntityView view)
         {
             if (view.CharacterAvatar == null) return;
@@ -203,7 +213,7 @@ namespace VisualAdjustments
             {
                 HideSlot(view, view.EntityData.Body.Head, ref dirty);
             }
-            if (characterSettings.hideEquipCloak)
+            if (characterSettings.hideItemCloak)
             {
                 HideSlot(view, view.EntityData.Body.Shoulders, ref dirty);
             }
@@ -230,7 +240,7 @@ namespace VisualAdjustments
                     characterSettings.overrideHelm = "";
                 }
             }
-            if (characterSettings.overrideCloak != "" && !characterSettings.hideEquipCloak)
+            if (characterSettings.overrideCloak != "" && !characterSettings.hideItemCloak)
             {
                 if (!OverrideEquipment(view, view.EntityData.Body.Shoulders, characterSettings.overrideCloak, ref dirty))
                 {
@@ -276,7 +286,7 @@ namespace VisualAdjustments
                     }
                 }
             }
-            if (characterSettings.hideCloak)
+            if (characterSettings.hideClassCloak)
             {
                 foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
                 {
@@ -301,6 +311,10 @@ namespace VisualAdjustments
                         dirty = true;
                     }
                 }
+            }
+            if (view.EntityData.Descriptor.Progression.GetEquipmentClass().Name == "Ranger")
+            {
+                FixRangerCloak(view);
             }
             if (view.EntityData.Descriptor.Doll != null) FixColors(view);
             view.CharacterAvatar.IsDirty = dirty;
