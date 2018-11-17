@@ -5,7 +5,7 @@ using static Kingmaker.UI.Common.ItemsFilter;
 
 namespace VisualAdjustments
 {
-    public class EquipmentManager
+    public class EquipmentResourcesManager
     {
         public static SortedList<string, string> Helm
         {

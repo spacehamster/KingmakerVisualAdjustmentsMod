@@ -105,7 +105,7 @@ namespace VisualAdjustments
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
             if (GUILayout.Button("Rebuild Character"))
             {
-                Main.RebuildCharacter(unitEntityData);
+                CharacterManager.RebuildCharacter(unitEntityData);
             }
             if (GUILayout.Button("Rebuild Outfit"))
             {
@@ -141,7 +141,7 @@ namespace VisualAdjustments
             }
             if (GUILayout.Button("Update Model"))
             {
-                Main.UpdateModel(unitEntityData.View);
+                CharacterManager.UpdateModel(unitEntityData.View);
             }
 
             GUILayout.EndHorizontal();
@@ -231,7 +231,7 @@ namespace VisualAdjustments
             GUILayout.Label($"Descriptor Portrait: {portrait}, isCustom {portrait?.IsCustom}");
             GUILayout.Label($"UI Portrait: {portrait}, isCustom {portrait?.IsCustom}");
             GUILayout.Label($"Custom Portrait: {portrait}, isCustom {portrait?.IsCustom}");
-            foreach (var blueprint in DollManager.Portrait.Values)
+            foreach (var blueprint in DollResourcesManager.Portrait.Values)
             {
                 GUILayout.Label($"Portrait Blueprint: {blueprint}");
             }
