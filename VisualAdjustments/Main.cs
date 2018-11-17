@@ -5,24 +5,13 @@ using Kingmaker.Blueprints;
 using System.Reflection;
 using System;
 using System.Linq;
-using Kingmaker.Visual.CharacterSystem;
 using System.Collections.Generic;
-using Kingmaker.Blueprints.Classes;
 using Kingmaker;
 using Kingmaker.EntitySystem.Entities;
-using Kingmaker.View;
-using Kingmaker.UnitLogic;
 using Kingmaker.UnitLogic.Class.LevelUp;
 using Kingmaker.Blueprints.CharGen;
 using Kingmaker.ResourceLinks;
 using static VisualAdjustments.Settings;
-using Kingmaker.Items.Slots;
-using Kingmaker.View.Equipment;
-using Kingmaker.UI.Selection;
-using Kingmaker.Blueprints.Facts;
-using Kingmaker.UnitLogic.Buffs;
-using Kingmaker.UnitLogic.Commands.Base;
-using Kingmaker.UnitLogic.Commands;
 using Kingmaker.PubSubSystem;
 using Kingmaker.Visual.Sound;
 
@@ -373,7 +362,7 @@ namespace VisualAdjustments
             GUILayout.Label(name + " ", GUILayout.Width(300));
             var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, -1, items.Count - 1, GUILayout.Width(300)), 0);
             var displayText = newIndex == -1 ? "None" : items.Values[newIndex];
-            GUILayout.Label(" " + displayText, GUILayout.ExpandWidth(false));
+            GUILayout.Label(" " + displayText, GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
             if (currentIndex != newIndex)
             {
@@ -397,7 +386,7 @@ namespace VisualAdjustments
             ChooseSlider("Override Boots ", EquipmentResourcesManager.Boots, ref characterSettings.overrideBoots, onEquipment);
             GUILayout.BeginHorizontal();
             ChooseSlider("Override View", EquipmentResourcesManager.Units, ref characterSettings.overrideView, onView);
-            if (GUILayout.Button("PrevView"))
+            if (GUILayout.Button("Prev", GUILayout.Width(45)))
             {
                 var currentIndex = EquipmentResourcesManager.Units.IndexOfKey(characterSettings.overrideView);
                 if (currentIndex == 0)
@@ -410,7 +399,7 @@ namespace VisualAdjustments
                 }
                 ViewManager.ReplaceView(unitEntityData, characterSettings.overrideView);
             }
-            if (GUILayout.Button("NextView"))
+            if (GUILayout.Button("Next", GUILayout.Width(45)))
             {
                 var currentIndex = EquipmentResourcesManager.Units.IndexOfKey(characterSettings.overrideView);
                 if (currentIndex == EquipmentResourcesManager.Units.Count) return;
