@@ -56,9 +56,9 @@ namespace VisualAdjustments
             static bool Prefix(UnitEntityData __instance, ref UnitEntityView __result)
             {
                 if (!Main.enabled) return true;
-                if (!__instance.IsPlayerFaction) return true; ;
-                if (!Main.settingsLookup.ContainsKey(__instance.CharacterName)) return true;
-                var characterSettings = Main.settingsLookup[__instance.CharacterName];
+                if (!__instance.IsPlayerFaction) return true;
+                var characterSettings = Main.settings.GetCharacterSettings(__instance);
+                if (characterSettings == null) return true;
                 if (characterSettings.overrideView == null || characterSettings.overrideView == "") return true;
                 foreach (Fact fact in __instance.Buffs.RawFacts)
                 {

@@ -1,5 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using Kingmaker.EntitySystem.Entities;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using UnityModManagerNet;
+using static UnityModManagerNet.UnityModManager;
 
 namespace VisualAdjustments
 {
@@ -30,6 +35,7 @@ namespace VisualAdjustments
             public string overrideGloves = "";
             public string overrideBoots = "";
             public string overrideView = "";
+            public Dictionary<string, string> overrideWeapons = new Dictionary<string, string>();
 
             public bool hideWeapons = false;
 #if (DEBUG)
@@ -40,10 +46,47 @@ namespace VisualAdjustments
             public int companionSecondary = 0;
 
         }
-        public List<CharacterSettings> characterSettings = new List<CharacterSettings>();
+        public Dictionary<string, CharacterSettings> characterSettings = new Dictionary<string, CharacterSettings>();
         public override void Save(UnityModManager.ModEntry modEntry)
         {
-            Save(this, modEntry);
+            var filepath = Path.Combine(modEntry.Path, "Settings.json");
+            try {
+                JsonSerializer serializer = new JsonSerializer();
+#if (DEBUG)
+                serializer.Formatting = Formatting.Indented;
+#endif
+                using (StreamWriter sw = new StreamWriter(filepath))
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
+                    serializer.Serialize(writer, this);
+                }
+            } catch (Exception ex)
+            {
+                modEntry.Logger.Error($"Can't save {filepath}.");
+                modEntry.Logger.Error(ex.ToString());
+            }
+        }
+        public CharacterSettings GetCharacterSettings(UnitEntityData unitEntityData) {
+            characterSettings.TryGetValue(unitEntityData.UniqueId, out CharacterSettings result);
+            return result;
+        }
+        public static Settings Load(ModEntry modEntry)
+        {
+            var filepath = Path.Combine(modEntry.Path, "Settings.json");
+            if (File.Exists(filepath))
+            {
+                try
+                {
+                    Settings result = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(filepath));
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    modEntry.Logger.Error($"Can't read {filepath}.");
+                    modEntry.Logger.Error(ex.ToString());
+                }
+            }
+            return new Settings();
         }
     }
 }

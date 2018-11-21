@@ -202,7 +202,9 @@ namespace VisualAdjustments
         {
             if (view.CharacterAvatar == null) return;
             if (!view.EntityData.IsPlayerFaction) return;
-            Settings.CharacterSettings characterSettings = Main.settings.characterSettings.FirstOrDefault((cs) => cs.characterName == view.EntityData.CharacterName);
+
+            Settings.CharacterSettings characterSettings;
+            Main.settings.characterSettings.TryGetValue(view.EntityData.CharacterName, out characterSettings);
             if (characterSettings == null) return;
             bool dirty = view.CharacterAvatar.IsDirty;
             if (view.EntityData.Descriptor.Doll == null && characterSettings.classOutfit != "Default")
@@ -371,8 +373,8 @@ namespace VisualAdjustments
                 if (!Main.enabled) return true;
                 if (disableEquipmentClassPatch) return true;
                 if (!__instance.Owner.IsPlayerFaction) return true;
-                if (!Main.settingsLookup.ContainsKey(__instance.Owner.CharacterName)) return true;
-                Settings.CharacterSettings characterSettings = Main.settingsLookup[__instance.Owner.CharacterName];
+                var characterSettings = Main.settings.GetCharacterSettings(__instance.Owner.Unit);
+                if (characterSettings == null) return true;
                 switch (characterSettings.classOutfit)
                 {
                     case "Alchemist":

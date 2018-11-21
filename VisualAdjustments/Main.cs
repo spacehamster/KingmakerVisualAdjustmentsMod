@@ -45,18 +45,13 @@ namespace VisualAdjustments
             "Sorcerer",
             "Wizard"
         };
-        public static Dictionary<string, Settings.CharacterSettings> settingsLookup = new Dictionary<string, Settings.CharacterSettings>();
         static bool Load(UnityModManager.ModEntry modEntry)
         {
             try
             {
-                settings = UnityModManager.ModSettings.Load<Settings>(modEntry);
+                settings = Settings.Load(modEntry);
                 var harmony = HarmonyInstance.Create(modEntry.Info.Id);
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
-                foreach(var characterSettings in settings.characterSettings)
-                {
-                    settingsLookup[characterSettings.characterName] = characterSettings;
-                }
                 modEntry.OnToggle = OnToggle;
                 modEntry.OnGUI = OnGUI;
                 modEntry.OnSaveGUI = OnSaveGUI;
@@ -85,18 +80,13 @@ namespace VisualAdjustments
                 if (!enabled) return;
                 foreach (UnitEntityData unitEntityData in Game.Instance.Player.ControllableCharacters)
                 {
-                    Settings.CharacterSettings characterSettings;
-                    if (settingsLookup.ContainsKey(unitEntityData.CharacterName))
-                    {
-                        characterSettings = settingsLookup[unitEntityData.CharacterName];
-                    }
-                    else
+                    Settings.CharacterSettings characterSettings = settings.GetCharacterSettings(unitEntityData);
+                    if(characterSettings == null)
                     {
                         characterSettings = new Settings.CharacterSettings();
                         characterSettings.characterName = unitEntityData.CharacterName;
-                        settings.characterSettings.Add(characterSettings);
-                        settingsLookup[characterSettings.characterName] = characterSettings;
-                    }
+                        settings.characterSettings[unitEntityData.UniqueId] = characterSettings;
+                    } 
                     if (unitEntityData.Descriptor.IsPet)
                     {
                         GUILayout.Label(string.Format("{0}", unitEntityData.CharacterName), "box", GUILayout.Width(300f));
@@ -201,7 +191,7 @@ namespace VisualAdjustments
                 var key = unitEntityData.Descriptor.UISettings.PortraitBlueprint?.name;
                 var oldIndex = DollResourcesManager.Portrait.IndexOfKey(key != null ? key : "");
                 GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-                GUILayout.Label("Portrait:  ", GUILayout.Width(300));
+                GUILayout.Label("Portrait ", GUILayout.Width(300));
                 var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.Portrait.Count, GUILayout.Width(300)), 0);
                 var value = newIndex >= 0 && newIndex < DollResourcesManager.Portrait.Count ? DollResourcesManager.Portrait.Values[newIndex] : null;
                 GUILayout.Label(" " + value, GUILayout.ExpandWidth(false));
@@ -229,7 +219,7 @@ namespace VisualAdjustments
         {
             var oldIndex = DollResourcesManager.Asks.IndexOfKey(unitEntityData.Descriptor.CustomAsks.name);
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-            GUILayout.Label("Asks:  ", GUILayout.Width(300));
+            GUILayout.Label("Voice  ", GUILayout.Width(300));
             var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.Asks.Count, GUILayout.Width(300)), 0);
             var value = (newIndex >= 0 && newIndex < DollResourcesManager.Asks.Count) ? DollResourcesManager.Asks.Values[newIndex] : null;
             GUILayout.Label(" " + value, GUILayout.ExpandWidth(false));
@@ -277,6 +267,16 @@ namespace VisualAdjustments
                 CharacterManager.RebuildCharacter(unitEntityData);
             });
         }
+        static void ChooseVisualPreset(UnitEntityData unitEntityData, DollState doll, string label, BlueprintRaceVisualPreset[] presets,
+            BlueprintRaceVisualPreset currentPreset)
+        {
+            var index = Array.FindIndex(presets, (vp) => vp == currentPreset); 
+            ChooseFromList(label, presets, ref index, () => {
+                doll.SetRacePreset(presets[index]);
+                unitEntityData.Descriptor.Doll = doll.CreateData();
+                CharacterManager.RebuildCharacter(unitEntityData);
+            });
+        }
         static void ChooseDoll(UnitEntityData unitEntityData)
         {
             var doll = DollResourcesManager.GetDoll(unitEntityData);
@@ -290,6 +290,7 @@ namespace VisualAdjustments
             ChooseRamp(unitEntityData, doll, "Skin Color", doll.GetSkinRamps(), doll.SkinRampIndex,  (int index) => doll.SetSkinColor(index));
             ChooseRamp(unitEntityData, doll, "Primary Outfit Color", doll.GetOutfitRampsPrimary(), doll.EquipmentRampIndex,  (int index) => doll.SetEquipColors(index, doll.EquipmentRampIndexSecondary));
             ChooseRamp(unitEntityData, doll, "Secondary Outfit Color", doll.GetOutfitRampsSecondary(), doll.EquipmentRampIndexSecondary,  (int index) => doll.SetEquipColors(doll.EquipmentRampIndex, index));
+            ChooseVisualPreset(unitEntityData, doll, "Body Type", doll.Race.Presets, doll.RacePreset);
             //ChooseEELRamp(unitEntityData, doll, (new int[] { 0, 1 }).ToList(), doll.LeftHanded ? 1 : 0, "Left Handed", (int value) => doll.SetLeftHanded(value > 0)); //TODO
             ChoosePortrait(unitEntityData);
             ChooseAsks(unitEntityData);
@@ -357,7 +358,7 @@ namespace VisualAdjustments
         }
         static void ChooseSlider(string name, SortedList<string, string> items, ref string currentItem, Action onChoose)
         {
-            var currentIndex = items.IndexOfKey(currentItem);
+            var currentIndex = currentItem == null ? -1 : items.IndexOfKey(currentItem);
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
             GUILayout.Label(name + " ", GUILayout.Width(300));
             var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, -1, items.Count - 1, GUILayout.Width(300)), 0);
@@ -377,6 +378,7 @@ namespace VisualAdjustments
                 CharacterManager.RebuildCharacter(unitEntityData);
                 CharacterManager.UpdateModel(unitEntityData.View);
             };
+            GUILayout.Label("Equipment", "box", GUILayout.Width(300f));
             Action onView = () => ViewManager.ReplaceView(unitEntityData, characterSettings.overrideView);
             ChooseSlider("Override Helm", EquipmentResourcesManager.Helm, ref characterSettings.overrideHelm, onEquipment);
             ChooseSlider("Override Cloak ", EquipmentResourcesManager.Cloak, ref characterSettings.overrideCloak, onEquipment);
@@ -384,6 +386,22 @@ namespace VisualAdjustments
             ChooseSlider("Override Bracers ", EquipmentResourcesManager.Bracers, ref characterSettings.overrideBracers, onEquipment);
             ChooseSlider("Override Gloves ", EquipmentResourcesManager.Gloves, ref characterSettings.overrideGloves, onEquipment);
             ChooseSlider("Override Boots ", EquipmentResourcesManager.Boots, ref characterSettings.overrideBoots, onEquipment);
+            GUILayout.Label("Weapons", "box", GUILayout.Width(300f));
+            foreach (var kv in EquipmentResourcesManager.Weapons)
+            {
+                var animationStyle = kv.Key;
+                var weaponLookup = kv.Value;
+                string currentValue = null;
+                characterSettings.overrideWeapons.TryGetValue(animationStyle, out currentValue);
+                Action onWeapon = () =>
+                {
+                    characterSettings.overrideWeapons[animationStyle] = currentValue;
+                    unitEntityData.View.HandsEquipment.UpdateAll();
+                };
+                ChooseSlider($"Override {animationStyle} ", weaponLookup, ref currentValue, onWeapon);
+            }
+
+            GUILayout.Label("View", "box", GUILayout.Width(300f));
             GUILayout.BeginHorizontal();
             ChooseSlider("Override View", EquipmentResourcesManager.Units, ref characterSettings.overrideView, onView);
             if (GUILayout.Button("Prev", GUILayout.Width(45)))

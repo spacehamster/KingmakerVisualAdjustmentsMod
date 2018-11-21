@@ -1,5 +1,6 @@
 ﻿using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Items.Equipment;
+using Kingmaker.Blueprints.Items.Weapons;
 using System.Collections.Generic;
 using static Kingmaker.UI.Common.ItemsFilter;
 
@@ -63,6 +64,14 @@ namespace VisualAdjustments
                 return m_Units; ;
             }
         }
+        public static SortedList<string, SortedList<string, string>> Weapons
+        {
+            get
+            {
+                if (!loaded) Init();
+                return m_Weapons;
+            }
+        }
         private static SortedList<string, string> m_Helm = new SortedList<string, string>();
         private static SortedList<string, string> m_Cloak = new SortedList<string, string>();
         private static SortedList<string, string> m_Armor = new SortedList<string, string>();
@@ -70,6 +79,7 @@ namespace VisualAdjustments
         private static SortedList<string, string> m_Gloves = new SortedList<string, string>();
         private static SortedList<string, string> m_Boots = new SortedList<string, string>();
         private static SortedList<string, string> m_Units = new SortedList<string, string>();
+        private static SortedList<string, SortedList<string, string>> m_Weapons = new SortedList<string, SortedList<string, string>>();
         private static bool loaded = false;
         static void Init()
         {
@@ -106,6 +116,26 @@ namespace VisualAdjustments
                     default:
                         break;
                 }
+            }
+            var weapons = ResourcesLibrary.GetBlueprints<BlueprintItemEquipmentHand>();
+            foreach (var bp in weapons)
+            {
+                var visualParameters = bp.VisualParameters;
+                var animationStyle = visualParameters.AnimStyle.ToString();
+                SortedList<string, string> eeList = null;
+                if (!m_Weapons.ContainsKey(animationStyle))
+                {
+                    eeList = new SortedList<string, string>();
+                    m_Weapons[animationStyle] = eeList;
+                } else
+                {
+                    eeList = m_Weapons[animationStyle];
+                }
+                if (eeList.ContainsKey(bp.AssetGuid))
+                {
+                    continue;
+                }
+                eeList[bp.AssetGuid] = bp.name;
             }
             var units = ResourcesLibrary.GetBlueprints<BlueprintUnit>();
             foreach (var bp in units)

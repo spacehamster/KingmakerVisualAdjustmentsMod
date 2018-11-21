@@ -42,6 +42,7 @@ namespace VisualAdjustments
             foreach (var link in links)
             {
                 var ee = link.Load();
+                if (ee == null) continue; //happens with bad custom mods
                 if (lookup.ContainsKey(ee.name))
                 {
                     lookup[ee.name].raceGenderCombos += ", " + race + gender;
@@ -191,10 +192,11 @@ namespace VisualAdjustments
                 GUILayout.EndHorizontal();
                 if (settings.expanded)
                 {
+                    GUILayout.Label($" HideFlags: {ee.HideBodyParts}");
                     foreach (var bodypart in ee.BodyParts.ToArray())
                     {
                         GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-                        GUILayout.Label(String.Format(" BP {0}:{1}", bodypart.RendererPrefab.name, bodypart.Type), GUILayout.ExpandWidth(false));
+                        GUILayout.Label(String.Format(" BP {0}:{1}", bodypart?.RendererPrefab?.name ?? "NULL", bodypart?.Type), GUILayout.ExpandWidth(false));
                         if (GUILayout.Button("Remove"))
                         {
                             ee.BodyParts.Remove(bodypart);
@@ -205,7 +207,7 @@ namespace VisualAdjustments
                     {
                         GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
                         var prefab = Traverse.Create(outfitpart).Field("m_Prefab").GetValue<GameObject>();
-                        GUILayout.Label(String.Format(" OP {0}:{1}", prefab?.name, outfitpart.Special), GUILayout.ExpandWidth(false));
+                        GUILayout.Label(String.Format(" OP {0}:{1}", prefab?.name ?? "NULL", outfitpart?.Special), GUILayout.ExpandWidth(false));
                         if (GUILayout.Button("Remove"))
                         {
                             ee.OutfitParts.Remove(outfitpart);
