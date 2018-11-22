@@ -294,7 +294,11 @@ namespace VisualAdjustments
             //ChooseEELRamp(unitEntityData, doll, (new int[] { 0, 1 }).ToList(), doll.LeftHanded ? 1 : 0, "Left Handed", (int value) => doll.SetLeftHanded(value > 0)); //TODO
             ChoosePortrait(unitEntityData);
             ChooseAsks(unitEntityData);
-
+            if (GUILayout.Button("Destroy Doll"))
+            {
+                unitEntityData.Descriptor.Doll = null;
+                CharacterManager.UpdateModel(unitEntityData.View);
+            }
         }
         static void ChooseCompanionColor(CharacterSettings characterSettings, UnitEntityData unitEntityData)
         {
@@ -324,6 +328,26 @@ namespace VisualAdjustments
                 }
             }
             ChoosePortrait(unitEntityData);
+            if(GUILayout.Button("Create Doll"))
+            {
+                var race = unitEntityData.Descriptor.Progression.Race;
+                var options = unitEntityData.Descriptor.Gender == Gender.Male ? race.MaleOptions : race.FemaleOptions;
+                var dollState = new DollState();
+                dollState.SetRace(unitEntityData.Descriptor.Progression.Race); //Race must be set before class
+                                                                               //This is a hack to work around harmony not allowing calls to the unpatched method
+                CharacterManager.disableEquipmentClassPatch = true;
+                dollState.SetClass(unitEntityData.Descriptor.Progression.GetEquipmentClass());
+                CharacterManager.disableEquipmentClassPatch = false;
+                dollState.SetGender(unitEntityData.Descriptor.Gender);
+                dollState.SetRacePreset(race.Presets[0]);
+                dollState.SetLeftHanded(false);
+                if (options.Hair.Length > 0) dollState.SetHair(options.Hair[0]);
+                if (options.Heads.Length > 0) dollState.SetHead(options.Hair[0]);
+                if (options.Beards.Length > 0) dollState.SetBeard(options.Hair[0]);
+                dollState.Validate();
+                unitEntityData.Descriptor.Doll = dollState.CreateData();
+                CharacterManager.UpdateModel(unitEntityData.View);
+            }
         }
         static void ChooseToggle(string label, ref bool currentValue, Action onChoose)
         {
