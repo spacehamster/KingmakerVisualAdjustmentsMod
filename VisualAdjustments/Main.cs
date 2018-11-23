@@ -217,7 +217,11 @@ namespace VisualAdjustments
         }
         static void ChooseAsks(UnitEntityData unitEntityData)
         {
-            var oldIndex = DollResourcesManager.Asks.IndexOfKey(unitEntityData.Descriptor.CustomAsks.name);
+            int oldIndex = -1;
+            if (unitEntityData.Descriptor.CustomAsks != null)
+            {
+               oldIndex = DollResourcesManager.Asks.IndexOfKey(unitEntityData.Descriptor.CustomAsks.name);
+            }
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
             GUILayout.Label("Voice  ", GUILayout.Width(300));
             var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.Asks.Count, GUILayout.Width(300)), 0);
@@ -297,7 +301,7 @@ namespace VisualAdjustments
             if (GUILayout.Button("Destroy Doll"))
             {
                 unitEntityData.Descriptor.Doll = null;
-                CharacterManager.UpdateModel(unitEntityData.View);
+                CharacterManager.RebuildCharacter(unitEntityData);
             }
         }
         static void ChooseCompanionColor(CharacterSettings characterSettings, UnitEntityData unitEntityData)
@@ -346,7 +350,7 @@ namespace VisualAdjustments
                 if (options.Beards.Length > 0) dollState.SetBeard(options.Hair[0]);
                 dollState.Validate();
                 unitEntityData.Descriptor.Doll = dollState.CreateData();
-                CharacterManager.UpdateModel(unitEntityData.View);
+                CharacterManager.RebuildCharacter(unitEntityData);
             }
         }
         static void ChooseToggle(string label, ref bool currentValue, Action onChoose)

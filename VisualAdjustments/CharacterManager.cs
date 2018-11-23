@@ -88,9 +88,22 @@ namespace VisualAdjustments
                     character.AddEquipmentEntity(ee, savedEquipment);
                 }
                 doll.ApplyRampIndices(character);
-                Traverse.Create(unitEntityData.View).Field("m_EquipmentClass").SetValue(null); //UpdateClassEquipment won't update if the class doesn't change
-                unitEntityData.View.UpdateBodyEquipmentModel();
-                unitEntityData.View.UpdateClassEquipment();
+                if(unitEntityData.Descriptor.IsMainCharacter || unitEntityData.Descriptor.IsCustomCompanion())
+                {
+                    Traverse.Create(unitEntityData.View).Field("m_EquipmentClass").SetValue(null); //UpdateClassEquipment won't update if the class doesn't change
+                    //Adds Armor
+                    unitEntityData.View.UpdateBodyEquipmentModel();
+                    unitEntityData.View.UpdateClassEquipment();
+
+                } else
+                {
+                    IEnumerable<EquipmentEntity> ees = unitEntityData.Body.AllSlots.SelectMany(
+                        new Func<ItemSlot, IEnumerable<EquipmentEntity>>(unitEntityData.View.ExtractEquipmentEntities));
+                    unitEntityData.View.CharacterAvatar.AddEquipmentEntities(ees, false);
+                    var characterClass = unitEntityData.Descriptor.Progression.GetEquipmentClass();
+                    var classEquipment = characterClass.LoadClothes(unitEntityData.Descriptor.Gender, unitEntityData.Descriptor.Progression.Race);
+                    unitEntityData.View.CharacterAvatar.AddEquipmentEntities(classEquipment);
+                }
             }
             else
             {
