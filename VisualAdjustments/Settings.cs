@@ -27,6 +27,8 @@ namespace VisualAdjustments
             public bool hideBracers = false;
             public bool hideGloves = false;
             public bool hideBoots = false;
+            public bool hideWings = false;
+            public bool hideWeaponEnchantments = false;
 
             public string overrideHelm = "";
             public string overrideCloak = "";

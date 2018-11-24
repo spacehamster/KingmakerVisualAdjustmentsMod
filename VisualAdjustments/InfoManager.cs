@@ -105,6 +105,13 @@ namespace VisualAdjustments
                 }
             }
             blueprintBuffs = ResourcesLibrary.GetBlueprints<BlueprintBuff>().ToArray();
+            foreach(var buff in blueprintBuffs)
+            {
+                if (buff.name.Contains("Wing"))
+                {
+                    Main.DebugLog($"{buff.name} {buff.AssetGuid}");
+                }
+            }
             loaded = true;
         }
         public static void ShowInfo(UnitEntityData unitEntityData)
