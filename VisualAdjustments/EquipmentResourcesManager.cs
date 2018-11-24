@@ -1,6 +1,5 @@
 ﻿using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Items.Equipment;
-using Kingmaker.Blueprints.Items.Weapons;
 using System.Collections.Generic;
 using static Kingmaker.UI.Common.ItemsFilter;
 
@@ -122,6 +121,7 @@ namespace VisualAdjustments
             {
                 var visualParameters = bp.VisualParameters;
                 var animationStyle = visualParameters.AnimStyle.ToString();
+                if (bp.VisualParameters.Model == null) continue;
                 SortedList<string, string> eeList = null;
                 if (!m_Weapons.ContainsKey(animationStyle))
                 {
