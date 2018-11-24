@@ -26,6 +26,10 @@ namespace VisualAdjustments
         {
             if(logger != null) logger.Log(msg);
         }
+        public static void DebugError(Exception ex)
+        {
+            if (logger != null) logger.Log(ex.ToString() + "\n" + ex.StackTrace);
+        }
         public static bool enabled;
         public static Settings settings;
         public static String[] classes = new String[] {

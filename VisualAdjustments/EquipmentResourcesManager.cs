@@ -143,13 +143,6 @@ namespace VisualAdjustments
                 if (bp.Prefab.AssetId == "") continue;
                 m_Units[bp.Prefab.AssetId] = bp.name;
             }
-            /*foreach (var kv in ResourcesLibrary.LibraryObject.BlueprintsByAssetId)
-            {
-                var resource = ResourcesLibrary.TryGetResource<UnitEntityView>(kv.Key);
-                if (resource == null) continue;
-                m_Units[kv.Key] = resource.name;
-            }*/
-            Main.DebugLog($"Loaded {m_Units.Count}");
             loaded = true;
         }
     }

@@ -1,20 +1,14 @@
 ﻿using Harmony12;
 using Kingmaker.Blueprints;
-using Kingmaker.Blueprints.CharGen;
 using Kingmaker.Blueprints.Classes;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Items.Slots;
-using Kingmaker.ResourceLinks;
 using Kingmaker.UnitLogic;
-using Kingmaker.UnitLogic.Class.LevelUp;
 using Kingmaker.View;
 using Kingmaker.Visual.CharacterSystem;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
 using static VisualAdjustments.Settings;
 
 namespace VisualAdjustments
@@ -330,8 +324,14 @@ namespace VisualAdjustments
         {
             static void Postfix(UnitEntityView __instance)
             {
-                if (!Main.enabled) return;
-                UpdateModel(__instance);
+                try
+                {
+                    if (!Main.enabled) return;
+                    UpdateModel(__instance);
+                } catch (Exception ex)
+                {
+                    Main.DebugError(ex);
+                }
             }
         }
         /*
@@ -344,8 +344,14 @@ namespace VisualAdjustments
         {
             static void Postfix(UnitEntityView __instance)
             {
-                if (!Main.enabled) return;
-                UpdateModel(__instance);
+                try
+                {
+                    if (!Main.enabled) return;
+                    UpdateModel(__instance);
+                } catch (Exception ex)
+                {
+                    Main.DebugError(ex);
+                }
             }
         }
         /*
@@ -360,8 +366,14 @@ namespace VisualAdjustments
         {
             static void Postfix(UnitEntityView __instance)
             {
-                if (!Main.enabled) return;
-                UpdateModel(__instance);
+                try
+                {
+                    if (!Main.enabled) return;
+                    UpdateModel(__instance);
+                } catch(Exception ex)
+                {
+                    Main.DebugError(ex);
+                }
             }
         }
         [HarmonyPatch(typeof(UnitProgressionData), "GetEquipmentClass")]
@@ -369,60 +381,67 @@ namespace VisualAdjustments
         {
             static bool Prefix(UnitProgressionData __instance, ref BlueprintCharacterClass __result)
             {
-                if (!Main.enabled) return true;
-                if (disableEquipmentClassPatch) return true;
-                if (!__instance.Owner.IsPlayerFaction) return true;
-                var characterSettings = Main.settings.GetCharacterSettings(__instance.Owner.Unit);
-                if (characterSettings == null) return true;
-                switch (characterSettings.classOutfit)
+                try
                 {
-                    case "Alchemist":
-                        __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["0937bec61c0dabc468428f496580c721"];
-                        break;
-                    case "Barbarian":
-                        __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["f7d7eb166b3dd594fb330d085df41853"];
-                        break;
-                    case "Bard":
-                        __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["772c83a25e2268e448e841dcd548235f"];
-                        break;
-                    case "Cleric":
-                        __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["67819271767a9dd4fbfd4ae700befea0"];
-                        break;
-                    case "Druid":
-                        __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["610d836f3a3a9ed42a4349b62f002e96"];
-                        break;
-                    case "Fighter":
-                        __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["48ac8db94d5de7645906c7d0ad3bcfbd"];
-                        break;
-                    case "Inquisitor":
-                        __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["f1a70d9e1b0b41e49874e1fa9052a1ce"];
-                        break;
-                    case "Magus":
-                        __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["45a4607686d96a1498891b3286121780"];
-                        break;
-                    case "Monk":
-                        __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["e8f21e5b58e0569468e420ebea456124"];
-                        break;
-                    case "Paladin":
-                        __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["bfa11238e7ae3544bbeb4d0b92e897ec"];
-                        break;
-                    case "Ranger":
-                        __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["cda0615668a6df14eb36ba19ee881af6"];
-                        break;
-                    case "Rogue":
-                        __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["299aa766dee3cbf4790da4efb8c72484"];
-                        break;
-                    case "Sorcerer":
-                        __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["b3a505fb61437dc4097f43c3f8f9a4cf"];
-                        break;
-                    case "Wizard":
-                        __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["ba34257984f4c41408ce1dc2004e342e"];
-                        break;
-                    default:
-                        return true;
+                    if (!Main.enabled) return true;
+                    if (disableEquipmentClassPatch) return true;
+                    if (!__instance.Owner.IsPlayerFaction) return true;
+                    var characterSettings = Main.settings.GetCharacterSettings(__instance.Owner.Unit);
+                    if (characterSettings == null) return true;
+                    switch (characterSettings.classOutfit)
+                    {
+                        case "Alchemist":
+                            __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["0937bec61c0dabc468428f496580c721"];
+                            break;
+                        case "Barbarian":
+                            __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["f7d7eb166b3dd594fb330d085df41853"];
+                            break;
+                        case "Bard":
+                            __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["772c83a25e2268e448e841dcd548235f"];
+                            break;
+                        case "Cleric":
+                            __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["67819271767a9dd4fbfd4ae700befea0"];
+                            break;
+                        case "Druid":
+                            __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["610d836f3a3a9ed42a4349b62f002e96"];
+                            break;
+                        case "Fighter":
+                            __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["48ac8db94d5de7645906c7d0ad3bcfbd"];
+                            break;
+                        case "Inquisitor":
+                            __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["f1a70d9e1b0b41e49874e1fa9052a1ce"];
+                            break;
+                        case "Magus":
+                            __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["45a4607686d96a1498891b3286121780"];
+                            break;
+                        case "Monk":
+                            __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["e8f21e5b58e0569468e420ebea456124"];
+                            break;
+                        case "Paladin":
+                            __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["bfa11238e7ae3544bbeb4d0b92e897ec"];
+                            break;
+                        case "Ranger":
+                            __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["cda0615668a6df14eb36ba19ee881af6"];
+                            break;
+                        case "Rogue":
+                            __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["299aa766dee3cbf4790da4efb8c72484"];
+                            break;
+                        case "Sorcerer":
+                            __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["b3a505fb61437dc4097f43c3f8f9a4cf"];
+                            break;
+                        case "Wizard":
+                            __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["ba34257984f4c41408ce1dc2004e342e"];
+                            break;
+                        default:
+                            return true;
+                    }
+                    if (__result == null) return true;
+                    return false;
+                } catch(Exception ex)
+                {
+                    Main.DebugError(ex);
+                    return true;
                 }
-                if (__result == null) return true;
-                return false;
             }
         }
     }
