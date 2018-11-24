@@ -203,8 +203,7 @@ namespace VisualAdjustments
             if (view.CharacterAvatar == null) return;
             if (!view.EntityData.IsPlayerFaction) return;
 
-            Settings.CharacterSettings characterSettings;
-            Main.settings.characterSettings.TryGetValue(view.EntityData.CharacterName, out characterSettings);
+            Settings.CharacterSettings characterSettings = Main.settings.GetCharacterSettings(view.EntityData);
             if (characterSettings == null) return;
             bool dirty = view.CharacterAvatar.IsDirty;
             if (view.EntityData.Descriptor.Doll == null && characterSettings.classOutfit != "Default")

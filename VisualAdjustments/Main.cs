@@ -85,7 +85,7 @@ namespace VisualAdjustments
                     {
                         characterSettings = new Settings.CharacterSettings();
                         characterSettings.characterName = unitEntityData.CharacterName;
-                        settings.characterSettings[unitEntityData.UniqueId] = characterSettings;
+                        settings.AddCharacterSettings(unitEntityData, characterSettings);
                     } 
                     if (unitEntityData.Descriptor.IsPet)
                     {
