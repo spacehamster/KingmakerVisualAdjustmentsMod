@@ -82,6 +82,7 @@
   <ItemGroup>
     <Compile Include="CharacterManager.cs" />
     <Compile Include="DollResourcesManager.cs" />
+    <Compile Include="EffectsManager.cs" />
     <Compile Include="EquipmentResourcesManager.cs" />
     <Compile Include="HandsEquipmentManager.cs" />
     <Compile Include="InfoManager.cs" />

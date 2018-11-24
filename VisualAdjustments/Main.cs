@@ -345,6 +345,14 @@ namespace VisualAdjustments
             {
                 unitEntityData.View.HandsEquipment.HandleEquipmentSetChanged();
             };
+            Action onHideBuff = () =>
+            {
+                unitEntityData.SpawnBuffsFxs();
+            };
+            Action onHideWeaponEnchantment = () =>
+            {
+                unitEntityData.View.HandsEquipment.HandleEquipmentSetChanged();
+            };
             ChooseToggle("Hide Cap", ref characterSettings.hideCap, onHideEquipment);
             ChooseToggle("Hide Backpack", ref characterSettings.hideBackpack, onHideEquipment);
             ChooseToggle("Hide Class Cloak", ref characterSettings.hideClassCloak, onHideEquipment);
@@ -355,6 +363,8 @@ namespace VisualAdjustments
             ChooseToggle("Hide Gloves", ref characterSettings.hideGloves, onHideEquipment);
             ChooseToggle("Hide Boots", ref characterSettings.hideBoots, onHideEquipment);
             ChooseToggle("Hide Inactive Weapons", ref characterSettings.hideWeapons, onHideWeapon);
+            ChooseToggle("Hide Weapon Enchantments", ref characterSettings.hideWeaponEnchantments, onHideWeaponEnchantment);
+            ChooseToggle("Hide Wings", ref characterSettings.hideWings, onHideBuff);
         }
         static void ChooseSlider(string name, SortedList<string, string> items, ref string currentItem, Action onChoose)
         {
