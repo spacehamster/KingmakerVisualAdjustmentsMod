@@ -14,6 +14,7 @@ using Kingmaker.ResourceLinks;
 using static VisualAdjustments.Settings;
 using Kingmaker.PubSubSystem;
 using Kingmaker.Visual.Sound;
+using Kingmaker.UnitLogic;
 
 namespace VisualAdjustments
 {
@@ -105,10 +106,10 @@ namespace VisualAdjustments
                     }
                     else
                     {
-                        characterSettings.showDollSelection = GUILayout.Toggle(characterSettings.showDollSelection, "Select Colors", GUILayout.ExpandWidth(false));
+                        characterSettings.showDollSelection = GUILayout.Toggle(characterSettings.showDollSelection, "Select Doll", GUILayout.ExpandWidth(false));
                     }
-                    characterSettings.showEquipmentSelection = GUILayout.Toggle(characterSettings.showEquipmentSelection, "Show Equipment Selection", GUILayout.ExpandWidth(false));
-                    characterSettings.showOverrideSelection = GUILayout.Toggle(characterSettings.showOverrideSelection, "Show Override Selection", GUILayout.ExpandWidth(false));
+                    characterSettings.showEquipmentSelection = GUILayout.Toggle(characterSettings.showEquipmentSelection, "Select Equipment", GUILayout.ExpandWidth(false));
+                    characterSettings.showOverrideSelection = GUILayout.Toggle(characterSettings.showOverrideSelection, "Select Overrides", GUILayout.ExpandWidth(false));
 #if (DEBUG)
                     characterSettings.showInfo = GUILayout.Toggle(characterSettings.showInfo, "Show Info", GUILayout.ExpandWidth(false));
 #endif
@@ -287,6 +288,12 @@ namespace VisualAdjustments
         }
         static void ChooseDoll(UnitEntityData unitEntityData)
         {
+            if (!unitEntityData.IsMainCharacter && !unitEntityData.IsCustomCompanion() &&  GUILayout.Button("Destroy Doll", GUILayout.Width(300)))
+            {
+                unitEntityData.Descriptor.Doll = null;
+                unitEntityData.Descriptor.ForcceUseClassEquipment = false;
+                CharacterManager.RebuildCharacter(unitEntityData);
+            }
             var doll = DollResourcesManager.GetDoll(unitEntityData);
             var race = unitEntityData.Descriptor.Progression.Race;
             var gender = unitEntityData.Gender;
@@ -301,17 +308,32 @@ namespace VisualAdjustments
             ChooseVisualPreset(unitEntityData, doll, "Body Type", doll.Race.Presets, doll.RacePreset);
             //ChooseEELRamp(unitEntityData, doll, (new int[] { 0, 1 }).ToList(), doll.LeftHanded ? 1 : 0, "Left Handed", (int value) => doll.SetLeftHanded(value > 0)); //TODO
             ChoosePortrait(unitEntityData);
-            ChooseAsks(unitEntityData);
-            if (GUILayout.Button("Destroy Doll"))
-            {
-                unitEntityData.Descriptor.Doll = null;
-                unitEntityData.Descriptor.ForcceUseClassEquipment = false;
-                CharacterManager.RebuildCharacter(unitEntityData);
-            }
+            if (unitEntityData.IsMainCharacter || unitEntityData.IsCustomCompanion()) ChooseAsks(unitEntityData);
         }
         static void ChooseCompanionColor(CharacterSettings characterSettings, UnitEntityData unitEntityData)
         {
-            GUILayout.Label("Note: Only applies to non-default outfits");
+            if (GUILayout.Button("Create Doll", GUILayout.Width(300)))
+            {
+                var race = unitEntityData.Descriptor.Progression.Race;
+                var options = unitEntityData.Descriptor.Gender == Gender.Male ? race.MaleOptions : race.FemaleOptions;
+                var dollState = new DollState();
+                dollState.SetRace(unitEntityData.Descriptor.Progression.Race); //Race must be set before class
+                                                                               //This is a hack to work around harmony not allowing calls to the unpatched method
+                CharacterManager.disableEquipmentClassPatch = true;
+                dollState.SetClass(unitEntityData.Descriptor.Progression.GetEquipmentClass());
+                CharacterManager.disableEquipmentClassPatch = false;
+                dollState.SetGender(unitEntityData.Descriptor.Gender);
+                dollState.SetRacePreset(race.Presets[0]);
+                dollState.SetLeftHanded(false);
+                if (options.Hair.Length > 0) dollState.SetHair(options.Hair[0]);
+                if (options.Heads.Length > 0) dollState.SetHead(options.Hair[0]);
+                if (options.Beards.Length > 0) dollState.SetBeard(options.Hair[0]);
+                dollState.Validate();
+                unitEntityData.Descriptor.Doll = dollState.CreateData();
+                unitEntityData.Descriptor.ForcceUseClassEquipment = true;
+                CharacterManager.RebuildCharacter(unitEntityData);
+            }
+            GUILayout.Label("Note: Colors only applies to non-default outfits");
             {
                 GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
                 GUILayout.Label("Primary Outfit Color ", GUILayout.Width(300));
@@ -337,27 +359,6 @@ namespace VisualAdjustments
                 }
             }
             ChoosePortrait(unitEntityData);
-            if(GUILayout.Button("Create Doll"))
-            {
-                var race = unitEntityData.Descriptor.Progression.Race;
-                var options = unitEntityData.Descriptor.Gender == Gender.Male ? race.MaleOptions : race.FemaleOptions;
-                var dollState = new DollState();
-                dollState.SetRace(unitEntityData.Descriptor.Progression.Race); //Race must be set before class
-                                                                               //This is a hack to work around harmony not allowing calls to the unpatched method
-                CharacterManager.disableEquipmentClassPatch = true;
-                dollState.SetClass(unitEntityData.Descriptor.Progression.GetEquipmentClass());
-                CharacterManager.disableEquipmentClassPatch = false;
-                dollState.SetGender(unitEntityData.Descriptor.Gender);
-                dollState.SetRacePreset(race.Presets[0]);
-                dollState.SetLeftHanded(false);
-                if (options.Hair.Length > 0) dollState.SetHair(options.Hair[0]);
-                if (options.Heads.Length > 0) dollState.SetHead(options.Hair[0]);
-                if (options.Beards.Length > 0) dollState.SetBeard(options.Hair[0]);
-                dollState.Validate();
-                unitEntityData.Descriptor.Doll = dollState.CreateData();
-                unitEntityData.Descriptor.ForcceUseClassEquipment = true;
-                CharacterManager.RebuildCharacter(unitEntityData);
-            }
         }
         static void ChooseToggle(string label, ref bool currentValue, Action onChoose)
         {
