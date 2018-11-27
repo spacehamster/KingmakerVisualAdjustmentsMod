@@ -1,6 +1,5 @@
 ﻿using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Items.Equipment;
-using Kingmaker.Blueprints.Items.Weapons;
 using System.Collections.Generic;
 using static Kingmaker.UI.Common.ItemsFilter;
 
@@ -122,6 +121,7 @@ namespace VisualAdjustments
             {
                 var visualParameters = bp.VisualParameters;
                 var animationStyle = visualParameters.AnimStyle.ToString();
+                if (bp.VisualParameters.Model == null) continue;
                 SortedList<string, string> eeList = null;
                 if (!m_Weapons.ContainsKey(animationStyle))
                 {
@@ -143,13 +143,6 @@ namespace VisualAdjustments
                 if (bp.Prefab.AssetId == "") continue;
                 m_Units[bp.Prefab.AssetId] = bp.name;
             }
-            /*foreach (var kv in ResourcesLibrary.LibraryObject.BlueprintsByAssetId)
-            {
-                var resource = ResourcesLibrary.TryGetResource<UnitEntityView>(kv.Key);
-                if (resource == null) continue;
-                m_Units[kv.Key] = resource.name;
-            }*/
-            Main.DebugLog($"Loaded {m_Units.Count}");
             loaded = true;
         }
     }

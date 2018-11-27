@@ -27,6 +27,8 @@ namespace VisualAdjustments
             public bool hideBracers = false;
             public bool hideGloves = false;
             public bool hideBoots = false;
+            public bool hideWings = false;
+            public bool hideWeaponEnchantments = false;
 
             public string overrideHelm = "";
             public string overrideCloak = "";
@@ -46,7 +48,8 @@ namespace VisualAdjustments
             public int companionSecondary = 0;
 
         }
-        public Dictionary<string, CharacterSettings> characterSettings = new Dictionary<string, CharacterSettings>();
+        [JsonProperty]
+        private Dictionary<string, CharacterSettings> characterSettings = new Dictionary<string, CharacterSettings>();
         public override void Save(UnityModManager.ModEntry modEntry)
         {
             var filepath = Path.Combine(modEntry.Path, "Settings.json");
@@ -69,6 +72,10 @@ namespace VisualAdjustments
         public CharacterSettings GetCharacterSettings(UnitEntityData unitEntityData) {
             characterSettings.TryGetValue(unitEntityData.UniqueId, out CharacterSettings result);
             return result;
+        }
+        public void AddCharacterSettings(UnitEntityData unitEntityData, CharacterSettings newSettings)
+        {
+            characterSettings[unitEntityData.UniqueId] = newSettings;
         }
         public static Settings Load(ModEntry modEntry)
         {

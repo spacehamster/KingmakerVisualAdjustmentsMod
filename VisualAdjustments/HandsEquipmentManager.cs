@@ -5,8 +5,7 @@ using Kingmaker.View.Equipment;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 namespace VisualAdjustments
 {
     class HandsEquipmentManager
@@ -38,16 +37,22 @@ namespace VisualAdjustments
     {
         static void Postfix(UnitViewHandSlotData __instance)
         {
-            if (!Main.enabled) return;
-            if (!__instance.Owner.IsPlayerFaction) return;
-            var characterSettings = Main.settings.GetCharacterSettings(__instance.Owner);
-            if (characterSettings == null) return;
-            if (characterSettings.hideWeapons)
+            try
             {
-                if (!__instance.IsActiveSet)
+                if (!Main.enabled) return;
+                if (!__instance.Owner.IsPlayerFaction) return;
+                var characterSettings = Main.settings.GetCharacterSettings(__instance.Owner);
+                if (characterSettings == null) return;
+                if (characterSettings.hideWeapons)
                 {
-                    __instance.ShowItem(false);
+                    if (!__instance.IsActiveSet)
+                    {
+                        __instance.ShowItem(false);
+                    }
                 }
+            } catch(Exception ex)
+            {
+                Main.DebugError(ex);
             }
         }
     }
@@ -56,20 +61,26 @@ namespace VisualAdjustments
     {
         static void Postfix(UnitViewHandSlotData __instance, ref BlueprintItemEquipmentHand __result)
         {
-            if (!Main.enabled) return;
-            if (!__instance.Owner.IsPlayerFaction) return;
-            
-            var characterSettings = Main.settings.GetCharacterSettings(__instance.Owner);
-            if (characterSettings == null) return;
-            if (__instance.VisibleItem == null) return;
-            var blueprint = __instance.VisibleItem.Blueprint as BlueprintItemEquipmentHand;
-            var animationStyle = blueprint.VisualParameters.AnimStyle.ToString();
-            string blueprintId;
-            characterSettings.overrideWeapons.TryGetValue(animationStyle, out blueprintId);
-            if (blueprintId == null || blueprintId == "") return;
-            var newBlueprint = ResourcesLibrary.TryGetBlueprint<BlueprintItemEquipmentHand>(blueprintId);
-            if (newBlueprint == null) return;
-            __result = newBlueprint;
+            try
+            {
+                if (!Main.enabled) return;
+                if (!__instance.Owner.IsPlayerFaction) return;
+
+                var characterSettings = Main.settings.GetCharacterSettings(__instance.Owner);
+                if (characterSettings == null) return;
+                if (__instance.VisibleItem == null) return;
+                var blueprint = __instance.VisibleItem.Blueprint as BlueprintItemEquipmentHand;
+                var animationStyle = blueprint.VisualParameters.AnimStyle.ToString();
+                string blueprintId;
+                characterSettings.overrideWeapons.TryGetValue(animationStyle, out blueprintId);
+                if (blueprintId == null || blueprintId == "") return;
+                var newBlueprint = ResourcesLibrary.TryGetBlueprint<BlueprintItemEquipmentHand>(blueprintId);
+                if (newBlueprint == null) return;
+                __result = newBlueprint;
+            } catch (Exception ex)
+            {
+                Main.DebugError(ex);
+            }
         }
     }
 }

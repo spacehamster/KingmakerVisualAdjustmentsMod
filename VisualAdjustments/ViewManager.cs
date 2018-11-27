@@ -11,8 +11,6 @@ using Kingmaker.View;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace VisualAdjustments
@@ -55,31 +53,38 @@ namespace VisualAdjustments
         {
             static bool Prefix(UnitEntityData __instance, ref UnitEntityView __result)
             {
-                if (!Main.enabled) return true;
-                if (!__instance.IsPlayerFaction) return true;
-                var characterSettings = Main.settings.GetCharacterSettings(__instance);
-                if (characterSettings == null) return true;
-                if (characterSettings.overrideView == null || characterSettings.overrideView == "") return true;
-                foreach (Fact fact in __instance.Buffs.RawFacts)
+                try
                 {
-                    if (fact.Active && !fact.Deactivating)
+                    if (!Main.enabled) return true;
+                    if (!__instance.IsPlayerFaction) return true;
+                    var characterSettings = Main.settings.GetCharacterSettings(__instance);
+                    if (characterSettings == null) return true;
+                    if (characterSettings.overrideView == null || characterSettings.overrideView == "") return true;
+                    foreach (Fact fact in __instance.Buffs.RawFacts)
                     {
-                        Buff buff = (Buff)fact;
-                        if (buff.Get<Polymorph>() != null)
+                        if (fact.Active && !fact.Deactivating)
                         {
-                            return true;
+                            Buff buff = (Buff)fact;
+                            if (buff.Get<Polymorph>() != null)
+                            {
+                                return true;
+                            }
                         }
                     }
-                }
-                UnitEntityView template = GetView(characterSettings.overrideView);
-                if (template == null)
+                    UnitEntityView template = GetView(characterSettings.overrideView);
+                    if (template == null)
+                    {
+                        Main.DebugLog("Overriding invalid view " + characterSettings.overrideView);
+                        return true;
+                    }
+                    Quaternion rotation = (!template.ForbidRotation) ? Quaternion.Euler(0f, __instance.Orientation, 0f) : Quaternion.identity;
+                    __result = UnityEngine.Object.Instantiate<UnitEntityView>(template, __instance.Position, rotation);
+                    return false;
+                } catch(Exception ex)
                 {
-                    Main.DebugLog("Overriding invalid view " + characterSettings.overrideView);
+                    Main.DebugError(ex);
                     return true;
                 }
-                Quaternion rotation = (!template.ForbidRotation) ? Quaternion.Euler(0f, __instance.Orientation, 0f) : Quaternion.identity;
-                __result = UnityEngine.Object.Instantiate<UnitEntityView>(template, __instance.Position, rotation);
-                return false;
             }
         }
     }
