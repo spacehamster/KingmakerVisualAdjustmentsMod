@@ -301,6 +301,7 @@ namespace VisualAdjustments
             if (GUILayout.Button("Destroy Doll"))
             {
                 unitEntityData.Descriptor.Doll = null;
+                unitEntityData.Descriptor.ForcceUseClassEquipment = false;
                 CharacterManager.RebuildCharacter(unitEntityData);
             }
         }
@@ -350,6 +351,7 @@ namespace VisualAdjustments
                 if (options.Beards.Length > 0) dollState.SetBeard(options.Hair[0]);
                 dollState.Validate();
                 unitEntityData.Descriptor.Doll = dollState.CreateData();
+                unitEntityData.Descriptor.ForcceUseClassEquipment = true;
                 CharacterManager.RebuildCharacter(unitEntityData);
             }
         }
