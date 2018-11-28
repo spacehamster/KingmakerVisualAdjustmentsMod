@@ -37,6 +37,7 @@ namespace VisualAdjustments
             public string overrideGloves = "";
             public string overrideBoots = "";
             public string overrideView = "";
+            public float overrideScale = 1;
             public Dictionary<string, string> overrideWeapons = new Dictionary<string, string>();
 
             public bool hideWeapons = false;

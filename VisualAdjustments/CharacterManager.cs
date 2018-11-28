@@ -444,5 +444,22 @@ namespace VisualAdjustments
                 }
             }
         }
+        [HarmonyPatch(typeof(UnitEntityView), "GetSizeScale")]
+        static class UnitEntityView_GetSizeScale_Patch
+        {
+            static void Postfix(UnitEntityView __instance, ref float __result)
+            {
+                try
+                {
+                    if (!Main.enabled) return;
+                    if (!__instance.EntityData.IsPlayerFaction) return;
+                    var characterSettings = Main.settings.GetCharacterSettings(__instance.EntityData);
+                    if (characterSettings == null) return;
+                    __result = characterSettings.overrideScale;
+                } catch (Exception ex) { 
+                    Main.DebugError(ex);
+                }
+            }
+        }
     }
 }

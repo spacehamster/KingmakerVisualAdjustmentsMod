@@ -385,6 +385,60 @@ namespace VisualAdjustments
                 onChoose();
             }
         }
+        /*
+         * m_Size is updated from GetSizeScale (EntityData.Descriptor.State.Size) and 
+         * is with m_OriginalScale to adjust the transform.localScale 
+         * Adjusting GetSizeScale will effect character corpulence and cause gameplay sideeffects
+         * Changing m_OriginalScale will effect ParticlesSnapMap.AdditionalScale
+         */
+        static void ChooseSize(UnitEntityData unitEntityData, CharacterSettings characterSettings)
+        {
+#if (DEBUG)
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Override Scale", GUILayout.Width(300));
+            var currentScale = Traverse.Create(unitEntityData.View).Field("m_Scale").GetValue<float>();
+            var originalScale = Traverse.Create(unitEntityData.View).Field("m_OriginalScale").GetValue<Vector3>();
+            var newScale = GUILayout.HorizontalSlider(currentScale, 0.1f, 5, GUILayout.Width(300));
+            Traverse.Create(unitEntityData.View).Field("m_Scale").SetValue(newScale);
+            unitEntityData.View.transform.localScale = originalScale * newScale;
+            var sizeDiff = Math.Log(1 / newScale, 0.66);
+            var size = unitEntityData.Descriptor.OriginalSize + (int)Math.Round(sizeDiff, 0);
+
+            GUILayout.Label($" Scale {newScale} sizeChange {sizeDiff} sizeCategory {size}", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+#endif
+        }
+        static void ChooseSize2(UnitEntityData unitEntityData, CharacterSettings characterSettings)
+        {
+#if (DEBUG)
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Override Scale", GUILayout.Width(300));
+            var originalScale = Traverse.Create(unitEntityData.View).Field("m_OriginalScale").GetValue<Vector3>();
+            var newScale = GUILayout.HorizontalSlider(originalScale.x, 0.1f, 10, GUILayout.Width(300));
+            Traverse.Create(unitEntityData.View).Field("m_OriginalScale").SetValue(new Vector3(newScale, newScale, newScale));
+            unitEntityData.View.transform.localScale = originalScale * newScale;
+            var sizeDiff = Math.Log(1 / newScale, 0.66);
+            var size = unitEntityData.Descriptor.OriginalSize + (int)Math.Round(sizeDiff, 0);
+
+            GUILayout.Label($" Scale {newScale} sizeChange {sizeDiff} sizeCategory {size}", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+#endif
+        }
+        static void ChooseSize3(UnitEntityData unitEntityData, CharacterSettings characterSettings)
+        {
+#if (DEBUG)
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Override Scale", GUILayout.Width(300));
+            var newScale = GUILayout.HorizontalSlider(characterSettings.overrideScale, 0.1f, 10, GUILayout.Width(300));
+
+            characterSettings.overrideScale = newScale;
+            var sizeDiff = Math.Log(1 / newScale, 0.66);
+            var size = unitEntityData.Descriptor.OriginalSize + (int)Math.Round(sizeDiff, 0);
+
+            GUILayout.Label($" Scale {newScale} sizeChange {sizeDiff} sizeCategory {size}", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+#endif
+        }
         static void ChooseEquipmentOverride(UnitEntityData unitEntityData, CharacterSettings characterSettings)
         {
             Action onEquipment = () =>
@@ -439,20 +493,9 @@ namespace VisualAdjustments
                 ViewManager.ReplaceView(unitEntityData, characterSettings.overrideView);
             }
             GUILayout.EndHorizontal();
-#if (DEBUG)
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Override Scale", GUILayout.Width(300));
-            var currentScale = Traverse.Create(unitEntityData.View).Field("m_Scale").GetValue<float>();
-            var originalScale = Traverse.Create(unitEntityData.View).Field("m_OriginalScale").GetValue<Vector3>();
-            var newScale = GUILayout.HorizontalSlider(currentScale, 0.1f, 5, GUILayout.Width(300));
-            Traverse.Create(unitEntityData.View).Field("m_Scale").SetValue(newScale);
-            unitEntityData.View.transform.localScale = originalScale * newScale;
-            var sizeDiff = Math.Log(1 / newScale, 0.66);
-            var size = unitEntityData.Descriptor.OriginalSize + (int)Math.Round(sizeDiff, 0);
-            
-            GUILayout.Label($" Scale {newScale} sizeChange {sizeDiff} sizeCategory {size}", GUILayout.ExpandWidth(false));
-            GUILayout.EndHorizontal();
-#endif
+            ChooseSize(unitEntityData, characterSettings);
+            ChooseSize2(unitEntityData, characterSettings);
+            ChooseSize3(unitEntityData, characterSettings);
         }
     }
     
