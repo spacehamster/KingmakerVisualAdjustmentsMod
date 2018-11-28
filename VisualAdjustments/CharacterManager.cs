@@ -1,4 +1,5 @@
 ﻿using Harmony12;
+using Kingmaker;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Classes;
 using Kingmaker.EntitySystem.Entities;
@@ -9,6 +10,7 @@ using Kingmaker.Visual.CharacterSystem;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 using static VisualAdjustments.Settings;
 
 namespace VisualAdjustments
@@ -458,11 +460,41 @@ namespace VisualAdjustments
                     var sizeDiff = __instance.EntityData.Descriptor.State.Size + characterSettings.overrideScaleCheat - __instance.EntityData.Descriptor.OriginalSize;
                     var newScaleFactor = 1 * Math.Pow(1 / 0.66, sizeDiff);
                     __result = (float)newScaleFactor;
-                } catch (Exception ex) { 
+                }
+                catch (Exception ex)
+                {
                     Main.DebugError(ex);
                 }
             }
         }
+        [HarmonyPatch(typeof(UnitEntityView), "LateUpdate")]
+        static class UnitEntityView_LateUpdate_Patch
+        {
+            static void Postfix(UnitEntityView __instance)
+            {
+                try
+                {
+                    if (!Main.enabled) return;
+                    if (!__instance.EntityData.IsPlayerFaction) return;
+                    var characterSettings = Main.settings.GetCharacterSettings(__instance.EntityData);
+                    if (characterSettings == null) return;
+                    var originalScale = __instance.GetSizeScale();
+                    float sizeScale = originalScale * (float)Math.Pow(1 / 0.66, characterSettings.overrideScale);
+                    var m_Scale = Traverse.Create(__instance).Field("m_Scale").GetValue<float>();
+                    var m_OriginalScale = Traverse.Create(__instance).Field("m_OriginalScale").GetValue<Vector3>();
+                    if (!sizeScale.Equals(m_Scale) && !__instance.DoNotAdjustScale)
+                    {
+                        __instance.transform.localScale = m_OriginalScale * sizeScale;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Main.DebugError(ex);
+                }
+            }
+        }
+
+
     }
 }
 
