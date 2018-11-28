@@ -430,7 +430,6 @@ namespace VisualAdjustments
          */
         static void ChooseSize(UnitEntityData unitEntityData, CharacterSettings characterSettings)
         {
-#if (DEBUG)
             GUILayout.BeginHorizontal();
             GUILayout.Label("Override Scale", GUILayout.Width(300));
 
@@ -439,24 +438,21 @@ namespace VisualAdjustments
             var newSizeCategory = (int)unitEntityData.Descriptor.State.Size + sizeModifier;
             var newScaleFactor = 1 * Math.Pow(1 / 0.66, newSizeCategory - originalSizeCategory);
             characterSettings.overrideScale = sizeModifier;
-            GUILayout.Label($" Scale {newScaleFactor} sizeCategory {(Size)newSizeCategory}", GUILayout.ExpandWidth(false));
+            GUILayout.Label($" Scale {sizeModifier}", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
-#endif
         }
-        static void ChooseSize2(UnitEntityData unitEntityData, CharacterSettings characterSettings)
+        static void ChooseSizeCheat(UnitEntityData unitEntityData, CharacterSettings characterSettings)
         {
-#if (DEBUG)
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Override Scale Cheat", GUILayout.Width(300));
+            GUILayout.Label("Override Cheat Scale", GUILayout.Width(300));
 
             var sizeModifier = (int)GUILayout.HorizontalSlider(characterSettings.overrideScaleCheat, -4, 4, GUILayout.Width(300));
             var originalSizeCategory = (int)unitEntityData.Descriptor.OriginalSize;
             var newSizeCategory = (int)unitEntityData.Descriptor.State.Size + sizeModifier;
             var newScaleFactor = 1 * Math.Pow(1 / 0.66, newSizeCategory - originalSizeCategory);
             characterSettings.overrideScaleCheat = sizeModifier;
-            GUILayout.Label($" Scale {newScaleFactor} sizeCategory {(Size)newSizeCategory}", GUILayout.ExpandWidth(false));
+            GUILayout.Label($" Scale {sizeModifier}", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
-#endif
         }
         static void ChooseEquipmentOverride(UnitEntityData unitEntityData, CharacterSettings characterSettings)
         {
@@ -514,8 +510,9 @@ namespace VisualAdjustments
                 ViewManager.ReplaceView(unitEntityData, characterSettings.overrideView);
             }
             GUILayout.EndHorizontal();
-            ChooseSize(unitEntityData, characterSettings);
-            ChooseSize2(unitEntityData, characterSettings);
+            characterSettings.showScale = GUILayout.Toggle(characterSettings.showScale, "Use Override Scale");
+            if (characterSettings.showScale) ChooseSize(unitEntityData, characterSettings);
+            ChooseSizeCheat(unitEntityData, characterSettings);
         }
     }
     
