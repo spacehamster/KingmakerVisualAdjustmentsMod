@@ -351,6 +351,7 @@ namespace VisualAdjustments
             };
             Action onHideBuff = () =>
             {
+                foreach (var buff in unitEntityData.Buffs) buff.ClearParticleEffect();
                 unitEntityData.SpawnBuffsFxs();
             };
             Action onHideWeaponEnchantment = () =>

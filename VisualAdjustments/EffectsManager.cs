@@ -1,6 +1,7 @@
 ﻿using Harmony12;
 using Kingmaker.Blueprints.Items.Ecnchantments;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.UnitLogic.Buffs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,28 +26,22 @@ namespace VisualAdjustments
             {"5a791c1b0bacee3459d7f5137fa0bd5f", "BuffWingsDraconicSilver"},
             {"381a168acd79cd54baf87a17ca861d9b", "BuffWingsDraconicWhite"},
         };
-        [HarmonyPatch(typeof(UnitEntityData), "SpawnBuffsFxs")]
-        static class UnitEntityData_SpawnBuffsFxs_Patch
+        [HarmonyPatch(typeof(Buff), "SpawnParticleEffect")]
+        static class Buff_SpawnParticleEffect_Patch
         {
-            static bool Prefix(UnitEntityData __instance)
+            static bool Prefix(Buff __instance)
             {
                 try
                 {
                     if (!Main.enabled) return true;
-                    if (!__instance.IsPlayerFaction) return true;
-                    var characterSettings = Main.settings.GetCharacterSettings(__instance);
+                    if (!__instance.Owner.IsPlayerFaction) return true;
+                    var characterSettings = Main.settings.GetCharacterSettings(__instance.Owner.Unit);
                     if (characterSettings == null) return true;
-                    foreach (var buff in __instance.Buffs)
+                    if (characterSettings.hideWings && WingsLookup.ContainsKey(__instance.Blueprint.AssetGuid))
                     {
-                        buff.ClearParticleEffect();
-                        if (characterSettings.hideWings && WingsLookup.ContainsKey(buff.Blueprint.AssetGuid))
-                        {
-                            Main.DebugLog($"Hiding {buff.Blueprint.name}");
-                            continue;
-                        }
-                        buff.SpawnParticleEffect();
+                        return false;
                     }
-                    return false;
+                    return true;
                 } catch(Exception ex)
                 {
                     Main.DebugError(ex);
