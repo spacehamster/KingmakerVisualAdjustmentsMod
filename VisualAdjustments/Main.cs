@@ -94,10 +94,14 @@ namespace VisualAdjustments
                     } 
                     if (unitEntityData.Descriptor.IsPet)
                     {
+                        GUILayout.BeginHorizontal();
                         GUILayout.Label(string.Format("{0}", unitEntityData.CharacterName), "box", GUILayout.Width(300f));
+                        characterSettings.showOverrideSelection = GUILayout.Toggle(characterSettings.showOverrideSelection, "Show Override Selection", GUILayout.ExpandWidth(false));
+                        if (characterSettings.showOverrideSelection) ChooseEquipmentOverride(unitEntityData, characterSettings);
+                        GUILayout.EndHorizontal();
                         return;
                     }
-                    GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+                    GUILayout.BeginHorizontal();
                     GUILayout.Label(string.Format("{0}", unitEntityData.CharacterName), "box", GUILayout.Width(300f));
                     characterSettings.showClassSelection = GUILayout.Toggle(characterSettings.showClassSelection, "Select Outfit", GUILayout.ExpandWidth(false));
                     if (unitEntityData.Descriptor.Doll != null)
@@ -138,7 +142,7 @@ namespace VisualAdjustments
         {
             var normalColor = GUI.skin.button.normal.textColor;
             var focusedColor = GUI.skin.button.focused.textColor;
-            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+            GUILayout.BeginHorizontal();
             foreach (var _class in classes)
             {
                 if (characterSettings.classOutfit == _class)
@@ -151,7 +155,7 @@ namespace VisualAdjustments
                     GUI.skin.button.normal.textColor = normalColor;
                     GUI.skin.button.focused.textColor = focusedColor;
                 }
-                if (GUILayout.Button(_class, Array.Empty<GUILayoutOption>()))
+                if (GUILayout.Button(_class))
                 {
                     characterSettings.classOutfit = _class;
                     CharacterManager.RebuildCharacter(unitEntityData);
@@ -167,7 +171,7 @@ namespace VisualAdjustments
             if (unitEntityData.Portrait.IsCustom) {
                 var key = unitEntityData.Descriptor.UISettings.CustomPortrait.CustomId;
                 var oldIndex = DollResourcesManager.CustomPortraits.IndexOf(key);
-                GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+                GUILayout.BeginHorizontal();
                 GUILayout.Label("Portrait:  ", GUILayout.Width(300));
                 var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.CustomPortraits.Count, GUILayout.Width(300)), 0);
                 var value = newIndex >= 0 && newIndex < DollResourcesManager.CustomPortraits.Count ? DollResourcesManager.CustomPortraits[newIndex] : null;
@@ -195,7 +199,7 @@ namespace VisualAdjustments
             {
                 var key = unitEntityData.Descriptor.UISettings.PortraitBlueprint?.name;
                 var oldIndex = DollResourcesManager.Portrait.IndexOfKey(key != null ? key : "");
-                GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+                GUILayout.BeginHorizontal();
                 GUILayout.Label("Portrait ", GUILayout.Width(300));
                 var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.Portrait.Count, GUILayout.Width(300)), 0);
                 var value = newIndex >= 0 && newIndex < DollResourcesManager.Portrait.Count ? DollResourcesManager.Portrait.Values[newIndex] : null;
@@ -223,7 +227,7 @@ namespace VisualAdjustments
         static void ChooseAsks(UnitEntityData unitEntityData)
         {
             var oldIndex = DollResourcesManager.Asks.IndexOfKey(unitEntityData.Descriptor.CustomAsks.name);
-            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+            GUILayout.BeginHorizontal();
             GUILayout.Label("Voice  ", GUILayout.Width(300));
             var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.Asks.Count, GUILayout.Width(300)), 0);
             var value = (newIndex >= 0 && newIndex < DollResourcesManager.Asks.Count) ? DollResourcesManager.Asks.Values[newIndex] : null;
@@ -244,7 +248,7 @@ namespace VisualAdjustments
         static void ChooseFromList<T>(string label, IReadOnlyList<T> list, ref int currentIndex, Action onChoose)
         {
             if (list.Count == 0) return;
-            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+            GUILayout.BeginHorizontal();
             GUILayout.Label(label + " ", GUILayout.Width(300));
             var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, 0, list.Count - 1, GUILayout.Width(300)), 0);
             GUILayout.Label(" " + newIndex, GUILayout.ExpandWidth(false));
@@ -305,7 +309,7 @@ namespace VisualAdjustments
         {
             GUILayout.Label("Note: Only applies to non-default outfits");
             {
-                GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+                GUILayout.BeginHorizontal();
                 GUILayout.Label("Primary Outfit Color ", GUILayout.Width(300));
                 var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(characterSettings.companionPrimary, 0, 35, GUILayout.Width(300)), 0);
                 GUILayout.Label(" " + newIndex, GUILayout.ExpandWidth(false));
@@ -317,7 +321,7 @@ namespace VisualAdjustments
                 }
             }
             {
-                GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+                GUILayout.BeginHorizontal();
                 GUILayout.Label("Secondary Outfit Color ", GUILayout.Width(300));
                 var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(characterSettings.companionSecondary, 0, 35, GUILayout.Width(300)), 0);
                 GUILayout.Label(" " + newIndex, GUILayout.ExpandWidth(false));
@@ -374,7 +378,7 @@ namespace VisualAdjustments
         static void ChooseSlider(string name, SortedList<string, string> items, ref string currentItem, Action onChoose)
         {
             var currentIndex = currentItem == null ? -1 : items.IndexOfKey(currentItem);
-            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+            GUILayout.BeginHorizontal();
             GUILayout.Label(name + " ", GUILayout.Width(300));
             var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, -1, items.Count - 1, GUILayout.Width(300)), 0);
             var displayText = newIndex == -1 ? "None" : items.Values[newIndex];
@@ -429,29 +433,31 @@ namespace VisualAdjustments
                 CharacterManager.RebuildCharacter(unitEntityData);
                 CharacterManager.UpdateModel(unitEntityData.View);
             };
-            GUILayout.Label("Equipment", "box", GUILayout.Width(300f));
             Action onView = () => ViewManager.ReplaceView(unitEntityData, characterSettings.overrideView);
-            ChooseSlider("Override Helm", EquipmentResourcesManager.Helm, ref characterSettings.overrideHelm, onEquipment);
-            ChooseSlider("Override Cloak ", EquipmentResourcesManager.Cloak, ref characterSettings.overrideCloak, onEquipment);
-            ChooseSlider("Override Armor ", EquipmentResourcesManager.Armor, ref characterSettings.overrideArmor, onEquipment);
-            ChooseSlider("Override Bracers ", EquipmentResourcesManager.Bracers, ref characterSettings.overrideBracers, onEquipment);
-            ChooseSlider("Override Gloves ", EquipmentResourcesManager.Gloves, ref characterSettings.overrideGloves, onEquipment);
-            ChooseSlider("Override Boots ", EquipmentResourcesManager.Boots, ref characterSettings.overrideBoots, onEquipment);
-            GUILayout.Label("Weapons", "box", GUILayout.Width(300f));
-            foreach (var kv in EquipmentResourcesManager.Weapons)
+            if (!unitEntityData.Descriptor.IsPet)
             {
-                var animationStyle = kv.Key;
-                var weaponLookup = kv.Value;
-                string currentValue = null;
-                characterSettings.overrideWeapons.TryGetValue(animationStyle, out currentValue);
-                Action onWeapon = () =>
+                GUILayout.Label("Equipment", "box", GUILayout.Width(300f));
+                ChooseSlider("Override Helm", EquipmentResourcesManager.Helm, ref characterSettings.overrideHelm, onEquipment);
+                ChooseSlider("Override Cloak ", EquipmentResourcesManager.Cloak, ref characterSettings.overrideCloak, onEquipment);
+                ChooseSlider("Override Armor ", EquipmentResourcesManager.Armor, ref characterSettings.overrideArmor, onEquipment);
+                ChooseSlider("Override Bracers ", EquipmentResourcesManager.Bracers, ref characterSettings.overrideBracers, onEquipment);
+                ChooseSlider("Override Gloves ", EquipmentResourcesManager.Gloves, ref characterSettings.overrideGloves, onEquipment);
+                ChooseSlider("Override Boots ", EquipmentResourcesManager.Boots, ref characterSettings.overrideBoots, onEquipment);
+                GUILayout.Label("Weapons", "box", GUILayout.Width(300f));
+                foreach (var kv in EquipmentResourcesManager.Weapons)
                 {
-                    characterSettings.overrideWeapons[animationStyle] = currentValue;
-                    unitEntityData.View.HandsEquipment.UpdateAll();
-                };
-                ChooseSlider($"Override {animationStyle} ", weaponLookup, ref currentValue, onWeapon);
+                    var animationStyle = kv.Key;
+                    var weaponLookup = kv.Value;
+                    string currentValue = null;
+                    characterSettings.overrideWeapons.TryGetValue(animationStyle, out currentValue);
+                    Action onWeapon = () =>
+                    {
+                        characterSettings.overrideWeapons[animationStyle] = currentValue;
+                        unitEntityData.View.HandsEquipment.UpdateAll();
+                    };
+                    ChooseSlider($"Override {animationStyle} ", weaponLookup, ref currentValue, onWeapon);
+                }
             }
-
             GUILayout.Label("View", "box", GUILayout.Width(300f));
             GUILayout.BeginHorizontal();
             ChooseSlider("Override View", EquipmentResourcesManager.Units, ref characterSettings.overrideView, onView);

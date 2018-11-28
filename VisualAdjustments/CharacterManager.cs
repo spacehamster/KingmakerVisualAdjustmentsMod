@@ -482,7 +482,7 @@ namespace VisualAdjustments
                     float sizeScale = originalScale * (float)Math.Pow(1 / 0.66, characterSettings.overrideScale);
                     var m_Scale = Traverse.Create(__instance).Field("m_Scale").GetValue<float>();
                     var m_OriginalScale = Traverse.Create(__instance).Field("m_OriginalScale").GetValue<Vector3>();
-                    if (!sizeScale.Equals(m_Scale) && !__instance.DoNotAdjustScale)
+                    if (!__instance.DoNotAdjustScale)
                     {
                         __instance.transform.localScale = m_OriginalScale * sizeScale;
                     }
