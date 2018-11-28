@@ -160,6 +160,12 @@ namespace VisualAdjustments
             }
 
             GUILayout.EndHorizontal();
+            var message =
+                    unitEntityData.View == null ? "No View" :
+                    unitEntityData.View.CharacterAvatar == null ? "No Character Avatar" :
+                    unitEntityData.View.CharacterAvatar.BakedCharacter == null ? "No Baked Character" : 
+                    "Baked Character";
+            GUILayout.Label(message);
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
             showArmor = GUILayout.Toggle(showArmor, "Show Armor");
             showWeapons = GUILayout.Toggle(showWeapons, "Show Weapons");
@@ -182,6 +188,7 @@ namespace VisualAdjustments
         static void ShowArmorInfo(UnitEntityData unitEntityData)
         {
             var character = unitEntityData.View.CharacterAvatar;
+            if (character == null) return;
             GUILayout.Label("Equipment", GUILayout.Width(300));
             foreach (var ee in character.EquipmentEntities.ToArray())
             {
