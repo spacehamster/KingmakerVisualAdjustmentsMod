@@ -455,7 +455,9 @@ namespace VisualAdjustments
                     if (!__instance.EntityData.IsPlayerFaction) return;
                     var characterSettings = Main.settings.GetCharacterSettings(__instance.EntityData);
                     if (characterSettings == null) return;
-                    __result = characterSettings.overrideScale;
+                    var sizeDiff = __instance.EntityData.Descriptor.State.Size + characterSettings.overrideScaleCheat - __instance.EntityData.Descriptor.OriginalSize;
+                    var newScaleFactor = 1 * Math.Pow(1 / 0.66, sizeDiff);
+                    __result = (float)newScaleFactor;
                 } catch (Exception ex) { 
                     Main.DebugError(ex);
                 }
@@ -463,3 +465,5 @@ namespace VisualAdjustments
         }
     }
 }
+
+

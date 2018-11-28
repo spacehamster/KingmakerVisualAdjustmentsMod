@@ -1,4 +1,5 @@
 ﻿using Kingmaker.EntitySystem.Entities;
+using Kingmaker.Enums;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -37,7 +38,8 @@ namespace VisualAdjustments
             public string overrideGloves = "";
             public string overrideBoots = "";
             public string overrideView = "";
-            public float overrideScale = 1;
+            public int overrideScale = 0;
+            public int overrideScaleCheat = 0;
             public Dictionary<string, string> overrideWeapons = new Dictionary<string, string>();
 
             public bool hideWeapons = false;

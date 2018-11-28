@@ -14,6 +14,7 @@ using Kingmaker.ResourceLinks;
 using static VisualAdjustments.Settings;
 using Kingmaker.PubSubSystem;
 using Kingmaker.Visual.Sound;
+using Kingmaker.Enums;
 
 namespace VisualAdjustments
 {
@@ -396,15 +397,13 @@ namespace VisualAdjustments
 #if (DEBUG)
             GUILayout.BeginHorizontal();
             GUILayout.Label("Override Scale", GUILayout.Width(300));
-            var currentScale = Traverse.Create(unitEntityData.View).Field("m_Scale").GetValue<float>();
-            var originalScale = Traverse.Create(unitEntityData.View).Field("m_OriginalScale").GetValue<Vector3>();
-            var newScale = GUILayout.HorizontalSlider(currentScale, 0.1f, 5, GUILayout.Width(300));
-            Traverse.Create(unitEntityData.View).Field("m_Scale").SetValue(newScale);
-            unitEntityData.View.transform.localScale = originalScale * newScale;
-            var sizeDiff = Math.Log(1 / newScale, 0.66);
-            var size = unitEntityData.Descriptor.OriginalSize + (int)Math.Round(sizeDiff, 0);
 
-            GUILayout.Label($" Scale {newScale} sizeChange {sizeDiff} sizeCategory {size}", GUILayout.ExpandWidth(false));
+            var sizeModifier = (int)GUILayout.HorizontalSlider(characterSettings.overrideScale, -4, 4, GUILayout.Width(300));
+            var originalSizeCategory = (int)unitEntityData.Descriptor.OriginalSize;
+            var newSizeCategory = (int)unitEntityData.Descriptor.State.Size + sizeModifier;
+            var newScaleFactor = 1 * Math.Pow(1 / 0.66, newSizeCategory - originalSizeCategory);
+            characterSettings.overrideScale = sizeModifier;
+            GUILayout.Label($" Scale {newScaleFactor} sizeCategory {(Size)newSizeCategory}", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 #endif
         }
@@ -412,30 +411,14 @@ namespace VisualAdjustments
         {
 #if (DEBUG)
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Override Scale", GUILayout.Width(300));
-            var originalScale = Traverse.Create(unitEntityData.View).Field("m_OriginalScale").GetValue<Vector3>();
-            var newScale = GUILayout.HorizontalSlider(originalScale.x, 0.1f, 10, GUILayout.Width(300));
-            Traverse.Create(unitEntityData.View).Field("m_OriginalScale").SetValue(new Vector3(newScale, newScale, newScale));
-            unitEntityData.View.transform.localScale = originalScale * newScale;
-            var sizeDiff = Math.Log(1 / newScale, 0.66);
-            var size = unitEntityData.Descriptor.OriginalSize + (int)Math.Round(sizeDiff, 0);
+            GUILayout.Label("Override Scale Cheat", GUILayout.Width(300));
 
-            GUILayout.Label($" Scale {newScale} sizeChange {sizeDiff} sizeCategory {size}", GUILayout.ExpandWidth(false));
-            GUILayout.EndHorizontal();
-#endif
-        }
-        static void ChooseSize3(UnitEntityData unitEntityData, CharacterSettings characterSettings)
-        {
-#if (DEBUG)
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Override Scale", GUILayout.Width(300));
-            var newScale = GUILayout.HorizontalSlider(characterSettings.overrideScale, 0.1f, 10, GUILayout.Width(300));
-
-            characterSettings.overrideScale = newScale;
-            var sizeDiff = Math.Log(1 / newScale, 0.66);
-            var size = unitEntityData.Descriptor.OriginalSize + (int)Math.Round(sizeDiff, 0);
-
-            GUILayout.Label($" Scale {newScale} sizeChange {sizeDiff} sizeCategory {size}", GUILayout.ExpandWidth(false));
+            var sizeModifier = (int)GUILayout.HorizontalSlider(characterSettings.overrideScaleCheat, -4, 4, GUILayout.Width(300));
+            var originalSizeCategory = (int)unitEntityData.Descriptor.OriginalSize;
+            var newSizeCategory = (int)unitEntityData.Descriptor.State.Size + sizeModifier;
+            var newScaleFactor = 1 * Math.Pow(1 / 0.66, newSizeCategory - originalSizeCategory);
+            characterSettings.overrideScaleCheat = sizeModifier;
+            GUILayout.Label($" Scale {newScaleFactor} sizeCategory {(Size)newSizeCategory}", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 #endif
         }
@@ -495,7 +478,6 @@ namespace VisualAdjustments
             GUILayout.EndHorizontal();
             ChooseSize(unitEntityData, characterSettings);
             ChooseSize2(unitEntityData, characterSettings);
-            ChooseSize3(unitEntityData, characterSettings);
         }
     }
     
