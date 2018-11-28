@@ -83,6 +83,7 @@ namespace VisualAdjustments
                 }
                 doll.ApplyRampIndices(character);
                 Traverse.Create(unitEntityData.View).Field("m_EquipmentClass").SetValue(null); //UpdateClassEquipment won't update if the class doesn't change
+                //Adds Armor
                 unitEntityData.View.UpdateBodyEquipmentModel();
                 unitEntityData.View.UpdateClassEquipment();
             }
