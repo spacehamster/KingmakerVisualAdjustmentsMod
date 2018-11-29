@@ -482,13 +482,23 @@ namespace VisualAdjustments
                     if (!characterSettings.showScale) return;
                     var originalScale = __instance.GetSizeScale();
                     float sizeScale = originalScale * (float)Math.Pow(1 / 0.66, characterSettings.overrideScale);
-                    //TODO calculate what m_Scale should be from __instance.transform.localScale
-                    var m_Scale = Traverse.Create(__instance).Field("m_Scale").GetValue<float>();
                     var m_OriginalScale = Traverse.Create(__instance).Field("m_OriginalScale").GetValue<Vector3>();
-                    if (!__instance.DoNotAdjustScale)
+                    var m_Scale = __instance.transform.localScale.x / m_OriginalScale.x;
+                    if (!sizeScale.Equals(m_Scale) && !__instance.DoNotAdjustScale)
                     {
-                        __instance.transform.localScale = m_OriginalScale * sizeScale;
+                        float scaleDelta = sizeScale - m_Scale;
+                        float deltaTime = Game.Instance.TimeController.DeltaTime;
+                        float scaleStep = scaleDelta * deltaTime * 2f;
+                        m_Scale = (scaleDelta <= 0f) ? Math.Max(sizeScale, m_Scale + scaleStep) : Math.Min(sizeScale, m_Scale + scaleStep);
+                        __instance.transform.localScale = m_OriginalScale * m_Scale;
                     }
+                    if (__instance.ParticlesSnapMap)
+                    {
+                        //Is this necessary?
+                        __instance.ParticlesSnapMap.AdditionalScale = __instance.transform.localScale.x / m_OriginalScale.x;
+                    }
+                    //Prevent fighting m_Scale to set transform scale
+                    Traverse.Create(__instance).Field("m_Scale").SetValue(__instance.GetSizeScale());
                 }
                 catch (Exception ex)
                 {

@@ -98,8 +98,8 @@ namespace VisualAdjustments
                         GUILayout.BeginHorizontal();
                         GUILayout.Label(string.Format("{0}", unitEntityData.CharacterName), "box", GUILayout.Width(300f));
                         characterSettings.showOverrideSelection = GUILayout.Toggle(characterSettings.showOverrideSelection, "Show Override Selection", GUILayout.ExpandWidth(false));
-                        if (characterSettings.showOverrideSelection) ChooseEquipmentOverride(unitEntityData, characterSettings);
                         GUILayout.EndHorizontal();
+                        if (characterSettings.showOverrideSelection) ChooseEquipmentOverride(unitEntityData, characterSettings);
                         return;
                     }
                     GUILayout.BeginHorizontal();
