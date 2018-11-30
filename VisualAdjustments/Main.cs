@@ -100,7 +100,7 @@ namespace VisualAdjustments
                         characterSettings.showOverrideSelection = GUILayout.Toggle(characterSettings.showOverrideSelection, "Show Override Selection", GUILayout.ExpandWidth(false));
                         GUILayout.EndHorizontal();
                         if (characterSettings.showOverrideSelection) ChooseEquipmentOverride(unitEntityData, characterSettings);
-                        return;
+                        continue;
                     }
                     GUILayout.BeginHorizontal();
                     GUILayout.Label(string.Format("{0}", unitEntityData.CharacterName), "box", GUILayout.Width(300f));
@@ -510,8 +510,7 @@ namespace VisualAdjustments
                 ViewManager.ReplaceView(unitEntityData, characterSettings.overrideView);
             }
             GUILayout.EndHorizontal();
-            characterSettings.showScale = GUILayout.Toggle(characterSettings.showScale, "Use Override Scale");
-            if (characterSettings.showScale) ChooseSize(unitEntityData, characterSettings);
+            ChooseSize(unitEntityData, characterSettings);
             ChooseSizeCheat(unitEntityData, characterSettings);
         }
     }

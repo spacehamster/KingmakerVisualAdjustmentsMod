@@ -479,7 +479,6 @@ namespace VisualAdjustments
                     if (!__instance.EntityData.IsPlayerFaction) return;
                     var characterSettings = Main.settings.GetCharacterSettings(__instance.EntityData);
                     if (characterSettings == null) return;
-                    if (!characterSettings.showScale) return;
                     var originalScale = __instance.GetSizeScale();
                     float sizeScale = originalScale * (float)Math.Pow(1 / 0.66, characterSettings.overrideScale);
                     var m_OriginalScale = Traverse.Create(__instance).Field("m_OriginalScale").GetValue<Vector3>();
