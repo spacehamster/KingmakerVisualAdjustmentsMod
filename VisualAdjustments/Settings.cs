@@ -84,8 +84,13 @@ namespace VisualAdjustments
             {
                 try
                 {
-                    Settings result = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(filepath));
-                    return result;
+                    JsonSerializer serializer = new JsonSerializer();
+                    using (StreamReader sr = new StreamReader(filepath))
+                    using (JsonTextReader reader = new JsonTextReader(sr))
+                    {
+                        Settings result = serializer.Deserialize<Settings>(reader);
+                        return result;
+                    }
                 }
                 catch (Exception ex)
                 {
