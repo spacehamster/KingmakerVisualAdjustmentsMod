@@ -459,8 +459,35 @@ namespace VisualAdjustments
                     var characterSettings = Main.settings.GetCharacterSettings(__instance.EntityData);
                     if (characterSettings == null) return;
                     var sizeDiff = __instance.EntityData.Descriptor.State.Size + characterSettings.overrideScaleCheat - __instance.EntityData.Descriptor.OriginalSize;
-                    var newScaleFactor = 1 * Math.Pow(1 / 0.66, sizeDiff);
+                    var newScaleFactor = Math.Pow(1 / 0.66, sizeDiff);
                     __result = (float)newScaleFactor;
+                }
+                catch (Exception ex)
+                {
+                    Main.DebugError(ex);
+                }
+            }
+        }
+        [HarmonyPatch(typeof(UnitEntityView), "GetSpeedAnimationCoeff")]
+        static class UnitEntityView_GetSpeedAnimationCoeff_Patch
+        {
+            static void Postfix(UnitEntityView __instance, ref float __result)
+            {
+                try
+                {
+                    if (!Main.enabled) return;
+                    if (!__instance.EntityData.IsPlayerFaction) return;
+                    var characterSettings = Main.settings.GetCharacterSettings(__instance.EntityData);
+                    if (characterSettings == null) return;
+                    if (characterSettings.overrideScaleShapeshiftOnly &&
+                        !__instance.EntityData.Body.IsPolymorphed)
+                    {
+                        return;
+                    }
+                    __result *= __instance.GetSizeScale();
+                    var sizeDiff = __instance.EntityData.Descriptor.State.Size + characterSettings.overrideScale - __instance.EntityData.Descriptor.OriginalSize;
+                    var newScaleFactor = Math.Pow(1 / 0.66, sizeDiff);
+                    __result /= (float)newScaleFactor;
                 }
                 catch (Exception ex)
                 {
@@ -479,6 +506,11 @@ namespace VisualAdjustments
                     if (!__instance.EntityData.IsPlayerFaction) return;
                     var characterSettings = Main.settings.GetCharacterSettings(__instance.EntityData);
                     if (characterSettings == null) return;
+                    if(characterSettings.overrideScaleShapeshiftOnly &&
+                        !__instance.EntityData.Body.IsPolymorphed)
+                    {
+                        return;
+                    }
                     var originalScale = __instance.GetSizeScale();
                     float sizeScale = originalScale * (float)Math.Pow(1 / 0.66, characterSettings.overrideScale);
                     var m_OriginalScale = Traverse.Create(__instance).Field("m_OriginalScale").GetValue<Vector3>();

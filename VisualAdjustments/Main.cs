@@ -510,6 +510,7 @@ namespace VisualAdjustments
                 ViewManager.ReplaceView(unitEntityData, characterSettings.overrideView);
             }
             GUILayout.EndHorizontal();
+            characterSettings.overrideScaleShapeshiftOnly = GUILayout.Toggle(characterSettings.overrideScaleShapeshiftOnly, "Only override polymorph scale");
             ChooseSize(unitEntityData, characterSettings);
             ChooseSizeCheat(unitEntityData, characterSettings);
         }
