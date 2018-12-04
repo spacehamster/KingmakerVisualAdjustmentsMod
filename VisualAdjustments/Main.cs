@@ -21,6 +21,8 @@ namespace VisualAdjustments
 
     public class Main
     {
+        const float DefaultLabelWidth = 200f;
+        const float DefaultSliderWidth = 300f;
         public static UnityModManager.ModEntry.ModLogger logger;
         [System.Diagnostics.Conditional("DEBUG")]
         public static void DebugLog(string msg)
@@ -94,11 +96,11 @@ namespace VisualAdjustments
                     } 
                     if (unitEntityData.Descriptor.IsPet)
                     {
-                        GUILayout.Label(string.Format("{0}", unitEntityData.CharacterName), "box", GUILayout.Width(300f));
+                        GUILayout.Label(string.Format("{0}", unitEntityData.CharacterName), "box", GUILayout.Width(DefaultLabelWidth));
                         return;
                     }
                     GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-                    GUILayout.Label(string.Format("{0}", unitEntityData.CharacterName), "box", GUILayout.Width(300f));
+                    GUILayout.Label(string.Format("{0}", unitEntityData.CharacterName), "box", GUILayout.Width(DefaultLabelWidth));
                     characterSettings.showClassSelection = GUILayout.Toggle(characterSettings.showClassSelection, "Select Outfit", GUILayout.ExpandWidth(false));
                     if (unitEntityData.Descriptor.Doll != null)
                     {
@@ -168,8 +170,8 @@ namespace VisualAdjustments
                 var key = unitEntityData.Descriptor.UISettings.CustomPortrait.CustomId;
                 var oldIndex = DollResourcesManager.CustomPortraits.IndexOf(key);
                 GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-                GUILayout.Label("Portrait:  ", GUILayout.Width(300));
-                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.CustomPortraits.Count, GUILayout.Width(300)), 0);
+                GUILayout.Label("Portrait:  ", GUILayout.Width(DefaultLabelWidth));
+                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.CustomPortraits.Count, GUILayout.Width(DefaultSliderWidth)), 0);
                 var value = newIndex >= 0 && newIndex < DollResourcesManager.CustomPortraits.Count ? DollResourcesManager.CustomPortraits[newIndex] : null;
                 GUILayout.Label(" " + value, GUILayout.ExpandWidth(false));
                 if(GUILayout.Button("Use Normal"))
@@ -196,8 +198,8 @@ namespace VisualAdjustments
                 var key = unitEntityData.Descriptor.UISettings.PortraitBlueprint?.name;
                 var oldIndex = DollResourcesManager.Portrait.IndexOfKey(key != null ? key : "");
                 GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-                GUILayout.Label("Portrait ", GUILayout.Width(300));
-                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.Portrait.Count, GUILayout.Width(300)), 0);
+                GUILayout.Label("Portrait ", GUILayout.Width(DefaultLabelWidth));
+                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.Portrait.Count, GUILayout.Width(DefaultSliderWidth)), 0);
                 var value = newIndex >= 0 && newIndex < DollResourcesManager.Portrait.Count ? DollResourcesManager.Portrait.Values[newIndex] : null;
                 GUILayout.Label(" " + value, GUILayout.ExpandWidth(false));
                 if (GUILayout.Button("Use Custom"))
@@ -228,8 +230,8 @@ namespace VisualAdjustments
                oldIndex = DollResourcesManager.Asks.IndexOfKey(unitEntityData.Descriptor.CustomAsks.name);
             }
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-            GUILayout.Label("Voice  ", GUILayout.Width(300));
-            var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.Asks.Count, GUILayout.Width(300)), 0);
+            GUILayout.Label("Voice  ", GUILayout.Width(DefaultLabelWidth));
+            var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.Asks.Count, GUILayout.Width(DefaultSliderWidth)), 0);
             var value = (newIndex >= 0 && newIndex < DollResourcesManager.Asks.Count) ? DollResourcesManager.Asks.Values[newIndex] : null;
             GUILayout.Label(" " + value, GUILayout.ExpandWidth(false));
             if (GUILayout.Button("Preview", GUILayout.ExpandWidth(false)))
@@ -249,8 +251,8 @@ namespace VisualAdjustments
         {
             if (list.Count == 0) return;
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-            GUILayout.Label(label + " ", GUILayout.Width(300));
-            var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, 0, list.Count - 1, GUILayout.Width(300)), 0);
+            GUILayout.Label(label + " ", GUILayout.Width(DefaultLabelWidth));
+            var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, 0, list.Count - 1, GUILayout.Width(DefaultSliderWidth)), 0);
             GUILayout.Label(" " + newIndex, GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
             if (newIndex != currentIndex && newIndex < list.Count)
@@ -288,7 +290,7 @@ namespace VisualAdjustments
         }
         static void ChooseDoll(UnitEntityData unitEntityData)
         {
-            if (!unitEntityData.IsMainCharacter && !unitEntityData.IsCustomCompanion() &&  GUILayout.Button("Destroy Doll", GUILayout.Width(300)))
+            if (!unitEntityData.IsMainCharacter && !unitEntityData.IsCustomCompanion() &&  GUILayout.Button("Destroy Doll", GUILayout.Width(DefaultLabelWidth)))
             {
                 unitEntityData.Descriptor.Doll = null;
                 unitEntityData.Descriptor.ForcceUseClassEquipment = false;
@@ -312,7 +314,7 @@ namespace VisualAdjustments
         }
         static void ChooseCompanionColor(CharacterSettings characterSettings, UnitEntityData unitEntityData)
         {
-            if (GUILayout.Button("Create Doll", GUILayout.Width(300)))
+            if (GUILayout.Button("Create Doll", GUILayout.Width(DefaultLabelWidth)))
             {
                 var race = unitEntityData.Descriptor.Progression.Race;
                 var options = unitEntityData.Descriptor.Gender == Gender.Male ? race.MaleOptions : race.FemaleOptions;
@@ -336,8 +338,8 @@ namespace VisualAdjustments
             GUILayout.Label("Note: Colors only applies to non-default outfits");
             {
                 GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-                GUILayout.Label("Primary Outfit Color ", GUILayout.Width(300));
-                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(characterSettings.companionPrimary, 0, 35, GUILayout.Width(300)), 0);
+                GUILayout.Label("Primary Outfit Color ", GUILayout.Width(DefaultLabelWidth));
+                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(characterSettings.companionPrimary, 0, 35, GUILayout.Width(DefaultSliderWidth)), 0);
                 GUILayout.Label(" " + newIndex, GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
                 if (newIndex != characterSettings.companionPrimary)
@@ -348,8 +350,8 @@ namespace VisualAdjustments
             }
             {
                 GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-                GUILayout.Label("Secondary Outfit Color ", GUILayout.Width(300));
-                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(characterSettings.companionSecondary, 0, 35, GUILayout.Width(300)), 0);
+                GUILayout.Label("Secondary Outfit Color ", GUILayout.Width(DefaultLabelWidth));
+                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(characterSettings.companionSecondary, 0, 35, GUILayout.Width(DefaultSliderWidth)), 0);
                 GUILayout.Label(" " + newIndex, GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
                 if (newIndex != characterSettings.companionSecondary)
@@ -402,12 +404,20 @@ namespace VisualAdjustments
             ChooseToggle("Hide Weapon Enchantments", ref characterSettings.hideWeaponEnchantments, onHideWeaponEnchantment);
             ChooseToggle("Hide Wings", ref characterSettings.hideWings, onHideBuff);
         }
-        static void ChooseSlider(string name, SortedList<string, string> items, ref string currentItem, Action onChoose)
+        static void ChooseSlider(string name, UnorderedList<string, string> items, ref string currentItem, Action onChoose)
         {
             var currentIndex = currentItem == null ? -1 : items.IndexOfKey(currentItem);
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-            GUILayout.Label(name + " ", GUILayout.Width(300));
-            var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, -1, items.Count - 1, GUILayout.Width(300)), 0);
+            GUILayout.Label(name + " ", GUILayout.Width(DefaultLabelWidth));
+            var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, -1, items.Count - 1, GUILayout.Width(DefaultSliderWidth)), 0);
+            if (GUILayout.Button("Prev", GUILayout.Width(45)) && currentIndex >= 0)
+            {
+                newIndex = currentIndex - 1;
+            }
+            if (GUILayout.Button("Next", GUILayout.Width(45)) && currentIndex < items.Count - 1)
+            {
+                newIndex = currentIndex + 1;
+            }
             var displayText = newIndex == -1 ? "None" : items.Values[newIndex];
             GUILayout.Label(" " + displayText, GUILayout.ExpandWidth(true));
             GUILayout.EndHorizontal();
@@ -424,7 +434,7 @@ namespace VisualAdjustments
                 CharacterManager.RebuildCharacter(unitEntityData);
                 CharacterManager.UpdateModel(unitEntityData.View);
             };
-            GUILayout.Label("Equipment", "box", GUILayout.Width(300f));
+            GUILayout.Label("Equipment", "box", GUILayout.Width(DefaultLabelWidth));
             Action onView = () => ViewManager.ReplaceView(unitEntityData, characterSettings.overrideView);
             ChooseSlider("Override Helm", EquipmentResourcesManager.Helm, ref characterSettings.overrideHelm, onEquipment);
             ChooseSlider("Override Cloak ", EquipmentResourcesManager.Cloak, ref characterSettings.overrideCloak, onEquipment);
@@ -432,7 +442,7 @@ namespace VisualAdjustments
             ChooseSlider("Override Bracers ", EquipmentResourcesManager.Bracers, ref characterSettings.overrideBracers, onEquipment);
             ChooseSlider("Override Gloves ", EquipmentResourcesManager.Gloves, ref characterSettings.overrideGloves, onEquipment);
             ChooseSlider("Override Boots ", EquipmentResourcesManager.Boots, ref characterSettings.overrideBoots, onEquipment);
-            GUILayout.Label("Weapons", "box", GUILayout.Width(300f));
+            GUILayout.Label("Weapons", "box", GUILayout.Width(DefaultLabelWidth));
             foreach (var kv in EquipmentResourcesManager.Weapons)
             {
                 var animationStyle = kv.Key;
@@ -447,36 +457,14 @@ namespace VisualAdjustments
                 ChooseSlider($"Override {animationStyle} ", weaponLookup, ref currentValue, onWeapon);
             }
 
-            GUILayout.Label("View", "box", GUILayout.Width(300f));
-            GUILayout.BeginHorizontal();
+            GUILayout.Label("View", "box", GUILayout.Width(DefaultLabelWidth));
             ChooseSlider("Override View", EquipmentResourcesManager.Units, ref characterSettings.overrideView, onView);
-            if (GUILayout.Button("Prev", GUILayout.Width(45)))
-            {
-                var currentIndex = EquipmentResourcesManager.Units.IndexOfKey(characterSettings.overrideView);
-                if (currentIndex == 0)
-                {
-                    characterSettings.overrideView = "";
-                }
-                else
-                {
-                    characterSettings.overrideView = EquipmentResourcesManager.Units.Keys[currentIndex - 1];
-                }
-                ViewManager.ReplaceView(unitEntityData, characterSettings.overrideView);
-            }
-            if (GUILayout.Button("Next", GUILayout.Width(45)))
-            {
-                var currentIndex = EquipmentResourcesManager.Units.IndexOfKey(characterSettings.overrideView);
-                if (currentIndex == EquipmentResourcesManager.Units.Count) return;
-                characterSettings.overrideView = EquipmentResourcesManager.Units.Keys[currentIndex + 1];
-                ViewManager.ReplaceView(unitEntityData, characterSettings.overrideView);
-            }
-            GUILayout.EndHorizontal();
 #if (DEBUG)
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Override Scale", GUILayout.Width(300));
+            GUILayout.Label("Override Scale", GUILayout.Width(DefaultLabelWidth));
             var currentScale = Traverse.Create(unitEntityData.View).Field("m_Scale").GetValue<float>();
             var originalScale = Traverse.Create(unitEntityData.View).Field("m_OriginalScale").GetValue<Vector3>();
-            var newScale = GUILayout.HorizontalSlider(currentScale, 0.1f, 5, GUILayout.Width(300));
+            var newScale = GUILayout.HorizontalSlider(currentScale, 0.1f, 5, GUILayout.Width(DefaultSliderWidth));
             Traverse.Create(unitEntityData.View).Field("m_Scale").SetValue(newScale);
             unitEntityData.View.transform.localScale = originalScale * newScale;
             var sizeDiff = Math.Log(1 / newScale, 0.66);

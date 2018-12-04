@@ -1,13 +1,15 @@
 ﻿using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Items.Equipment;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using static Kingmaker.UI.Common.ItemsFilter;
 
 namespace VisualAdjustments
 {
     public class EquipmentResourcesManager
     {
-        public static SortedList<string, string> Helm
+        public static UnorderedList<string, string> Helm
         {
             get
             {
@@ -15,7 +17,7 @@ namespace VisualAdjustments
                 return m_Helm;
             }
         }
-        public static SortedList<string, string> Cloak
+        public static UnorderedList<string, string> Cloak
         {
             get
             {
@@ -23,7 +25,7 @@ namespace VisualAdjustments
                 return m_Cloak;
             }
         }
-        public static SortedList<string, string> Armor
+        public static UnorderedList<string, string> Armor
         {
             get
             {
@@ -31,7 +33,7 @@ namespace VisualAdjustments
                 return m_Armor;
             }
         }
-        public static SortedList<string, string> Bracers
+        public static UnorderedList<string, string> Bracers
         {
             get
             {
@@ -39,7 +41,7 @@ namespace VisualAdjustments
                 return m_Bracers;
             }
         }
-        public static SortedList<string, string> Gloves
+        public static UnorderedList<string, string> Gloves
         {
             get
             {
@@ -47,7 +49,7 @@ namespace VisualAdjustments
                 return m_Gloves;
             }
         }
-        public static SortedList<string, string> Boots
+        public static UnorderedList<string, string> Boots
         {
             get
             {
@@ -55,7 +57,7 @@ namespace VisualAdjustments
                 return m_Boots;
             }
         }
-        public static SortedList<string, string> Units
+        public static UnorderedList<string, string> Units
         {
             get
             {
@@ -63,7 +65,7 @@ namespace VisualAdjustments
                 return m_Units; ;
             }
         }
-        public static SortedList<string, SortedList<string, string>> Weapons
+        public static SortedList<string, UnorderedList<string, string>> Weapons
         {
             get
             {
@@ -71,19 +73,19 @@ namespace VisualAdjustments
                 return m_Weapons;
             }
         }
-        private static SortedList<string, string> m_Helm = new SortedList<string, string>();
-        private static SortedList<string, string> m_Cloak = new SortedList<string, string>();
-        private static SortedList<string, string> m_Armor = new SortedList<string, string>();
-        private static SortedList<string, string> m_Bracers = new SortedList<string, string>();
-        private static SortedList<string, string> m_Gloves = new SortedList<string, string>();
-        private static SortedList<string, string> m_Boots = new SortedList<string, string>();
-        private static SortedList<string, string> m_Units = new SortedList<string, string>();
-        private static SortedList<string, SortedList<string, string>> m_Weapons = new SortedList<string, SortedList<string, string>>();
+        private static UnorderedList<string, string> m_Helm = new UnorderedList<string, string>();
+        private static UnorderedList<string, string> m_Cloak = new UnorderedList<string, string>();
+        private static UnorderedList<string, string> m_Armor = new UnorderedList<string, string>();
+        private static UnorderedList<string, string> m_Bracers = new UnorderedList<string, string>();
+        private static UnorderedList<string, string> m_Gloves = new UnorderedList<string, string>();
+        private static UnorderedList<string, string> m_Boots = new UnorderedList<string, string>();
+        private static UnorderedList<string, string> m_Units = new UnorderedList<string, string>();
+        private static SortedList<string, UnorderedList<string, string>> m_Weapons = new SortedList<string, UnorderedList<string, string>>();
         private static bool loaded = false;
         static void Init()
         {
-            var blueprints = ResourcesLibrary.GetBlueprints<BlueprintItemEquipment>();
-            foreach(var bp in blueprints)
+            var blueprints = ResourcesLibrary.GetBlueprints<BlueprintItemEquipment>().OrderBy((bp) => bp.name);
+            foreach (var bp in blueprints)
             {
                 if (bp.EquipmentEntity == null) continue;
                 switch (bp.ItemType)
@@ -116,16 +118,16 @@ namespace VisualAdjustments
                         break;
                 }
             }
-            var weapons = ResourcesLibrary.GetBlueprints<BlueprintItemEquipmentHand>();
+            var weapons = ResourcesLibrary.GetBlueprints<BlueprintItemEquipmentHand>().OrderBy((bp) => bp.name);
             foreach (var bp in weapons)
             {
                 var visualParameters = bp.VisualParameters;
                 var animationStyle = visualParameters.AnimStyle.ToString();
                 if (bp.VisualParameters.Model == null) continue;
-                SortedList<string, string> eeList = null;
+                UnorderedList<string, string> eeList = null;
                 if (!m_Weapons.ContainsKey(animationStyle))
                 {
-                    eeList = new SortedList<string, string>();
+                    eeList = new UnorderedList<string, string>();
                     m_Weapons[animationStyle] = eeList;
                 } else
                 {
@@ -137,11 +139,19 @@ namespace VisualAdjustments
                 }
                 eeList[bp.AssetGuid] = bp.name;
             }
-            var units = ResourcesLibrary.GetBlueprints<BlueprintUnit>();
+            Func<BlueprintUnit, string> getViewName = (bp) =>
+           {
+               if (!ResourcesLibrary.LibraryObject.ResourcePathsByAssetId.ContainsKey(bp.Prefab.AssetId)) return "NULL";
+               var path = ResourcesLibrary.LibraryObject.ResourcePathsByAssetId[bp.Prefab.AssetId].Split('/');
+               return path[path.Length - 1];
+           };
+            var units = ResourcesLibrary.GetBlueprints<BlueprintUnit>().OrderBy(getViewName);
             foreach (var bp in units)
             {
                 if (bp.Prefab.AssetId == "") continue;
-                m_Units[bp.Prefab.AssetId] = bp.name;
+                if (!ResourcesLibrary.LibraryObject.ResourcePathsByAssetId.ContainsKey(bp.Prefab.AssetId)) continue;             
+                if (m_Units.ContainsKey(bp.Prefab.AssetId)) continue;
+                m_Units[bp.Prefab.AssetId] = getViewName(bp);
             }
             loaded = true;
         }
