@@ -329,7 +329,19 @@ namespace VisualAdjustments
             ChooseRamp(unitEntityData, doll, "Primary Outfit Color", doll.GetOutfitRampsPrimary(), doll.EquipmentRampIndex, (int index) => doll.SetEquipColors(index, doll.EquipmentRampIndexSecondary));
             ChooseRamp(unitEntityData, doll, "Secondary Outfit Color", doll.GetOutfitRampsSecondary(), doll.EquipmentRampIndexSecondary, (int index) => doll.SetEquipColors(doll.EquipmentRampIndex, index));
             ChooseVisualPreset(unitEntityData, doll, "Body Type", doll.Race.Presets, doll.RacePreset);
-            //ChooseEELRamp(unitEntityData, doll, (new int[] { 0, 1 }).ToList(), doll.LeftHanded ? 1 : 0, "Left Handed", (int value) => doll.SetLeftHanded(value > 0)); //TODO
+            if (doll.LeftHanded && GUILayout.Button("Set Right Handed", GUILayout.Width(DefaultLabelWidth)))
+            {
+                doll.SetLeftHanded(false);
+                unitEntityData.Descriptor.Doll = doll.CreateData();
+                CharacterManager.RebuildCharacter(unitEntityData);
+            }
+            else if (!doll.LeftHanded && GUILayout.Button("Set Left Handed", GUILayout.Width(DefaultLabelWidth)))
+            {
+                doll.SetLeftHanded(true);
+                unitEntityData.Descriptor.Doll = doll.CreateData();
+                CharacterManager.RebuildCharacter(unitEntityData);
+            }
+            //ChooseRamp(unitEntityData, doll, "Handedness",  (new int[] { 0, 1 }).ToList(), doll.LeftHanded ? 1 : 0, "Left Handed", (int value) => doll.SetLeftHanded(value > 0)); //TODO
             ChoosePortrait(unitEntityData);
             if (unitEntityData.IsMainCharacter || unitEntityData.IsCustomCompanion()) ChooseAsks(unitEntityData);
         }
