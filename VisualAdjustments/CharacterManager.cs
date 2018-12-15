@@ -150,6 +150,12 @@ namespace VisualAdjustments
                 case "f9417988783876044b76f918f8636455": //"Nok-Nok",
                     FilterOutfit("Rogue");
                     break;
+                case "c807d18a89f96c74f8bb48b31b616323": //"Kalikke",
+                    FilterOutfit("Kineticist");
+                    break;
+                case "f1c0b181a534f4940ae17f243a5968ec": //"Kanerah",
+                    FilterOutfit("Kineticist");
+                    break;
             }
             var _class = __instance.EntityData.Descriptor.Progression.GetEquipmentClass();
             var gender = __instance.EntityData.Descriptor.Gender;
@@ -269,6 +275,28 @@ namespace VisualAdjustments
                 if (!OverrideEquipment(view, view.EntityData.Body.Feet, characterSettings.overrideBoots, ref dirty))
                 {
                     characterSettings.overrideBoots = "";
+                }
+            }
+            if (characterSettings.hideHorns)
+            {
+                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
+                {
+                    if (ee.BodyParts.Exists((bodypart) => bodypart.Type == BodyPartType.Horns))
+                    {
+                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
+                        dirty = true;
+                    }
+                }
+            }
+            if (characterSettings.hideTail)
+            {
+                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
+                {
+                    if (ee.name.StartsWith("Tail"))
+                    {
+                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
+                        dirty = true;
+                    }
                 }
             }
             if (characterSettings.hideBackpack)
@@ -411,6 +439,9 @@ namespace VisualAdjustments
                             break;
                         case "Inquisitor":
                             __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["f1a70d9e1b0b41e49874e1fa9052a1ce"];
+                            break;
+                        case "Kineticist":
+                            __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["42a455d9ec1ad924d889272429eb8391"];
                             break;
                         case "Magus":
                             __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["45a4607686d96a1498891b3286121780"];

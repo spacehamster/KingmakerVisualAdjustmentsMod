@@ -20,7 +20,6 @@ namespace VisualAdjustments
             public bool hideBackpack = false;
             public bool hideCap = false;
             public bool hideClassCloak = false;
-
             public bool hideHelmet = false;
             public bool hideItemCloak = false;
             public bool hideArmor = false;
@@ -29,6 +28,8 @@ namespace VisualAdjustments
             public bool hideBoots = false;
             public bool hideWings = false;
             public bool hideWeaponEnchantments = false;
+            public bool hideTail;
+            public bool hideHorns;
 
             public string overrideHelm = "";
             public string overrideCloak = "";
@@ -40,13 +41,13 @@ namespace VisualAdjustments
             public Dictionary<string, string> overrideWeapons = new Dictionary<string, string>();
 
             public bool hideWeapons = false;
+
 #if (DEBUG)
             public bool showInfo = false;
 #endif
             public string classOutfit = "Default";
             public int companionPrimary = 0;
             public int companionSecondary = 0;
-
         }
         [JsonProperty]
         private Dictionary<string, CharacterSettings> characterSettings = new Dictionary<string, CharacterSettings>();

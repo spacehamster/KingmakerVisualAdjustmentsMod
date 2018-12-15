@@ -15,6 +15,7 @@ using static VisualAdjustments.Settings;
 using Kingmaker.PubSubSystem;
 using Kingmaker.Visual.Sound;
 using Kingmaker.UnitLogic;
+using Kingmaker.Blueprints.Root;
 
 namespace VisualAdjustments
 {
@@ -44,6 +45,7 @@ namespace VisualAdjustments
             "Druid",
             "Fighter",
             "Inquisitor",
+            "Kineticist",
             "Magus",
             "Monk",
             "Paladin",
@@ -143,6 +145,8 @@ namespace VisualAdjustments
             GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
             foreach (var _class in classes)
             {
+                if (_class == "Kineticist" && !BlueprintRoot.Instance.DlcSettings.Tieflings.Enabled)
+                    continue;
                 if (characterSettings.classOutfit == _class)
                 {
                     GUI.skin.button.normal.textColor = Color.yellow;
@@ -303,8 +307,16 @@ namespace VisualAdjustments
             ChooseEEL(unitEntityData, doll, "Face", customizationOptions.Heads, doll.Head, (EquipmentEntityLink ee) => doll.SetHead(ee));
             ChooseEEL(unitEntityData, doll, "Hair", customizationOptions.Hair, doll.Hair,  (EquipmentEntityLink ee) => doll.SetHair(ee));
             ChooseEEL(unitEntityData, doll, "Beards", customizationOptions.Beards, doll.Beard,  (EquipmentEntityLink ee) => doll.SetBeard(ee));
+            if (BlueprintRoot.Instance.DlcSettings.Tieflings.Enabled)
+            {
+                ChooseEEL(unitEntityData, doll, "Horns", customizationOptions.Horns, doll.Horn, (EquipmentEntityLink ee) => doll.SetHorn(ee));
+            }
             ChooseRamp(unitEntityData, doll, "Hair Color", doll.GetHairRamps(), doll.HairRampIndex,  (int index) => doll.SetHairColor(index));
             ChooseRamp(unitEntityData, doll, "Skin Color", doll.GetSkinRamps(), doll.SkinRampIndex,  (int index) => doll.SetSkinColor(index));
+            if (BlueprintRoot.Instance.DlcSettings.Tieflings.Enabled)
+            {
+                ChooseRamp(unitEntityData, doll, "Horn Color", doll.GetHornsRamps(), doll.HornsRampIndex, (int index) => doll.SetHornsColor(index));
+            }
             ChooseRamp(unitEntityData, doll, "Primary Outfit Color", doll.GetOutfitRampsPrimary(), doll.EquipmentRampIndex,  (int index) => doll.SetEquipColors(index, doll.EquipmentRampIndexSecondary));
             ChooseRamp(unitEntityData, doll, "Secondary Outfit Color", doll.GetOutfitRampsSecondary(), doll.EquipmentRampIndexSecondary,  (int index) => doll.SetEquipColors(doll.EquipmentRampIndex, index));
             ChooseVisualPreset(unitEntityData, doll, "Body Type", doll.Race.Presets, doll.RacePreset);
@@ -403,6 +415,11 @@ namespace VisualAdjustments
             ChooseToggle("Hide Inactive Weapons", ref characterSettings.hideWeapons, onHideWeapon);
             ChooseToggle("Hide Weapon Enchantments", ref characterSettings.hideWeaponEnchantments, onHideWeaponEnchantment);
             ChooseToggle("Hide Wings", ref characterSettings.hideWings, onHideBuff);
+            if (BlueprintRoot.Instance.DlcSettings.Tieflings.Enabled)
+            {
+                ChooseToggle("Hide Horns", ref characterSettings.hideHorns, onHideEquipment);
+                ChooseToggle("Hide Tail", ref characterSettings.hideTail, onHideEquipment);
+            }
         }
         static void ChooseSlider(string name, UnorderedList<string, string> items, ref string currentItem, Action onChoose)
         {

@@ -16,6 +16,8 @@ namespace VisualAdjustments
         static private SortedList<string, EquipmentEntityLink> beard = new SortedList<string, EquipmentEntityLink>();
         static private SortedList<string, EquipmentEntityLink> eyebrows = new SortedList<string, EquipmentEntityLink>();
         static private SortedList<string, EquipmentEntityLink> skin = new SortedList<string, EquipmentEntityLink>();
+        static private SortedList<string, EquipmentEntityLink> tails = new SortedList<string, EquipmentEntityLink>();
+        static private SortedList<string, EquipmentEntityLink> horns = new SortedList<string, EquipmentEntityLink>();
         static private SortedList<string, EquipmentEntityLink> classOutfits = new SortedList<string, EquipmentEntityLink>();
         static private SortedList<string, BlueprintPortrait> portraits = new SortedList<string, BlueprintPortrait>();
         static private SortedList<string, BlueprintUnitAsksList> asks = new SortedList<string, BlueprintUnitAsksList>();
@@ -67,6 +69,8 @@ namespace VisualAdjustments
                     AddLinks(hair, customizationOptions.Hair);
                     AddLinks(beard, customizationOptions.Beards);
                     AddLinks(eyebrows, customizationOptions.Eyebrows);
+                    AddLinks(tails, customizationOptions.TailSkinColors);
+                    AddLinks(horns, customizationOptions.Horns);
                 }
             }
             foreach (var racePreset in racePresets)
@@ -118,6 +122,8 @@ namespace VisualAdjustments
             if (beard.ContainsKey(assetID)) return "Beard";
             if (eyebrows.ContainsKey(assetID)) return "Eyebrows";
             if (skin.ContainsKey(assetID)) return "Skin";
+            if (horns.ContainsKey(assetID)) return "Horn";
+            if (tails.ContainsKey(assetID)) return "Tail";
             if (classOutfits.ContainsKey(assetID)) return "ClassOutfit";
             return "Unknown";
         }
@@ -157,6 +163,21 @@ namespace VisualAdjustments
                     if (dollData.EntityRampIdices.ContainsKey(assetID))
                     {
                         dollState.SetHairColor(dollData.EntityRampIdices[assetID]);
+                    }
+                }
+                if (skin.ContainsKey(assetID))
+                {
+                    if (dollData.EntityRampIdices.ContainsKey(assetID))
+                    {
+                        dollState.SetSkinColor(dollData.EntityRampIdices[assetID]);
+                    }
+                }
+                if (horns.ContainsKey(assetID))
+                {
+                    dollState.SetHorn(horns[assetID]);
+                    if (dollData.EntityRampIdices.ContainsKey(assetID))
+                    {
+                        dollState.SetHornsColor(dollData.EntityRampIdices[assetID]);
                     }
                 }
                 if (skin.ContainsKey(assetID))
