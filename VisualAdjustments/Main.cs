@@ -101,7 +101,7 @@ namespace VisualAdjustments
                         GUILayout.Label(string.Format("{0}", unitEntityData.CharacterName), "box", GUILayout.Width(DefaultLabelWidth));
                         return;
                     }
-                    GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+                    GUILayout.BeginHorizontal();
                     GUILayout.Label(string.Format("{0}", unitEntityData.CharacterName), "box", GUILayout.Width(DefaultLabelWidth));
                     characterSettings.showClassSelection = GUILayout.Toggle(characterSettings.showClassSelection, "Select Outfit", GUILayout.ExpandWidth(false));
                     if (unitEntityData.Descriptor.Doll != null)
@@ -142,7 +142,7 @@ namespace VisualAdjustments
         {
             var normalColor = GUI.skin.button.normal.textColor;
             var focusedColor = GUI.skin.button.focused.textColor;
-            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+            GUILayout.BeginHorizontal();
             foreach (var _class in classes)
             {
                 if (_class == "Kineticist" && !BlueprintRoot.Instance.DlcSettings.Tieflings.Enabled)
@@ -157,7 +157,7 @@ namespace VisualAdjustments
                     GUI.skin.button.normal.textColor = normalColor;
                     GUI.skin.button.focused.textColor = focusedColor;
                 }
-                if (GUILayout.Button(_class, Array.Empty<GUILayoutOption>()))
+                if (GUILayout.Button(_class))
                 {
                     characterSettings.classOutfit = _class;
                     CharacterManager.RebuildCharacter(unitEntityData);
@@ -173,7 +173,7 @@ namespace VisualAdjustments
             if (unitEntityData.Portrait.IsCustom) {
                 var key = unitEntityData.Descriptor.UISettings.CustomPortrait.CustomId;
                 var oldIndex = DollResourcesManager.CustomPortraits.IndexOf(key);
-                GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+                GUILayout.BeginHorizontal();
                 GUILayout.Label("Portrait:  ", GUILayout.Width(DefaultLabelWidth));
                 var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.CustomPortraits.Count, GUILayout.Width(DefaultSliderWidth)), 0);
                 var value = newIndex >= 0 && newIndex < DollResourcesManager.CustomPortraits.Count ? DollResourcesManager.CustomPortraits[newIndex] : null;
@@ -201,7 +201,7 @@ namespace VisualAdjustments
             {
                 var key = unitEntityData.Descriptor.UISettings.PortraitBlueprint?.name;
                 var oldIndex = DollResourcesManager.Portrait.IndexOfKey(key != null ? key : "");
-                GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+                GUILayout.BeginHorizontal();
                 GUILayout.Label("Portrait ", GUILayout.Width(DefaultLabelWidth));
                 var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.Portrait.Count, GUILayout.Width(DefaultSliderWidth)), 0);
                 var value = newIndex >= 0 && newIndex < DollResourcesManager.Portrait.Count ? DollResourcesManager.Portrait.Values[newIndex] : null;
@@ -233,7 +233,7 @@ namespace VisualAdjustments
             {
                oldIndex = DollResourcesManager.Asks.IndexOfKey(unitEntityData.Descriptor.CustomAsks.name);
             }
-            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+            GUILayout.BeginHorizontal();
             GUILayout.Label("Voice  ", GUILayout.Width(DefaultLabelWidth));
             var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.Asks.Count, GUILayout.Width(DefaultSliderWidth)), 0);
             var value = (newIndex >= 0 && newIndex < DollResourcesManager.Asks.Count) ? DollResourcesManager.Asks.Values[newIndex] : null;
@@ -254,7 +254,7 @@ namespace VisualAdjustments
         static void ChooseFromList<T>(string label, IReadOnlyList<T> list, ref int currentIndex, Action onChoose)
         {
             if (list.Count == 0) return;
-            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+            GUILayout.BeginHorizontal();
             GUILayout.Label(label + " ", GUILayout.Width(DefaultLabelWidth));
             var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, 0, list.Count - 1, GUILayout.Width(DefaultSliderWidth)), 0);
             GUILayout.Label(" " + newIndex, GUILayout.ExpandWidth(false));
@@ -349,7 +349,7 @@ namespace VisualAdjustments
             }
             GUILayout.Label("Note: Colors only applies to non-default outfits");
             {
-                GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+                GUILayout.BeginHorizontal();
                 GUILayout.Label("Primary Outfit Color ", GUILayout.Width(DefaultLabelWidth));
                 var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(characterSettings.companionPrimary, 0, 35, GUILayout.Width(DefaultSliderWidth)), 0);
                 GUILayout.Label(" " + newIndex, GUILayout.ExpandWidth(false));
@@ -361,7 +361,7 @@ namespace VisualAdjustments
                 }
             }
             {
-                GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+                GUILayout.BeginHorizontal();
                 GUILayout.Label("Secondary Outfit Color ", GUILayout.Width(DefaultLabelWidth));
                 var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(characterSettings.companionSecondary, 0, 35, GUILayout.Width(DefaultSliderWidth)), 0);
                 GUILayout.Label(" " + newIndex, GUILayout.ExpandWidth(false));
@@ -424,7 +424,7 @@ namespace VisualAdjustments
         static void ChooseSlider(string name, UnorderedList<string, string> items, ref string currentItem, Action onChoose)
         {
             var currentIndex = currentItem == null ? -1 : items.IndexOfKey(currentItem);
-            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+            GUILayout.BeginHorizontal();
             GUILayout.Label(name + " ", GUILayout.Width(DefaultLabelWidth));
             var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, -1, items.Count - 1, GUILayout.Width(DefaultSliderWidth)), 0);
             if (GUILayout.Button("Prev", GUILayout.Width(45)) && currentIndex >= 0)
