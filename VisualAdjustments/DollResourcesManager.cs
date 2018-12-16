@@ -47,6 +47,14 @@ namespace VisualAdjustments
                 return asks;
             }
         }
+        static public SortedList<string, EquipmentEntityLink> ClassOutfits
+        {
+            get
+            {
+                if (!loaded) Init();
+                return classOutfits;
+            }
+        }
         static private bool loaded = false;
         static private void AddLinks(SortedList<string, EquipmentEntityLink> dict, EquipmentEntityLink[] links)
         {

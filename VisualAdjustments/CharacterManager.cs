@@ -20,9 +20,9 @@ namespace VisualAdjustments
         {
             if (unitEntityData.Descriptor.Doll == null) return -1;
             var doll = unitEntityData.Descriptor.Doll;
-            foreach (var assetId in doll.EntitySecondaryRampIdices.Keys.ToList())
+            foreach (var assetId in doll.EntityRampIdices.Keys)
             {
-                if (doll.EntityRampIdices.ContainsKey(assetId)) return doll.EntityRampIdices[assetId];
+                if (DollResourcesManager.ClassOutfits.ContainsKey(assetId)) return doll.EntityRampIdices[assetId];
             }
             return -1;
         }
@@ -30,9 +30,9 @@ namespace VisualAdjustments
         {
             if (unitEntityData.Descriptor.Doll == null) return -1;
             var doll = unitEntityData.Descriptor.Doll;
-            foreach (var assetId in doll.EntitySecondaryRampIdices.Keys.ToList())
+            foreach (var assetId in doll.EntitySecondaryRampIdices.Keys)
             {
-                return doll.EntitySecondaryRampIdices[assetId];
+                if(DollResourcesManager.ClassOutfits.ContainsKey(assetId)) return doll.EntitySecondaryRampIdices[assetId];
             }
             return -1;
         }
@@ -195,7 +195,7 @@ namespace VisualAdjustments
             {
                 if(ee.name == "EE_Ranger_M_Cape")
                 {
-                    ee.HideBodyParts &= ~(BodyPartType.Hair | BodyPartType.Hair2);
+                    ee.HideBodyParts &= ~(BodyPartType.Hair | BodyPartType.Hair2 | BodyPartType.Ears);
                 }
             }
         }
