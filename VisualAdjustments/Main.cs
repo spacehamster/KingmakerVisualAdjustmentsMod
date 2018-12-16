@@ -29,7 +29,7 @@ namespace VisualAdjustments
         [System.Diagnostics.Conditional("DEBUG")]
         public static void DebugLog(string msg)
         {
-            if(logger != null) logger.Log(msg);
+            if (logger != null) logger.Log(msg);
         }
         public static void DebugError(Exception ex)
         {
@@ -67,7 +67,8 @@ namespace VisualAdjustments
                 modEntry.OnSaveGUI = OnSaveGUI;
                 logger = modEntry.Logger;
             }
-            catch (Exception e){
+            catch (Exception e)
+            {
                 DebugLog(e.ToString() + "\n" + e.StackTrace);
                 throw e;
             }
@@ -91,12 +92,12 @@ namespace VisualAdjustments
                 foreach (UnitEntityData unitEntityData in Game.Instance.Player.ControllableCharacters)
                 {
                     Settings.CharacterSettings characterSettings = settings.GetCharacterSettings(unitEntityData);
-                    if(characterSettings == null)
+                    if (characterSettings == null)
                     {
                         characterSettings = new Settings.CharacterSettings();
                         characterSettings.characterName = unitEntityData.CharacterName;
                         settings.AddCharacterSettings(unitEntityData, characterSettings);
-                    } 
+                    }
                     if (unitEntityData.Descriptor.IsPet)
                     {
                         GUILayout.BeginHorizontal();
@@ -138,7 +139,8 @@ namespace VisualAdjustments
                     if (characterSettings.showInfo) InfoManager.ShowInfo(unitEntityData);
 #endif
                 }
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
                 DebugLog(e.ToString() + " " + e.StackTrace);
             }
@@ -175,7 +177,8 @@ namespace VisualAdjustments
         }
         static void ChoosePortrait(UnitEntityData unitEntityData)
         {
-            if (unitEntityData.Portrait.IsCustom) {
+            if (unitEntityData.Portrait.IsCustom)
+            {
                 var key = unitEntityData.Descriptor.UISettings.CustomPortrait.CustomId;
                 var oldIndex = DollResourcesManager.CustomPortraits.IndexOf(key);
                 GUILayout.BeginHorizontal();
@@ -183,7 +186,7 @@ namespace VisualAdjustments
                 var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.CustomPortraits.Count, GUILayout.Width(DefaultSliderWidth)), 0);
                 var value = newIndex >= 0 && newIndex < DollResourcesManager.CustomPortraits.Count ? DollResourcesManager.CustomPortraits[newIndex] : null;
                 GUILayout.Label(" " + value, GUILayout.ExpandWidth(false));
-                if(GUILayout.Button("Use Normal"))
+                if (GUILayout.Button("Use Normal"))
                 {
                     unitEntityData.Descriptor.UISettings.SetPortrait(
                         (BlueprintPortrait)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["621ada02d0b4bf64387babad3a53067b"]);
@@ -202,7 +205,8 @@ namespace VisualAdjustments
                         h.HandlePortraitChanged(unitEntityData);
                     });
                 }
-            } else
+            }
+            else
             {
                 var key = unitEntityData.Descriptor.UISettings.PortraitBlueprint?.name;
                 var oldIndex = DollResourcesManager.Portrait.IndexOfKey(key != null ? key : "");
@@ -236,7 +240,7 @@ namespace VisualAdjustments
             int oldIndex = -1;
             if (unitEntityData.Descriptor.CustomAsks != null)
             {
-               oldIndex = DollResourcesManager.Asks.IndexOfKey(unitEntityData.Descriptor.CustomAsks.name);
+                oldIndex = DollResourcesManager.Asks.IndexOfKey(unitEntityData.Descriptor.CustomAsks.name);
             }
             GUILayout.BeginHorizontal();
             GUILayout.Label("Voice  ", GUILayout.Width(DefaultLabelWidth));
@@ -290,7 +294,7 @@ namespace VisualAdjustments
         static void ChooseVisualPreset(UnitEntityData unitEntityData, DollState doll, string label, BlueprintRaceVisualPreset[] presets,
             BlueprintRaceVisualPreset currentPreset)
         {
-            var index = Array.FindIndex(presets, (vp) => vp == currentPreset); 
+            var index = Array.FindIndex(presets, (vp) => vp == currentPreset);
             ChooseFromList(label, presets, ref index, () => {
                 doll.SetRacePreset(presets[index]);
                 unitEntityData.Descriptor.Doll = doll.CreateData();
@@ -299,7 +303,7 @@ namespace VisualAdjustments
         }
         static void ChooseDoll(UnitEntityData unitEntityData)
         {
-            if (!unitEntityData.IsMainCharacter && !unitEntityData.IsCustomCompanion() &&  GUILayout.Button("Destroy Doll", GUILayout.Width(DefaultLabelWidth)))
+            if (!unitEntityData.IsMainCharacter && !unitEntityData.IsCustomCompanion() && GUILayout.Button("Destroy Doll", GUILayout.Width(DefaultLabelWidth)))
             {
                 unitEntityData.Descriptor.Doll = null;
                 unitEntityData.Descriptor.ForcceUseClassEquipment = false;
@@ -310,20 +314,20 @@ namespace VisualAdjustments
             var gender = unitEntityData.Gender;
             CustomizationOptions customizationOptions = gender != Gender.Male ? race.FemaleOptions : race.MaleOptions;
             ChooseEEL(unitEntityData, doll, "Face", customizationOptions.Heads, doll.Head, (EquipmentEntityLink ee) => doll.SetHead(ee));
-            ChooseEEL(unitEntityData, doll, "Hair", customizationOptions.Hair, doll.Hair,  (EquipmentEntityLink ee) => doll.SetHair(ee));
-            ChooseEEL(unitEntityData, doll, "Beards", customizationOptions.Beards, doll.Beard,  (EquipmentEntityLink ee) => doll.SetBeard(ee));
+            ChooseEEL(unitEntityData, doll, "Hair", customizationOptions.Hair, doll.Hair, (EquipmentEntityLink ee) => doll.SetHair(ee));
+            ChooseEEL(unitEntityData, doll, "Beards", customizationOptions.Beards, doll.Beard, (EquipmentEntityLink ee) => doll.SetBeard(ee));
             if (BlueprintRoot.Instance.DlcSettings.Tieflings.Enabled)
             {
                 ChooseEEL(unitEntityData, doll, "Horns", customizationOptions.Horns, doll.Horn, (EquipmentEntityLink ee) => doll.SetHorn(ee));
             }
-            ChooseRamp(unitEntityData, doll, "Hair Color", doll.GetHairRamps(), doll.HairRampIndex,  (int index) => doll.SetHairColor(index));
-            ChooseRamp(unitEntityData, doll, "Skin Color", doll.GetSkinRamps(), doll.SkinRampIndex,  (int index) => doll.SetSkinColor(index));
+            ChooseRamp(unitEntityData, doll, "Hair Color", doll.GetHairRamps(), doll.HairRampIndex, (int index) => doll.SetHairColor(index));
+            ChooseRamp(unitEntityData, doll, "Skin Color", doll.GetSkinRamps(), doll.SkinRampIndex, (int index) => doll.SetSkinColor(index));
             if (BlueprintRoot.Instance.DlcSettings.Tieflings.Enabled)
             {
                 ChooseRamp(unitEntityData, doll, "Horn Color", doll.GetHornsRamps(), doll.HornsRampIndex, (int index) => doll.SetHornsColor(index));
             }
-            ChooseRamp(unitEntityData, doll, "Primary Outfit Color", doll.GetOutfitRampsPrimary(), doll.EquipmentRampIndex,  (int index) => doll.SetEquipColors(index, doll.EquipmentRampIndexSecondary));
-            ChooseRamp(unitEntityData, doll, "Secondary Outfit Color", doll.GetOutfitRampsSecondary(), doll.EquipmentRampIndexSecondary,  (int index) => doll.SetEquipColors(doll.EquipmentRampIndex, index));
+            ChooseRamp(unitEntityData, doll, "Primary Outfit Color", doll.GetOutfitRampsPrimary(), doll.EquipmentRampIndex, (int index) => doll.SetEquipColors(index, doll.EquipmentRampIndexSecondary));
+            ChooseRamp(unitEntityData, doll, "Secondary Outfit Color", doll.GetOutfitRampsSecondary(), doll.EquipmentRampIndexSecondary, (int index) => doll.SetEquipColors(doll.EquipmentRampIndex, index));
             ChooseVisualPreset(unitEntityData, doll, "Body Type", doll.Race.Presets, doll.RacePreset);
             //ChooseEELRamp(unitEntityData, doll, (new int[] { 0, 1 }).ToList(), doll.LeftHanded ? 1 : 0, "Left Handed", (int value) => doll.SetLeftHanded(value > 0)); //TODO
             ChoosePortrait(unitEntityData);
@@ -455,30 +459,23 @@ namespace VisualAdjustments
          * Adjusting GetSizeScale will effect character corpulence and cause gameplay sideeffects
          * Changing m_OriginalScale will effect ParticlesSnapMap.AdditionalScale
          */
-        static void ChooseSize(UnitEntityData unitEntityData, CharacterSettings characterSettings)
+        static void ChooseSizeAdditive(UnitEntityData unitEntityData, CharacterSettings characterSettings)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Override Scale", GUILayout.Width(300));
-
-            var sizeModifier = (int)GUILayout.HorizontalSlider(characterSettings.overrideScale, -4, 4, GUILayout.Width(300));
-            var originalSizeCategory = (int)unitEntityData.Descriptor.OriginalSize;
-            var newSizeCategory = (int)unitEntityData.Descriptor.State.Size + sizeModifier;
-            var newScaleFactor = 1 * Math.Pow(1 / 0.66, newSizeCategory - originalSizeCategory);
-            characterSettings.overrideScale = sizeModifier;
-            GUILayout.Label($" Scale {sizeModifier}", GUILayout.ExpandWidth(false));
+            GUILayout.Label("Additive Scale Factor", GUILayout.Width(300));
+            var sizeModifier = (int)GUILayout.HorizontalSlider(characterSettings.additiveScaleFactor, -4, 4, GUILayout.Width(DefaultSliderWidth));
+            characterSettings.additiveScaleFactor = sizeModifier;
+            var sign = sizeModifier >= 0 ? "+" : "";
+            GUILayout.Label($" Scale {sign}{sizeModifier}", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
         }
-        static void ChooseSizeCheat(UnitEntityData unitEntityData, CharacterSettings characterSettings)
+        static void ChooseSizeOverride(UnitEntityData unitEntityData, CharacterSettings characterSettings)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Override Cheat Scale", GUILayout.Width(300));
-
-            var sizeModifier = (int)GUILayout.HorizontalSlider(characterSettings.overrideScaleCheat, -4, 4, GUILayout.Width(300));
-            var originalSizeCategory = (int)unitEntityData.Descriptor.OriginalSize;
-            var newSizeCategory = (int)unitEntityData.Descriptor.State.Size + sizeModifier;
-            var newScaleFactor = 1 * Math.Pow(1 / 0.66, newSizeCategory - originalSizeCategory);
-            characterSettings.overrideScaleCheat = sizeModifier;
-            GUILayout.Label($" Scale {sizeModifier}", GUILayout.ExpandWidth(false));
+            GUILayout.Label("Override Scale Factor", GUILayout.Width(300));
+            var sizeModifier = (int)GUILayout.HorizontalSlider(characterSettings.overrideScaleFactor, -4, 4, GUILayout.Width(DefaultSliderWidth));
+            characterSettings.overrideScaleFactor = sizeModifier;
+            GUILayout.Label($" Scale {(Size)(sizeModifier + 4)}", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
         }
         static void ChooseEquipmentOverride(UnitEntityData unitEntityData, CharacterSettings characterSettings)
@@ -513,10 +510,22 @@ namespace VisualAdjustments
 
             GUILayout.Label("View", "box", GUILayout.Width(DefaultLabelWidth));
             ChooseSlider("Override View", EquipmentResourcesManager.Units, ref characterSettings.overrideView, onView);
-            characterSettings.overrideScaleShapeshiftOnly = GUILayout.Toggle(characterSettings.overrideScaleShapeshiftOnly, "Only override polymorph scale");
-            ChooseSize(unitEntityData, characterSettings);
-            ChooseSizeCheat(unitEntityData, characterSettings);
+            GUILayout.BeginHorizontal();
+            var result = GUILayout.Toggle(characterSettings.overrideScale, "Override Scale", GUILayout.ExpandWidth(false));
+            if (result != characterSettings.overrideScale)
+            {
+                characterSettings.overrideScale = result;
+                var view = unitEntityData.View;
+                //Cause UnitEntityView to recalculate character size
+                Traverse.Create(view).Field("m_Scale").SetValue(view.GetSizeScale() + 0.01f);
+            }
+            characterSettings.overrideScaleShapeshiftOnly = GUILayout.Toggle(characterSettings.overrideScaleShapeshiftOnly, "Restrict to polymorph", GUILayout.ExpandWidth(false));
+            characterSettings.overrideScaleAdditive = GUILayout.Toggle(characterSettings.overrideScaleAdditive, "Use Additive Factor", GUILayout.ExpandWidth(false));
+            characterSettings.overrideScaleCheatMode = GUILayout.Toggle(characterSettings.overrideScaleCheatMode, "Use Cheat Mode", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+            if (characterSettings.overrideScale && characterSettings.overrideScaleAdditive) ChooseSizeAdditive(unitEntityData, characterSettings);
+            if (characterSettings.overrideScale && !characterSettings.overrideScaleAdditive) ChooseSizeOverride(unitEntityData, characterSettings);
         }
     }
-    
+
 }

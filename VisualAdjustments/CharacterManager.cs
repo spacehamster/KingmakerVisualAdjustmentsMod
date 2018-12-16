@@ -34,7 +34,7 @@ namespace VisualAdjustments
             var doll = unitEntityData.Descriptor.Doll;
             foreach (var assetId in doll.EntitySecondaryRampIdices.Keys)
             {
-                if(DollResourcesManager.ClassOutfits.ContainsKey(assetId)) return doll.EntitySecondaryRampIdices[assetId];
+                if (DollResourcesManager.ClassOutfits.ContainsKey(assetId)) return doll.EntitySecondaryRampIdices[assetId];
             }
             return -1;
         }
@@ -193,9 +193,9 @@ namespace VisualAdjustments
         }
         static void FixRangerCloak(UnitEntityView view)
         {
-            foreach(var ee in view.CharacterAvatar.EquipmentEntities)
+            foreach (var ee in view.CharacterAvatar.EquipmentEntities)
             {
-                if(ee.name == "EE_Ranger_M_Cape")
+                if (ee.name == "EE_Ranger_M_Cape")
                 {
                     ee.HideBodyParts &= ~(BodyPartType.Hair | BodyPartType.Hair2 | BodyPartType.Ears);
                 }
@@ -359,7 +359,8 @@ namespace VisualAdjustments
                 {
                     if (!Main.enabled) return;
                     UpdateModel(__instance);
-                } catch (Exception ex)
+                }
+                catch (Exception ex)
                 {
                     Main.DebugError(ex);
                 }
@@ -379,7 +380,8 @@ namespace VisualAdjustments
                 {
                     if (!Main.enabled) return;
                     UpdateModel(__instance);
-                } catch (Exception ex)
+                }
+                catch (Exception ex)
                 {
                     Main.DebugError(ex);
                 }
@@ -401,7 +403,8 @@ namespace VisualAdjustments
                 {
                     if (!Main.enabled) return;
                     UpdateModel(__instance);
-                } catch(Exception ex)
+                }
+                catch (Exception ex)
                 {
                     Main.DebugError(ex);
                 }
@@ -471,31 +474,11 @@ namespace VisualAdjustments
                     }
                     if (__result == null) return true;
                     return false;
-                } catch(Exception ex)
-                {
-                    Main.DebugError(ex);
-                    return true;
-                }
-            }
-        }
-        [HarmonyPatch(typeof(UnitEntityView), "GetSizeScale")]
-        static class UnitEntityView_GetSizeScale_Patch
-        {
-            static void Postfix(UnitEntityView __instance, ref float __result)
-            {
-                try
-                {
-                    if (!Main.enabled) return;
-                    if (!__instance.EntityData.IsPlayerFaction) return;
-                    var characterSettings = Main.settings.GetCharacterSettings(__instance.EntityData);
-                    if (characterSettings == null) return;
-                    var sizeDiff = __instance.EntityData.Descriptor.State.Size + characterSettings.overrideScaleCheat - __instance.EntityData.Descriptor.OriginalSize;
-                    var newScaleFactor = Math.Pow(1 / 0.66, sizeDiff);
-                    __result = (float)newScaleFactor;
                 }
                 catch (Exception ex)
                 {
                     Main.DebugError(ex);
+                    return true;
                 }
             }
         }
@@ -510,13 +493,16 @@ namespace VisualAdjustments
                     if (!__instance.EntityData.IsPlayerFaction) return;
                     var characterSettings = Main.settings.GetCharacterSettings(__instance.EntityData);
                     if (characterSettings == null) return;
+                    if (!characterSettings.overrideScale) return;
                     if (characterSettings.overrideScaleShapeshiftOnly &&
                         !__instance.EntityData.Body.IsPolymorphed)
                     {
                         return;
                     }
                     __result *= __instance.GetSizeScale();
-                    var sizeDiff = __instance.EntityData.Descriptor.State.Size + characterSettings.overrideScale - __instance.EntityData.Descriptor.OriginalSize;
+                    var sizeDiff = 0;
+                    if (characterSettings.overrideScaleAdditive) sizeDiff = __instance.EntityData.Descriptor.State.Size + characterSettings.additiveScaleFactor - __instance.EntityData.Descriptor.OriginalSize;
+                    else sizeDiff = characterSettings.overrideScaleFactor - (int)__instance.EntityData.Descriptor.OriginalSize;
                     var newScaleFactor = Math.Pow(1 / 0.66, sizeDiff);
                     __result /= (float)newScaleFactor;
                 }
@@ -537,13 +523,16 @@ namespace VisualAdjustments
                     if (!__instance.EntityData.IsPlayerFaction) return;
                     var characterSettings = Main.settings.GetCharacterSettings(__instance.EntityData);
                     if (characterSettings == null) return;
-                    if(characterSettings.overrideScaleShapeshiftOnly &&
+                    if (!characterSettings.overrideScale) return;
+                    if (characterSettings.overrideScaleShapeshiftOnly &&
                         !__instance.EntityData.Body.IsPolymorphed)
                     {
                         return;
                     }
                     var originalScale = __instance.GetSizeScale();
-                    float sizeScale = originalScale * (float)Math.Pow(1 / 0.66, characterSettings.overrideScale);
+                    float sizeScale = 1;
+                    if (characterSettings.overrideScaleAdditive) sizeScale = originalScale * (float)Math.Pow(1 / 0.66, characterSettings.additiveScaleFactor);
+                    else sizeScale = (float)Math.Pow(1 / 0.66, characterSettings.overrideScaleFactor);
                     var m_OriginalScale = Traverse.Create(__instance).Field("m_OriginalScale").GetValue<Vector3>();
                     var m_Scale = __instance.transform.localScale.x / m_OriginalScale.x;
                     if (!sizeScale.Equals(m_Scale) && !__instance.DoNotAdjustScale)
@@ -572,5 +561,3 @@ namespace VisualAdjustments
 
     }
 }
-
-

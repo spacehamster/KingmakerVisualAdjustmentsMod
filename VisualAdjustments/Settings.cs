@@ -39,9 +39,12 @@ namespace VisualAdjustments
             public string overrideGloves = "";
             public string overrideBoots = "";
             public string overrideView = "";
+            public bool overrideScale = false;
             public bool overrideScaleShapeshiftOnly = false;
-            public int overrideScale = 0;
-            public int overrideScaleCheat = 0;
+            public bool overrideScaleAdditive = false;
+            public bool overrideScaleCheatMode = false;
+            public int overrideScaleFactor = 0;
+            public int additiveScaleFactor = 0;
             public Dictionary<string, string> overrideWeapons = new Dictionary<string, string>();
 
             public bool hideWeapons = false;
@@ -58,7 +61,8 @@ namespace VisualAdjustments
         public override void Save(UnityModManager.ModEntry modEntry)
         {
             var filepath = Path.Combine(modEntry.Path, "Settings.json");
-            try {
+            try
+            {
                 JsonSerializer serializer = new JsonSerializer();
 #if (DEBUG)
                 serializer.Formatting = Formatting.Indented;
@@ -68,13 +72,15 @@ namespace VisualAdjustments
                 {
                     serializer.Serialize(writer, this);
                 }
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 modEntry.Logger.Error($"Can't save {filepath}.");
                 modEntry.Logger.Error(ex.ToString());
             }
         }
-        public CharacterSettings GetCharacterSettings(UnitEntityData unitEntityData) {
+        public CharacterSettings GetCharacterSettings(UnitEntityData unitEntityData)
+        {
             characterSettings.TryGetValue(unitEntityData.UniqueId, out CharacterSettings result);
             return result;
         }
