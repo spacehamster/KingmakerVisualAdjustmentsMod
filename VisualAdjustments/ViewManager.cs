@@ -87,5 +87,109 @@ namespace VisualAdjustments
                 }
             }
         }
+        [HarmonyPatch(typeof(UnitEntityView), "GetSizeScale")]
+        static class UnitEntityView_GetSizeScale_Patch
+        {
+            static void Postfix(UnitEntityView __instance, ref float __result)
+            {
+                try
+                {
+                    if (!Main.enabled) return;
+                    if (!__instance.EntityData.IsPlayerFaction) return;
+                    var characterSettings = Main.settings.GetCharacterSettings(__instance.EntityData);
+                    if (characterSettings == null) return;
+                    if (!characterSettings.overrideScale || !characterSettings.overrideScaleCheatMode) return;
+                    if (characterSettings.overrideScaleShapeshiftOnly &&
+                        !__instance.EntityData.Body.IsPolymorphed)
+                    {
+                        return;
+                    }
+                    int sizeDiff = 0;
+                    if (characterSettings.overrideScaleAdditive) sizeDiff = __instance.EntityData.Descriptor.State.Size + characterSettings.additiveScaleFactor - __instance.EntityData.Descriptor.OriginalSize;
+                    else sizeDiff = characterSettings.overrideScaleFactor - (int)__instance.EntityData.Descriptor.OriginalSize;
+                    var newScaleFactor = Math.Pow(1 / 0.66, sizeDiff);
+                    __result = (float)newScaleFactor;
+                }
+                catch (Exception ex)
+                {
+                    Main.DebugError(ex);
+                }
+            }
+        }
+        [HarmonyPatch(typeof(UnitEntityView), "GetSpeedAnimationCoeff")]
+        static class UnitEntityView_GetSpeedAnimationCoeff_Patch
+        {
+            static void Postfix(UnitEntityView __instance, ref float __result)
+            {
+                try
+                {
+                    if (!Main.enabled) return;
+                    if (!__instance.EntityData.IsPlayerFaction) return;
+                    var characterSettings = Main.settings.GetCharacterSettings(__instance.EntityData);
+                    if (characterSettings == null) return;
+                    if (!characterSettings.overrideScale || characterSettings.overrideScaleCheatMode) return;
+                    if (characterSettings.overrideScaleShapeshiftOnly &&
+                        !__instance.EntityData.Body.IsPolymorphed)
+                    {
+                        return;
+                    }
+                    __result *= __instance.GetSizeScale();
+                    var sizeDiff = 0;
+                    if (characterSettings.overrideScaleAdditive) sizeDiff = __instance.EntityData.Descriptor.State.Size + characterSettings.additiveScaleFactor - __instance.EntityData.Descriptor.OriginalSize;
+                    else sizeDiff = characterSettings.overrideScaleFactor - (int)__instance.EntityData.Descriptor.OriginalSize;
+                    var newScaleFactor = Math.Pow(1 / 0.66, sizeDiff);
+                    __result /= (float)newScaleFactor;
+                }
+                catch (Exception ex)
+                {
+                    Main.DebugError(ex);
+                }
+            }
+        }
+        [HarmonyPatch(typeof(UnitEntityView), "LateUpdate")]
+        static class UnitEntityView_LateUpdate_Patch
+        {
+            static void Postfix(UnitEntityView __instance)
+            {
+                try
+                {
+                    if (!Main.enabled) return;
+                    if (!__instance.EntityData.IsPlayerFaction) return;
+                    var characterSettings = Main.settings.GetCharacterSettings(__instance.EntityData);
+                    if (characterSettings == null) return;
+                    if (!characterSettings.overrideScale || characterSettings.overrideScaleCheatMode) return;
+                    if (characterSettings.overrideScaleShapeshiftOnly &&
+                        !__instance.EntityData.Body.IsPolymorphed)
+                    {
+                        return;
+                    }
+                    var originalScale = __instance.GetSizeScale();
+                    float sizeScale = 1;
+                    if (characterSettings.overrideScaleAdditive) sizeScale = originalScale * (float)Math.Pow(1 / 0.66, characterSettings.additiveScaleFactor);
+                    else sizeScale = (float)Math.Pow(1 / 0.66, characterSettings.overrideScaleFactor - (int)__instance.EntityData.Descriptor.OriginalSize);
+                    var m_OriginalScale = Traverse.Create(__instance).Field("m_OriginalScale").GetValue<Vector3>();
+                    var m_Scale = __instance.transform.localScale.x / m_OriginalScale.x;
+                    if (!sizeScale.Equals(m_Scale) && !__instance.DoNotAdjustScale)
+                    {
+                        float scaleDelta = sizeScale - m_Scale;
+                        float deltaTime = Game.Instance.TimeController.DeltaTime;
+                        float scaleStep = scaleDelta * deltaTime * 2f;
+                        m_Scale = (scaleDelta <= 0f) ? Math.Max(sizeScale, m_Scale + scaleStep) : Math.Min(sizeScale, m_Scale + scaleStep);
+                        __instance.transform.localScale = m_OriginalScale * m_Scale;
+                    }
+                    if (__instance.ParticlesSnapMap)
+                    {
+                        //Is this necessary?
+                        __instance.ParticlesSnapMap.AdditionalScale = __instance.transform.localScale.x / m_OriginalScale.x;
+                    }
+                    //Prevent fighting m_Scale to set transform scale
+                    Traverse.Create(__instance).Field("m_Scale").SetValue(__instance.GetSizeScale());
+                }
+                catch (Exception ex)
+                {
+                    Main.DebugError(ex);
+                }
+            }
+        }
     }
 }

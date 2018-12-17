@@ -466,16 +466,16 @@ namespace VisualAdjustments
             var sizeModifier = (int)GUILayout.HorizontalSlider(characterSettings.additiveScaleFactor, -4, 4, GUILayout.Width(DefaultSliderWidth));
             characterSettings.additiveScaleFactor = sizeModifier;
             var sign = sizeModifier >= 0 ? "+" : "";
-            GUILayout.Label($" Scale {sign}{sizeModifier}", GUILayout.ExpandWidth(false));
+            GUILayout.Label($" {sign}{sizeModifier}", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
         }
         static void ChooseSizeOverride(UnitEntityData unitEntityData, CharacterSettings characterSettings)
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label("Override Scale Factor", GUILayout.Width(300));
-            var sizeModifier = (int)GUILayout.HorizontalSlider(characterSettings.overrideScaleFactor, -4, 4, GUILayout.Width(DefaultSliderWidth));
+            var sizeModifier = (int)GUILayout.HorizontalSlider(characterSettings.overrideScaleFactor, 0, 8, GUILayout.Width(DefaultSliderWidth));
             characterSettings.overrideScaleFactor = sizeModifier;
-            GUILayout.Label($" Scale {(Size)(sizeModifier + 4)}", GUILayout.ExpandWidth(false));
+            GUILayout.Label($" {(Size)(sizeModifier)}", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
         }
         static void ChooseEquipmentOverride(UnitEntityData unitEntityData, CharacterSettings characterSettings)
@@ -510,18 +510,17 @@ namespace VisualAdjustments
 
             GUILayout.Label("View", "box", GUILayout.Width(DefaultLabelWidth));
             ChooseSlider("Override View", EquipmentResourcesManager.Units, ref characterSettings.overrideView, onView);
-            GUILayout.BeginHorizontal();
-            var result = GUILayout.Toggle(characterSettings.overrideScale, "Override Scale", GUILayout.ExpandWidth(false));
-            if (result != characterSettings.overrideScale)
+
+            Action onChooseScale = () =>
             {
-                characterSettings.overrideScale = result;
-                var view = unitEntityData.View;
-                //Cause UnitEntityView to recalculate character size
-                Traverse.Create(view).Field("m_Scale").SetValue(view.GetSizeScale() + 0.01f);
-            }
-            characterSettings.overrideScaleShapeshiftOnly = GUILayout.Toggle(characterSettings.overrideScaleShapeshiftOnly, "Restrict to polymorph", GUILayout.ExpandWidth(false));
-            characterSettings.overrideScaleAdditive = GUILayout.Toggle(characterSettings.overrideScaleAdditive, "Use Additive Factor", GUILayout.ExpandWidth(false));
-            characterSettings.overrideScaleCheatMode = GUILayout.Toggle(characterSettings.overrideScaleCheatMode, "Use Cheat Mode", GUILayout.ExpandWidth(false));
+                Traverse.Create(unitEntityData.View).Field("m_Scale").SetValue(unitEntityData.View.GetSizeScale() + 0.01f);
+            };
+            GUILayout.Label("Scale", "box", GUILayout.Width(DefaultLabelWidth));
+            GUILayout.BeginHorizontal();
+            ChooseToggle("Enable Override Scale", ref characterSettings.overrideScale, onChooseScale);
+            ChooseToggle("Restrict to polymorph", ref characterSettings.overrideScaleShapeshiftOnly, onChooseScale);
+            ChooseToggle("Use Additive Factor", ref characterSettings.overrideScaleAdditive, onChooseScale);
+            ChooseToggle("Use Cheat Mode", ref characterSettings.overrideScaleCheatMode, onChooseScale);
             GUILayout.EndHorizontal();
             if (characterSettings.overrideScale && characterSettings.overrideScaleAdditive) ChooseSizeAdditive(unitEntityData, characterSettings);
             if (characterSettings.overrideScale && !characterSettings.overrideScaleAdditive) ChooseSizeOverride(unitEntityData, characterSettings);
