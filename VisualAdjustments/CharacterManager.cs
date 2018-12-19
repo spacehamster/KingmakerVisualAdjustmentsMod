@@ -345,6 +345,29 @@ namespace VisualAdjustments
             if (view.EntityData.Descriptor.Doll != null) FixColors(view);
             view.CharacterAvatar.IsDirty = dirty;
         }
+        [HarmonyPatch(typeof(Character), "UpdateMirrorScale")]
+        static class Character_UpdateMirrorScale_Patch
+        {
+            static bool Prefix(Character __instance, ref Animator ___m_Animator, bool ___m_Mirror)
+            {
+                try
+                {
+                    if (!Main.enabled) return true;
+                    if (___m_Animator == null)
+                    {
+                        return false ;
+                    }
+                    Vector3 localScale = ___m_Animator.transform.localScale;
+                    localScale.x = localScale.x * ((!___m_Mirror) ? 1 : -1);
+                    ___m_Animator.transform.localScale = localScale;
+                    return false;
+                } catch(Exception ex)
+                {
+                    Main.DebugError(ex);
+                    return true;
+                }
+            }
+        }
         /*
          * Called by CheatsSilly.UpdatePartyNoArmor and OnDataAttached
          * Applies all EquipmentEntities from item Slots for NonBaked avatars

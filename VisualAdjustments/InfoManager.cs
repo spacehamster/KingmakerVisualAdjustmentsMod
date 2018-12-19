@@ -1,4 +1,5 @@
 using Harmony12;
+using Kingmaker;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.CharGen;
 using Kingmaker.Blueprints.Classes;
@@ -114,6 +115,7 @@ namespace VisualAdjustments
             }
             loaded = true;
         }
+        public static bool WeaponScale = true;
         public static void ShowInfo(UnitEntityData unitEntityData)
         {
             if (!loaded) Init();
@@ -158,7 +160,21 @@ namespace VisualAdjustments
             {
                 CharacterManager.UpdateModel(unitEntityData.View);
             }
-
+            GUILayout.EndHorizontal();
+            if (GUILayout.Button($"Set Weapon Scale to {!WeaponScale}"))
+            {
+                WeaponScale = !WeaponScale;
+            }
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"Original size {unitEntityData.Descriptor.OriginalSize}");
+            GUILayout.Label($"Current size {unitEntityData.Descriptor.State.Size}");
+            var m_OriginalScale = Traverse.Create(unitEntityData.View).Field("m_OriginalScale").GetValue<Vector3>();
+            var m_Scale = Traverse.Create(unitEntityData.View).Field("m_Scale").GetValue<float>();
+            var realScale = unitEntityData.View.transform.localScale;
+            GUILayout.Label($"View Original {m_OriginalScale.x:0.#}");
+            GUILayout.Label($"View Current {m_Scale:0.#}");
+            GUILayout.Label($"View Real {realScale.x:0.#}");
+            GUILayout.Label($"Disabled Scaling {unitEntityData.View.DisableSizeScaling}");
             GUILayout.EndHorizontal();
             var message =
                     unitEntityData.View == null ? "No View" :
@@ -282,9 +298,16 @@ namespace VisualAdjustments
         }
             static void ShowUnitViewHandSlotData(UnitViewHandSlotData handData)
         {
-            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
-            
+            var ownerScale = handData.Owner.View.GetSizeScale() * Game.Instance.BlueprintRoot.WeaponModelSizing.GetCoeff(handData.Owner.Descriptor.OriginalSize);
+            var visualScale = handData.VisualModel?.transform.localScale ?? Vector3.zero;
+            var visualPosition = handData.VisualModel?.transform.localPosition ?? Vector3.zero;
+            var sheathScale = handData.SheathVisualModel?.transform.localScale ?? Vector3.zero;
+            var sheathPosition = handData.SheathVisualModel?.transform.localPosition ?? Vector3.zero;
+            GUILayout.Label(string.Format($"weapon {ownerScale:0.#}, scale {visualScale} position {visualPosition}"), GUILayout.Width(500));
+            GUILayout.Label(string.Format($"sheath {ownerScale:0.#}, scale {sheathScale} position {sheathPosition}"), GUILayout.Width(500));
+            GUILayout.BeginHorizontal();
             GUILayout.Label(string.Format("Data {0} Slot {1} Active {2}", handData?.VisibleItem?.Name, handData?.VisualSlot, handData?.IsActiveSet), GUILayout.Width(500));
+
             if (GUILayout.Button("Unequip"))
             {
                 handData.Unequip();

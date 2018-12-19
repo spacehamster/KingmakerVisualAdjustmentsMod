@@ -3,6 +3,7 @@ using Kingmaker;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Facts;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.Enums;
 using Kingmaker.UI.Selection;
 using Kingmaker.UnitLogic.Buffs;
 using Kingmaker.UnitLogic.Commands;
@@ -104,11 +105,17 @@ namespace VisualAdjustments
                     {
                         return;
                     }
-                    int sizeDiff = 0;
-                    if (characterSettings.overrideScaleAdditive) sizeDiff = __instance.EntityData.Descriptor.State.Size + characterSettings.additiveScaleFactor - __instance.EntityData.Descriptor.OriginalSize;
-                    else sizeDiff = characterSettings.overrideScaleFactor - (int)__instance.EntityData.Descriptor.OriginalSize;
-                    var newScaleFactor = Math.Pow(1 / 0.66, sizeDiff);
-                    __result = (float)newScaleFactor;
+                    Size originalSize = __instance.EntityData.Descriptor.OriginalSize;
+                    Size size = __instance.EntityData.Descriptor.State.Size;
+                    if (__instance.DisableSizeScaling) //Used when polymorphed
+                    {
+                        originalSize = size;
+                    }
+                    int sizeDiff = characterSettings.overrideScaleAdditive ?
+                        (size + characterSettings.additiveScaleFactor - originalSize) :
+                       (characterSettings.overrideScaleFactor - (int)originalSize);
+                   float sizeScale = Mathf.Pow(1 / 0.66f, sizeDiff);
+                    __result = sizeScale;
                 }
                 catch (Exception ex)
                 {
@@ -137,14 +144,50 @@ namespace VisualAdjustments
                     var sizeDiff = 0;
                     if (characterSettings.overrideScaleAdditive) sizeDiff = __instance.EntityData.Descriptor.State.Size + characterSettings.additiveScaleFactor - __instance.EntityData.Descriptor.OriginalSize;
                     else sizeDiff = characterSettings.overrideScaleFactor - (int)__instance.EntityData.Descriptor.OriginalSize;
-                    var newScaleFactor = Math.Pow(1 / 0.66, sizeDiff);
-                    __result /= (float)newScaleFactor;
+                    var newScaleFactor = Mathf.Pow(1 / 0.66f, sizeDiff);
+                    __result /= newScaleFactor;
                 }
                 catch (Exception ex)
                 {
                     Main.DebugError(ex);
                 }
             }
+        }
+        /*
+         * The unitEntityView stores the current scale in m_Scale, and smoothly adjusts to until it is equal to
+         * sizeScale from unitEntityView.GetSizeScale()
+         * sizeScale is defined as
+         * Math.Pow(1 / 0.66, Descriptor.State.Size - Descriptor.OriginalSize;);
+         * The actual size is change defined as
+         * base.transform.localScale = UnitEntityView.m_OriginalScale * sizeScale;
+         */
+        static void OverrideSize(UnitEntityView __instance, Settings.CharacterSettings characterSettings)
+        {
+            var originalScale = __instance.GetSizeScale();
+            int originalSize = (int)__instance.EntityData.Descriptor.OriginalSize;
+            if(__instance.DisableSizeScaling) originalSize = (int)__instance.EntityData.Descriptor.State.Size;
+            float sizeScale = 1;
+            if (characterSettings.overrideScaleAdditive) sizeScale = originalScale * Mathf.Pow(1 / 0.66f, characterSettings.additiveScaleFactor);
+            else sizeScale = Mathf.Pow(1 / 0.66f, characterSettings.overrideScaleFactor - originalSize);
+            var m_OriginalScale = Traverse.Create(__instance).Field("m_OriginalScale").GetValue<Vector3>();
+            var m_Scale = __instance.transform.localScale.x / m_OriginalScale.x;
+            if (!sizeScale.Equals(m_Scale) && !__instance.DoNotAdjustScale)
+            {
+                /*float scaleDelta = sizeScale - m_Scale;
+                float deltaTime = Game.Instance.TimeController.DeltaTime;
+                float scaleStep = scaleDelta * deltaTime * 2f;
+                m_Scale = (scaleDelta <= 0f) ? Math.Max(sizeScale, m_Scale + scaleStep) : Math.Min(sizeScale, m_Scale + scaleStep);*/
+                m_Scale = sizeScale; //Skip animating
+                __instance.transform.localScale = m_OriginalScale * m_Scale;
+            }
+
+            if (__instance.ParticlesSnapMap)
+            {
+                //Is this necessary?
+                __instance.ParticlesSnapMap.AdditionalScale = __instance.transform.localScale.x / m_OriginalScale.x;
+            }
+            //Prevent fighting m_Scale to set transform scale
+            Traverse.Create(__instance).Field("m_Scale").SetValue(__instance.GetSizeScale());
         }
         [HarmonyPatch(typeof(UnitEntityView), "LateUpdate")]
         static class UnitEntityView_LateUpdate_Patch
@@ -163,27 +206,8 @@ namespace VisualAdjustments
                     {
                         return;
                     }
-                    var originalScale = __instance.GetSizeScale();
-                    float sizeScale = 1;
-                    if (characterSettings.overrideScaleAdditive) sizeScale = originalScale * (float)Math.Pow(1 / 0.66, characterSettings.additiveScaleFactor);
-                    else sizeScale = (float)Math.Pow(1 / 0.66, characterSettings.overrideScaleFactor - (int)__instance.EntityData.Descriptor.OriginalSize);
-                    var m_OriginalScale = Traverse.Create(__instance).Field("m_OriginalScale").GetValue<Vector3>();
-                    var m_Scale = __instance.transform.localScale.x / m_OriginalScale.x;
-                    if (!sizeScale.Equals(m_Scale) && !__instance.DoNotAdjustScale)
-                    {
-                        float scaleDelta = sizeScale - m_Scale;
-                        float deltaTime = Game.Instance.TimeController.DeltaTime;
-                        float scaleStep = scaleDelta * deltaTime * 2f;
-                        m_Scale = (scaleDelta <= 0f) ? Math.Max(sizeScale, m_Scale + scaleStep) : Math.Min(sizeScale, m_Scale + scaleStep);
-                        __instance.transform.localScale = m_OriginalScale * m_Scale;
-                    }
-                    if (__instance.ParticlesSnapMap)
-                    {
-                        //Is this necessary?
-                        __instance.ParticlesSnapMap.AdditionalScale = __instance.transform.localScale.x / m_OriginalScale.x;
-                    }
-                    //Prevent fighting m_Scale to set transform scale
-                    Traverse.Create(__instance).Field("m_Scale").SetValue(__instance.GetSizeScale());
+                    OverrideSize(__instance, characterSettings);
+
                 }
                 catch (Exception ex)
                 {
