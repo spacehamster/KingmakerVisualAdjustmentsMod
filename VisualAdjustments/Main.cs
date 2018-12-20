@@ -181,12 +181,21 @@ namespace VisualAdjustments
             if (unitEntityData.Portrait.IsCustom)
             {
                 var key = unitEntityData.Descriptor.UISettings.CustomPortrait.CustomId;
-                var oldIndex = DollResourcesManager.CustomPortraits.IndexOf(key);
+                var currentIndex = DollResourcesManager.CustomPortraits.IndexOf(key);
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Portrait:  ", GUILayout.Width(DefaultLabelWidth));
-                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.CustomPortraits.Count, GUILayout.Width(DefaultSliderWidth)), 0);
+                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, 0, DollResourcesManager.CustomPortraits.Count, GUILayout.Width(DefaultSliderWidth)), 0);
+                if (GUILayout.Button("Prev", GUILayout.Width(45)) && currentIndex >= 0)
+                {
+                    newIndex = currentIndex - 1;
+                }
+                if (GUILayout.Button("Next", GUILayout.Width(45)) && currentIndex < DollResourcesManager.CustomPortraits.Count - 1)
+                {
+                    newIndex = currentIndex + 1;
+                }
                 var value = newIndex >= 0 && newIndex < DollResourcesManager.CustomPortraits.Count ? DollResourcesManager.CustomPortraits[newIndex] : null;
                 GUILayout.Label(" " + value, GUILayout.ExpandWidth(false));
+
                 if (GUILayout.Button("Use Normal"))
                 {
                     unitEntityData.Descriptor.UISettings.SetPortrait(
@@ -198,7 +207,7 @@ namespace VisualAdjustments
                     return;
                 }
                 GUILayout.EndHorizontal();
-                if (newIndex != oldIndex && value != null)
+                if (newIndex != currentIndex && value != null)
                 {
                     unitEntityData.Descriptor.UISettings.SetPortrait(new PortraitData(value));
                     EventBus.RaiseEvent<IUnitPortraitChangedHandler>(delegate (IUnitPortraitChangedHandler h)
@@ -210,10 +219,18 @@ namespace VisualAdjustments
             else
             {
                 var key = unitEntityData.Descriptor.UISettings.PortraitBlueprint?.name;
-                var oldIndex = DollResourcesManager.Portrait.IndexOfKey(key ?? "");
+                var currentIndex = DollResourcesManager.Portrait.IndexOfKey(key ?? "");
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Portrait ", GUILayout.Width(DefaultLabelWidth));
-                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.Portrait.Count, GUILayout.Width(DefaultSliderWidth)), 0);
+                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, 0, DollResourcesManager.Portrait.Count, GUILayout.Width(DefaultSliderWidth)), 0);
+                if (GUILayout.Button("Prev", GUILayout.Width(45)) && currentIndex >= 0)
+                {
+                    newIndex = currentIndex - 1;
+                }
+                if (GUILayout.Button("Next", GUILayout.Width(45)) && currentIndex < DollResourcesManager.Portrait.Count - 1)
+                {
+                    newIndex = currentIndex + 1;
+                }
                 var value = newIndex >= 0 && newIndex < DollResourcesManager.Portrait.Count ? DollResourcesManager.Portrait.Values[newIndex] : null;
                 GUILayout.Label(" " + value, GUILayout.ExpandWidth(false));
                 if (GUILayout.Button("Use Custom"))
@@ -226,7 +243,7 @@ namespace VisualAdjustments
                     return;
                 }
                 GUILayout.EndHorizontal();
-                if (newIndex != oldIndex && value != null)
+                if (newIndex != currentIndex && value != null)
                 {
                     unitEntityData.Descriptor.UISettings.SetPortrait(value);
                     EventBus.RaiseEvent<IUnitPortraitChangedHandler>(delegate (IUnitPortraitChangedHandler h)
