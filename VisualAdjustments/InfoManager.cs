@@ -106,19 +106,12 @@ namespace VisualAdjustments
                 }
             }
             blueprintBuffs = ResourcesLibrary.GetBlueprints<BlueprintBuff>().ToArray();
-            foreach(var buff in blueprintBuffs)
-            {
-                if (buff.name.Contains("Wing"))
-                {
-                    Main.DebugLog($"{buff.name} {buff.AssetGuid}");
-                }
-            }
             loaded = true;
         }
         public static void ShowInfo(UnitEntityData unitEntityData)
         {
             if (!loaded) Init();
-            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+            GUILayout.BeginHorizontal();
             if (GUILayout.Button("Rebuild Character"))
             {
                 CharacterManager.RebuildCharacter(unitEntityData);
@@ -160,22 +153,6 @@ namespace VisualAdjustments
                 CharacterManager.UpdateModel(unitEntityData.View);
             }
             GUILayout.EndHorizontal();
-            if (GUILayout.Button($"Set Weapon Scale to {!WeaponScale}"))
-            {
-                WeaponScale = !WeaponScale;
-            }
-            if (GUILayout.Button($"Set Weapon Position to {!WeaponPosition}"))
-            {
-                WeaponPosition = !WeaponPosition;
-            }
-            if (GUILayout.Button($"Set Weapon Mirror to {!WeaponMirror}"))
-            {
-                WeaponMirror = !WeaponMirror;
-            }
-            if (GUILayout.Button($"Set Weapon Right to {!WeaponRight}"))
-            {
-                WeaponRight = !WeaponRight;
-            }
             GUILayout.BeginHorizontal();
             GUILayout.Label($"Descriptor Lefthanded {unitEntityData.Descriptor.IsLeftHanded}");
             GUILayout.Label($"Doll Lefthanded {unitEntityData.Descriptor.Doll.LeftHanded}");
@@ -196,7 +173,7 @@ namespace VisualAdjustments
                     unitEntityData.View.CharacterAvatar.BakedCharacter == null ? "No Baked Character" : 
                     "Baked Character";
             GUILayout.Label(message);
-            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+            GUILayout.BeginHorizontal();
             showArmor = GUILayout.Toggle(showArmor, "Show Armor");
             showWeapons = GUILayout.Toggle(showWeapons, "Show Weapons");
             showDoll = GUILayout.Toggle(showDoll, "Show Doll");
@@ -223,7 +200,7 @@ namespace VisualAdjustments
             foreach (var ee in character.EquipmentEntities.ToArray())
             {
                 EquipmentEntityInfo settings = lookup.ContainsKey(ee.name) ? lookup[ee.name] : new EquipmentEntityInfo();
-                GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+                GUILayout.BeginHorizontal();
                 GUILayout.Label(
                         String.Format("{0}:{1}:{2}:{3}:P{4}:S{5}", ee.name, settings.type, ee.BodyParts.Count, ee.OutfitParts.Count, 
                             character.GetPrimaryRampIndex(ee), character.GetSecondaryRampIndex(ee)),
@@ -239,7 +216,7 @@ namespace VisualAdjustments
                     GUILayout.Label($" HideFlags: {ee.HideBodyParts}");
                     foreach (var bodypart in ee.BodyParts.ToArray())
                     {
-                        GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+                        GUILayout.BeginHorizontal();
                         GUILayout.Label(String.Format(" BP {0}:{1}", bodypart?.RendererPrefab?.name ?? "NULL", bodypart?.Type), GUILayout.ExpandWidth(false));
                         if (GUILayout.Button("Remove"))
                         {
@@ -249,7 +226,7 @@ namespace VisualAdjustments
                     }
                     foreach (var outfitpart in ee.OutfitParts.ToArray())
                     {
-                        GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+                        GUILayout.BeginHorizontal();
                         var prefab = Traverse.Create(outfitpart).Field("m_Prefab").GetValue<GameObject>();
                         GUILayout.Label(String.Format(" OP {0}:{1}", prefab?.name ?? "NULL", outfitpart?.Special), GUILayout.ExpandWidth(false));
                         if (GUILayout.Button("Remove"))
@@ -292,7 +269,7 @@ namespace VisualAdjustments
         }
         static void ShowHandslotInfo(HandSlot handSlot)
         {
-            GUILayout.BeginHorizontal(Array.Empty<GUILayoutOption>());
+            GUILayout.BeginHorizontal();
             var pItem = handSlot != null && handSlot.HasItem ? handSlot.Item : null;
             GUILayout.Label(string.Format("Slot {0}, {1}, Active {2}", 
                 pItem?.Name, pItem?.GetType(), handSlot?.Active), GUILayout.Width(500));

@@ -139,12 +139,12 @@ namespace VisualAdjustments
                 }
                 eeList[bp.AssetGuid] = bp.name;
             }
-            Func<BlueprintUnit, string> getViewName = (bp) =>
-           {
-               if (!ResourcesLibrary.LibraryObject.ResourcePathsByAssetId.ContainsKey(bp.Prefab.AssetId)) return "NULL";
-               var path = ResourcesLibrary.LibraryObject.ResourcePathsByAssetId[bp.Prefab.AssetId].Split('/');
-               return path[path.Length - 1];
-           };
+            string getViewName(BlueprintUnit bp)
+            {
+                if (!ResourcesLibrary.LibraryObject.ResourcePathsByAssetId.ContainsKey(bp.Prefab.AssetId)) return "NULL";
+                var path = ResourcesLibrary.LibraryObject.ResourcePathsByAssetId[bp.Prefab.AssetId].Split('/');
+                return path[path.Length - 1];
+            }
             var units = ResourcesLibrary.GetBlueprints<BlueprintUnit>().OrderBy(getViewName);
             foreach (var bp in units)
             {

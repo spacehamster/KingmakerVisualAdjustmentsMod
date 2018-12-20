@@ -95,7 +95,7 @@ namespace VisualAdjustments
                     Settings.CharacterSettings characterSettings = settings.GetCharacterSettings(unitEntityData);
                     if (characterSettings == null)
                     {
-                        characterSettings = new Settings.CharacterSettings();
+                        characterSettings = new CharacterSettings();
                         characterSettings.characterName = unitEntityData.CharacterName;
                         settings.AddCharacterSettings(unitEntityData, characterSettings);
                     }
@@ -210,7 +210,7 @@ namespace VisualAdjustments
             else
             {
                 var key = unitEntityData.Descriptor.UISettings.PortraitBlueprint?.name;
-                var oldIndex = DollResourcesManager.Portrait.IndexOfKey(key != null ? key : "");
+                var oldIndex = DollResourcesManager.Portrait.IndexOfKey(key ?? "");
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Portrait ", GUILayout.Width(DefaultLabelWidth));
                 var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.Portrait.Count, GUILayout.Width(DefaultSliderWidth)), 0);
@@ -410,24 +410,24 @@ namespace VisualAdjustments
         }
         static void ChooseEquipment(UnitEntityData unitEntityData, CharacterSettings characterSettings)
         {
-            Action onHideEquipment = () =>
+            void onHideEquipment()
             {
                 CharacterManager.RebuildCharacter(unitEntityData);
                 CharacterManager.UpdateModel(unitEntityData.View);
-            };
-            Action onHideWeapon = () =>
+            }
+            void onHideWeapon()
             {
                 unitEntityData.View.HandsEquipment.HandleEquipmentSetChanged();
-            };
-            Action onHideBuff = () =>
+            }
+            void onHideBuff()
             {
                 foreach (var buff in unitEntityData.Buffs) buff.ClearParticleEffect();
                 unitEntityData.SpawnBuffsFxs();
-            };
-            Action onHideWeaponEnchantment = () =>
+            }
+            void onHideWeaponEnchantment()
             {
                 unitEntityData.View.HandsEquipment.HandleEquipmentSetChanged();
-            };
+            }
             ChooseToggle("Hide Cap", ref characterSettings.hideCap, onHideEquipment);
             ChooseToggle("Hide Backpack", ref characterSettings.hideBackpack, onHideEquipment);
             ChooseToggle("Hide Class Cloak", ref characterSettings.hideClassCloak, onHideEquipment);
@@ -496,13 +496,13 @@ namespace VisualAdjustments
         }
         static void ChooseEquipmentOverride(UnitEntityData unitEntityData, CharacterSettings characterSettings)
         {
-            Action onEquipment = () =>
+            void onEquipment()
             {
                 CharacterManager.RebuildCharacter(unitEntityData);
                 CharacterManager.UpdateModel(unitEntityData.View);
-            };
+            }
             GUILayout.Label("Equipment", "box", GUILayout.Width(DefaultLabelWidth));
-            Action onView = () => ViewManager.ReplaceView(unitEntityData, characterSettings.overrideView);
+            void onView() => ViewManager.ReplaceView(unitEntityData, characterSettings.overrideView);
             ChooseSlider("Override Helm", EquipmentResourcesManager.Helm, ref characterSettings.overrideHelm, onEquipment);
             ChooseSlider("Override Cloak ", EquipmentResourcesManager.Cloak, ref characterSettings.overrideCloak, onEquipment);
             ChooseSlider("Override Armor ", EquipmentResourcesManager.Armor, ref characterSettings.overrideArmor, onEquipment);
@@ -514,23 +514,22 @@ namespace VisualAdjustments
             {
                 var animationStyle = kv.Key;
                 var weaponLookup = kv.Value;
-                string currentValue = null;
-                characterSettings.overrideWeapons.TryGetValue(animationStyle, out currentValue);
-                Action onWeapon = () =>
+                characterSettings.overrideWeapons.TryGetValue(animationStyle, out string currentValue);
+                void onWeapon()
                 {
                     characterSettings.overrideWeapons[animationStyle] = currentValue;
                     unitEntityData.View.HandsEquipment.UpdateAll();
-                };
+                }
                 ChooseSlider($"Override {animationStyle} ", weaponLookup, ref currentValue, onWeapon);
             }
 
             GUILayout.Label("View", "box", GUILayout.Width(DefaultLabelWidth));
             ChooseSlider("Override View", EquipmentResourcesManager.Units, ref characterSettings.overrideView, onView);
 
-            Action onChooseScale = () =>
+            void onChooseScale()
             {
                 Traverse.Create(unitEntityData.View).Field("m_Scale").SetValue(unitEntityData.View.GetSizeScale() + 0.01f);
-            };
+            }
             GUILayout.Label("Scale", "box", GUILayout.Width(DefaultLabelWidth));
             GUILayout.BeginHorizontal();
             ChooseToggle("Enable Override Scale", ref characterSettings.overrideScale, onChooseScale);
