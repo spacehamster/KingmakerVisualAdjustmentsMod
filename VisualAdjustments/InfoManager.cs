@@ -115,7 +115,6 @@ namespace VisualAdjustments
             }
             loaded = true;
         }
-        public static bool WeaponScale = true;
         public static void ShowInfo(UnitEntityData unitEntityData)
         {
             if (!loaded) Init();
@@ -164,6 +163,18 @@ namespace VisualAdjustments
             if (GUILayout.Button($"Set Weapon Scale to {!WeaponScale}"))
             {
                 WeaponScale = !WeaponScale;
+            }
+            if (GUILayout.Button($"Set Weapon Position to {!WeaponPosition}"))
+            {
+                WeaponPosition = !WeaponPosition;
+            }
+            if (GUILayout.Button($"Set Weapon Mirror to {!WeaponMirror}"))
+            {
+                WeaponMirror = !WeaponMirror;
+            }
+            if (GUILayout.Button($"Set Weapon Right to {!WeaponRight}"))
+            {
+                WeaponRight = !WeaponRight;
             }
             GUILayout.BeginHorizontal();
             GUILayout.Label($"Descriptor Lefthanded {unitEntityData.Descriptor.IsLeftHanded}");

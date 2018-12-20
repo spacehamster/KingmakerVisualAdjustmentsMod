@@ -12,40 +12,6 @@ namespace VisualAdjustments
 {
     class HandsEquipmentManager
     {
-        public static void FixSheath(UnitViewHandSlotData __instance)
-        {
-            if (__instance.SheathVisualModel == null) return;
-            if (__instance.VisualModel == null) return;
-
-
-            if (__instance.Owner.Descriptor.IsLeftHanded || true)
-            {
-                var sign = __instance.Owner.Descriptor.IsLeftHanded ? -1 : 1;
-                __instance.VisualModel.transform.localScale = new Vector3(
-                    -Mathf.Abs(__instance.VisualModel.transform.localScale.x),
-                    __instance.VisualModel.transform.localScale.y,
-                    __instance.VisualModel.transform.localScale.z);
-                __instance.SheathVisualModel.transform.localPosition = __instance.VisualModel.transform.localPosition;
-                __instance.SheathVisualModel.transform.localScale = __instance.VisualModel.transform.localScale;
-                return;
-                //Still sometimes has weapons on wrong side, try right to positive and left negative for both weapon and sheath
-                //return;
-                //var sign = InfoManager.WeaponScale ? 1 : -1;
-                var weaponScale = sign * Mathf.Abs(__instance.VisualModel.transform.localScale.x);
-                var sheathScale = sign * Mathf.Abs(__instance.SheathVisualModel.transform.localScale.x);
-                __instance.VisualModel.transform.localScale = new Vector3(
-                    weaponScale,
-                    __instance.VisualModel.transform.localScale.y,
-                    __instance.VisualModel.transform.localScale.z);
-                __instance.SheathVisualModel.transform.localScale = new Vector3(
-                    sheathScale,
-                    __instance.SheathVisualModel.transform.localScale.y,
-                    __instance.SheathVisualModel.transform.localScale.z);
-                Main.DebugLog($"Set weapon to {__instance.VisualModel.transform.localScale.x} {__instance.SheathVisualModel.transform.localScale.x}");
-            }
-
-        }
-    }
     [HarmonyPatch(typeof(UnitViewHandsEquipment), "UpdateVisibility")]
     static class UnitViewHandsEquipment_UpdateVisibility_Patch
     {
@@ -65,6 +31,25 @@ namespace VisualAdjustments
                     kv.Value.OffHand.ShowItem(false);
                 }
             }
+        }
+    }
+        /*
+         *Fix sword hover outside sheath bug
+        * Note: Only setting the sheath position to the weapon position is required to
+        * fix the sheath bug, but I have fixed the scale incase there are 
+        * weapons with chirality in the game
+        */
+        public static void FixSheath(UnitViewHandSlotData __instance)
+        {
+            if (__instance.SheathVisualModel == null) return;
+            if (__instance.VisualModel == null) return;
+            var sign = __instance.Owner.Descriptor.IsLeftHanded ? -1 : 1;
+            __instance.VisualModel.transform.localScale = new Vector3(
+                sign * Mathf.Abs(__instance.VisualModel.transform.localScale.x),
+                __instance.VisualModel.transform.localScale.y,
+                __instance.VisualModel.transform.localScale.z);
+            __instance.SheathVisualModel.transform.localPosition = __instance.VisualModel.transform.localPosition;
+            __instance.SheathVisualModel.transform.localScale = __instance.VisualModel.transform.localScale;
         }
     }
     [HarmonyPatch(typeof(UnitViewHandSlotData), "AttachModel", new Type[] { })]
@@ -114,27 +99,6 @@ namespace VisualAdjustments
                 if (newBlueprint == null) return;
                 __result = newBlueprint;
             } catch (Exception ex)
-            {
-                Main.DebugError(ex);
-            }
-        }
-    }
-    /*
-     * Fix sword hover outside sheath bug
-     * Note: this patch has to be MatchVisuals because something is stomping the transfrom values
-     * of VisualModel and SheathVisualModel after RecreateModel returns and before MatchVisuals returns     * 
-     */
-    [HarmonyPatch(typeof(UnitViewHandSlotData), "MatchVisuals")]
-    static class UnitViewHandSlotData_MatchVisuals_Patch
-    {
-        static void Postfix(UnitViewHandSlotData __instance)
-        {
-            try
-            {
-                if (!Main.enabled) return;
-                if (!__instance.Owner.IsPlayerFaction) return;
-                //HandsEquipmentManager.FixSheath(__instance);
-            } catch(Exception ex)
             {
                 Main.DebugError(ex);
             }
