@@ -2,6 +2,7 @@
 using Kingmaker;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Classes;
+using Kingmaker.Blueprints.Root;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Items.Slots;
 using Kingmaker.UnitLogic;
@@ -50,7 +51,6 @@ namespace VisualAdjustments
                 if (ee == null) continue;
                 dollEE.Add(ee);
             }
-
             var character = unitEntityView.CharacterAvatar;
             var equipmentClass = unitEntityView.EntityData.Descriptor.Progression.GetEquipmentClass();
             var clothes = equipmentClass.LoadClothes(unitEntityView.EntityData.Descriptor.Gender, unitEntityView.EntityData.Descriptor.Progression.Race);
@@ -63,6 +63,10 @@ namespace VisualAdjustments
                 character.SetSecondaryRampIndex(ee, secondaryIndex);
             }
         }
+        /*
+         * Based on DollData.CreateUnitView, DollRoom.CreateAvatar and 
+         * UnitEntityData.CreateView
+         */ 
         public static void RebuildCharacter(UnitEntityData unitEntityData)
         {
             var character = unitEntityData.View.CharacterAvatar;
@@ -74,7 +78,7 @@ namespace VisualAdjustments
                 character.RemoveAllEquipmentEntities(savedEquipment);
                 if (doll.RacePreset != null)
                 {
-                    character.Skeleton = ((doll.Gender != Gender.Male)) ? doll.RacePreset.FemaleSkeleton : doll.RacePreset.MaleSkeleton;
+                    character.Skeleton = (doll.Gender != Gender.Male) ? doll.RacePreset.FemaleSkeleton : doll.RacePreset.MaleSkeleton;
                     character.AddEquipmentEntities(doll.RacePreset.Skin.Load(doll.Gender, doll.RacePreset.RaceId), savedEquipment);
                 }
                 character.Mirror = doll.LeftHanded;
@@ -345,6 +349,14 @@ namespace VisualAdjustments
             if (view.EntityData.Descriptor.Doll != null) FixColors(view);
             view.CharacterAvatar.IsDirty = dirty;
         }
+        /*
+         * There are two sources of handedness, 
+         * UnitDescriptor.IsLeftHanded: which is derived from
+         * Doll.LeftHanded and used to set UnitViewHandSlotData.localScale.x = -x
+         * and UnitEntitiyView.OnAttached to set the Character.Mirror = true; 
+         * DollData.IsLeftHanded is used to set Character.Mirror = true in 
+         * DollData.CreateUnitView
+         */
         [HarmonyPatch(typeof(Character), "UpdateMirrorScale")]
         static class Character_UpdateMirrorScale_Patch
         {
@@ -358,7 +370,8 @@ namespace VisualAdjustments
                         return false ;
                     }
                     Vector3 localScale = ___m_Animator.transform.localScale;
-                    localScale.x = localScale.x * ((!___m_Mirror) ? 1 : -1);
+                    var sign = !___m_Mirror ? 1 : -1;
+                    localScale.x = Mathf.Abs(localScale.x) * sign;
                     ___m_Animator.transform.localScale = localScale;
                     return false;
                 } catch(Exception ex)

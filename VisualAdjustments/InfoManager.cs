@@ -166,6 +166,9 @@ namespace VisualAdjustments
                 WeaponScale = !WeaponScale;
             }
             GUILayout.BeginHorizontal();
+            GUILayout.Label($"Descriptor Lefthanded {unitEntityData.Descriptor.IsLeftHanded}");
+            GUILayout.Label($"Doll Lefthanded {unitEntityData.Descriptor.Doll.LeftHanded}");
+            GUILayout.Label($"Original size {unitEntityData.Descriptor.OriginalSize}");
             GUILayout.Label($"Original size {unitEntityData.Descriptor.OriginalSize}");
             GUILayout.Label($"Current size {unitEntityData.Descriptor.State.Size}");
             var m_OriginalScale = Traverse.Create(unitEntityData.View).Field("m_OriginalScale").GetValue<Vector3>();

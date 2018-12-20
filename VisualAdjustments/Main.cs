@@ -332,19 +332,19 @@ namespace VisualAdjustments
             ChooseVisualPreset(unitEntityData, doll, "Body Type", doll.Race.Presets, doll.RacePreset);
             if (unitEntityData.Descriptor.Doll.LeftHanded && GUILayout.Button("Set Right Handed", GUILayout.Width(DefaultLabelWidth)))
             {
+                unitEntityData.Descriptor.LeftHandedOverride = false;
                 doll.SetLeftHanded(false);
                 unitEntityData.Descriptor.Doll = doll.CreateData();
-                unitEntityData.Descriptor.LeftHandedOverride = false;
+                ViewManager.ReplaceView(unitEntityData, null);
                 unitEntityData.View.HandsEquipment.HandleEquipmentSetChanged();
-                CharacterManager.RebuildCharacter(unitEntityData);
             }
             else if (!unitEntityData.Descriptor.Doll.LeftHanded && GUILayout.Button("Set Left Handed", GUILayout.Width(DefaultLabelWidth)))
             {
+                unitEntityData.Descriptor.LeftHandedOverride = true;
                 doll.SetLeftHanded(true);
                 unitEntityData.Descriptor.Doll = doll.CreateData();
-                unitEntityData.Descriptor.LeftHandedOverride = true;
+                ViewManager.ReplaceView(unitEntityData, null);
                 unitEntityData.View.HandsEquipment.HandleEquipmentSetChanged();
-                CharacterManager.RebuildCharacter(unitEntityData);
             }
             ChoosePortrait(unitEntityData);
             if (unitEntityData.IsMainCharacter || unitEntityData.IsCustomCompanion()) ChooseAsks(unitEntityData);

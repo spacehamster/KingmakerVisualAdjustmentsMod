@@ -16,13 +16,21 @@ namespace VisualAdjustments
         {
             if (__instance.SheathVisualModel == null) return;
             if (__instance.VisualModel == null) return;
-            if (__instance.Owner.Descriptor.IsLeftHanded)
+
+
+            if (__instance.Owner.Descriptor.IsLeftHanded || true)
             {
-                return;
+                var sign = __instance.Owner.Descriptor.IsLeftHanded ? -1 : 1;
+                __instance.VisualModel.transform.localScale = new Vector3(
+                    -Mathf.Abs(__instance.VisualModel.transform.localScale.x),
+                    __instance.VisualModel.transform.localScale.y,
+                    __instance.VisualModel.transform.localScale.z);
                 __instance.SheathVisualModel.transform.localPosition = __instance.VisualModel.transform.localPosition;
+                __instance.SheathVisualModel.transform.localScale = __instance.VisualModel.transform.localScale;
+                return;
                 //Still sometimes has weapons on wrong side, try right to positive and left negative for both weapon and sheath
                 //return;
-                var sign = InfoManager.WeaponScale ? 1 : -1;
+                //var sign = InfoManager.WeaponScale ? 1 : -1;
                 var weaponScale = sign * Mathf.Abs(__instance.VisualModel.transform.localScale.x);
                 var sheathScale = sign * Mathf.Abs(__instance.SheathVisualModel.transform.localScale.x);
                 __instance.VisualModel.transform.localScale = new Vector3(

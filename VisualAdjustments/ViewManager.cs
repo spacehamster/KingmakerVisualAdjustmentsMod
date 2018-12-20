@@ -23,6 +23,9 @@ namespace VisualAdjustments
             if (string.IsNullOrEmpty(id)) return null;
             return ResourcesLibrary.TryGetResource<UnitEntityView>(id);
         }
+        /*
+         * Based on Polymorph.TryReplaceView
+         */ 
         public static void ReplaceView(UnitEntityData unit, string id)
         {
             var original = unit.View;
@@ -47,8 +50,11 @@ namespace VisualAdjustments
                 selectionManager.ForceCreateMarks();
             }
             UnityEngine.Object.Destroy(original.gameObject);
+            if (string.IsNullOrEmpty(id)) CharacterManager.RebuildCharacter(unit);
         }
-
+        /*
+         * Used for overriding view
+         */ 
         [HarmonyPatch(typeof(UnitEntityData), "CreateView")]
         static class UnitEntityData_CreateView_Patch
         {
@@ -197,6 +203,7 @@ namespace VisualAdjustments
                 try
                 {
                     if (!Main.enabled) return;
+                    //if (__instance.EntityData == null) return;
                     if (!__instance.EntityData.IsPlayerFaction) return;
                     var characterSettings = Main.settings.GetCharacterSettings(__instance.EntityData);
                     if (characterSettings == null) return;
