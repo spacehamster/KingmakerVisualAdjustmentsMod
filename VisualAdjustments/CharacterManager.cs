@@ -258,6 +258,65 @@ namespace VisualAdjustments
             {
                 HideSlot(view, view.EntityData.Body.Feet, ref dirty);
             }
+            if (characterSettings.hideHorns)
+            {
+                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
+                {
+                    if (ee.BodyParts.Exists((bodypart) => bodypart.Type == BodyPartType.Horns))
+                    {
+                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
+                        dirty = true;
+                    }
+                }
+            }
+            if (characterSettings.hideTail)
+            {
+                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
+                {
+                    if (ee.name.StartsWith("Tail"))
+                    {
+                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
+                        dirty = true;
+                    }
+                }
+            }
+            if (characterSettings.hideBackpack)
+            {
+                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
+                {
+                    if (ee.OutfitParts.Exists((outfit) => outfit.Special == EquipmentEntity.OutfitPartSpecialType.Backpack))
+                    {
+                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
+                        dirty = true;
+                    }
+                }
+            }
+            if (characterSettings.hideClassCloak || characterSettings.overrideCloak != "")
+            {
+                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
+                {
+                    if (ee.OutfitParts.Exists((outfit) => {
+                        return outfit.Special == EquipmentEntity.OutfitPartSpecialType.Cloak ||
+                            outfit.Special == EquipmentEntity.OutfitPartSpecialType.CloakSquashed;
+                    }) && !view.ExtractEquipmentEntities(view.EntityData.Body.Shoulders).Contains(ee))
+                    {
+                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
+                        dirty = true;
+                    }
+                }
+            }
+            if (characterSettings.hideCap)
+            {
+                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
+                {
+                    if (ee.BodyParts.Exists((bodypart) => bodypart.Type == BodyPartType.Cap) &&
+                        !view.ExtractEquipmentEntities(view.EntityData.Body.Head).Contains(ee))
+                    {
+                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
+                        dirty = true;
+                    }
+                }
+            }
             if (characterSettings.overrideHelm != "" && !characterSettings.hideHelmet)
             {
                 if (!OverrideEquipment(view, view.EntityData.Body.Head, characterSettings.overrideHelm, ref dirty))
@@ -298,65 +357,6 @@ namespace VisualAdjustments
                 if (!OverrideEquipment(view, view.EntityData.Body.Feet, characterSettings.overrideBoots, ref dirty))
                 {
                     characterSettings.overrideBoots = "";
-                }
-            }
-            if (characterSettings.hideHorns)
-            {
-                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
-                {
-                    if (ee.BodyParts.Exists((bodypart) => bodypart.Type == BodyPartType.Horns))
-                    {
-                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
-                        dirty = true;
-                    }
-                }
-            }
-            if (characterSettings.hideTail)
-            {
-                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
-                {
-                    if (ee.name.StartsWith("Tail"))
-                    {
-                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
-                        dirty = true;
-                    }
-                }
-            }
-            if (characterSettings.hideBackpack)
-            {
-                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
-                {
-                    if (ee.OutfitParts.Exists((outfit) => outfit.Special == EquipmentEntity.OutfitPartSpecialType.Backpack))
-                    {
-                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
-                        dirty = true;
-                    }
-                }
-            }
-            if (characterSettings.hideClassCloak)
-            {
-                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
-                {
-                    if (ee.OutfitParts.Exists((outfit) => {
-                        return outfit.Special == EquipmentEntity.OutfitPartSpecialType.Cloak ||
-                            outfit.Special == EquipmentEntity.OutfitPartSpecialType.CloakSquashed;
-                    }) && !view.ExtractEquipmentEntities(view.EntityData.Body.Shoulders).Contains(ee))
-                    {
-                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
-                        dirty = true;
-                    }
-                }
-            }
-            if (characterSettings.hideCap)
-            {
-                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
-                {
-                    if (ee.BodyParts.Exists((bodypart) => bodypart.Type == BodyPartType.Cap) &&
-                        !view.ExtractEquipmentEntities(view.EntityData.Body.Head).Contains(ee))
-                    {
-                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
-                        dirty = true;
-                    }
                 }
             }
             if (view.EntityData.Descriptor.Progression.GetEquipmentClass().Name == "Ranger")
