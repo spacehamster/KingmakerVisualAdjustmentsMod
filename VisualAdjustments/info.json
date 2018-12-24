@@ -2,11 +2,11 @@
   "Id": "VisualAdjustments",
   "DisplayName": "Visual Adjustments",
   "Author": "spacehamster",
-  "Version": "1.6.0",
+  "Version": "1.6.1",
   "ManagerVersion": "0.12.0",
   "Requirements": [],
   "AssemblyName": "VisualAdjustments.dll",
   "EntryMethod": "VisualAdjustments.Main.Load",
-  "HomePage": "https://github.com/spacehamster/KingmakerVisualAdjustmentsMod",
+  "HomePage": "https://www.nexusmods.com/pathfinderkingmaker/mods/35",
   "Repository": "https://raw.githubusercontent.com/spacehamster/KingmakerVisualAdjustmentsMod/master/VisualAdjustments/Repository.json"
 }
