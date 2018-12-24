@@ -48,7 +48,7 @@ namespace VisualAdjustments
             public Dictionary<string, string> overrideWeapons = new Dictionary<string, string>();
 
             public bool hideWeapons = false;
-
+            public bool hideBeltSlots = false;
 #if (DEBUG)
             public bool showInfo = false;
 #endif

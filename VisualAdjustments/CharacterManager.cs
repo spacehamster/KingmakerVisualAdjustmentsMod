@@ -39,6 +39,11 @@ namespace VisualAdjustments
             }
             return -1;
         }
+        /*
+         * Fix bug where class outfit colors would switch dark blue when a characters'
+         * secondary class was returned by UnitProgressionData.GetEquipmentClass,
+         * as only the character's starting class has ramp indexs in the DollData 
+         */
         static void FixColors(UnitEntityView unitEntityView)
         {
             //Probably not necessary, don't update colors if doll contains current class
@@ -195,6 +200,9 @@ namespace VisualAdjustments
             dirty = true;
             return true;
         }
+        /*
+         * Fix "bug" where Male Ranger Cape would hide hair and ears         * 
+         */ 
         static void FixRangerCloak(UnitEntityView view)
         {
             foreach (var ee in view.CharacterAvatar.EquipmentEntities)
@@ -204,6 +212,14 @@ namespace VisualAdjustments
                     ee.HideBodyParts &= ~(BodyPartType.Hair | BodyPartType.Hair2 | BodyPartType.Ears);
                 }
             }
+        }
+        public static void NoClassOutfit(UnitEntityView view)
+        {
+            var classOutfit = view.EntityData.Descriptor.Progression.GetEquipmentClass();
+            var oldClothes = classOutfit.LoadClothes(view.EntityData.Descriptor.Gender, view.EntityData.Descriptor.Progression.Race);
+            view.CharacterAvatar.RemoveEquipmentEntities(oldClothes);
+            var newClothes = BlueprintRoot.Instance.CharGen.LoadClothes(view.EntityData.Descriptor.Gender);
+            view.CharacterAvatar.AddEquipmentEntities(newClothes);
         }
         public static void UpdateModel(UnitEntityView view)
         {
@@ -217,6 +233,7 @@ namespace VisualAdjustments
             {
                 ChangeCompanionOutfit(view, characterSettings);
             }
+            if (characterSettings.classOutfit == "None") NoClassOutfit(view);
             if (characterSettings.hideHelmet)
             {
                 HideSlot(view, view.EntityData.Body.Head, ref dirty);
@@ -356,6 +373,8 @@ namespace VisualAdjustments
          * and UnitEntitiyView.OnAttached to set the Character.Mirror = true; 
          * DollData.IsLeftHanded is used to set Character.Mirror = true in 
          * DollData.CreateUnitView
+         * This patch fixes a bug in base game that causes all characters to be right handed,
+         * which mistakenly failed to set localScale.x to negative for left handed characters
          */
         [HarmonyPatch(typeof(Character), "UpdateMirrorScale")]
         static class Character_UpdateMirrorScale_Patch

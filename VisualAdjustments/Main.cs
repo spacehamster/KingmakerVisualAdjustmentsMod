@@ -53,7 +53,8 @@ namespace VisualAdjustments
             "Ranger",
             "Rogue",
             "Sorcerer",
-            "Wizard"
+            "Wizard",
+            "None"
         };
         static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -153,6 +154,11 @@ namespace VisualAdjustments
             GUILayout.BeginHorizontal();
             foreach (var _class in classes)
             {
+                if (_class == "Magus")
+                {
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                }
                 if (_class == "Kineticist" && !BlueprintRoot.Instance.DlcSettings.Tieflings.Enabled)
                     continue;
                 if (characterSettings.classOutfit == _class)
@@ -432,16 +438,12 @@ namespace VisualAdjustments
                 CharacterManager.RebuildCharacter(unitEntityData);
                 CharacterManager.UpdateModel(unitEntityData.View);
             }
-            void onHideWeapon()
-            {
-                unitEntityData.View.HandsEquipment.HandleEquipmentSetChanged();
-            }
             void onHideBuff()
             {
                 foreach (var buff in unitEntityData.Buffs) buff.ClearParticleEffect();
                 unitEntityData.SpawnBuffsFxs();
             }
-            void onHideWeaponEnchantment()
+            void onWeaponChanged()
             {
                 unitEntityData.View.HandsEquipment.HandleEquipmentSetChanged();
             }
@@ -454,8 +456,9 @@ namespace VisualAdjustments
             ChooseToggle("Hide Bracers", ref characterSettings.hideBracers, onHideEquipment);
             ChooseToggle("Hide Gloves", ref characterSettings.hideGloves, onHideEquipment);
             ChooseToggle("Hide Boots", ref characterSettings.hideBoots, onHideEquipment);
-            ChooseToggle("Hide Inactive Weapons", ref characterSettings.hideWeapons, onHideWeapon);
-            ChooseToggle("Hide Weapon Enchantments", ref characterSettings.hideWeaponEnchantments, onHideWeaponEnchantment);
+            ChooseToggle("Hide Inactive Weapons", ref characterSettings.hideWeapons, onWeaponChanged);
+            ChooseToggle("Hide Belt Slots", ref characterSettings.hideBeltSlots, onWeaponChanged);
+            ChooseToggle("Hide Weapon Enchantments", ref characterSettings.hideWeaponEnchantments, onWeaponChanged);
             ChooseToggle("Hide Wings", ref characterSettings.hideWings, onHideBuff);
             if (BlueprintRoot.Instance.DlcSettings.Tieflings.Enabled)
             {
