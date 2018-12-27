@@ -17,7 +17,7 @@ using Kingmaker.Visual.Sound;
 using Kingmaker.Enums;
 using Kingmaker.UnitLogic;
 using Kingmaker.Blueprints.Root;
-
+using Kingmaker.Utility;
 namespace VisualAdjustments
 {
 
@@ -199,9 +199,6 @@ namespace VisualAdjustments
                 {
                     newIndex = currentIndex + 1;
                 }
-                var value = newIndex >= 0 && newIndex < DollResourcesManager.CustomPortraits.Count ? DollResourcesManager.CustomPortraits[newIndex] : null;
-                GUILayout.Label(" " + value, GUILayout.ExpandWidth(false));
-
                 if (GUILayout.Button("Use Normal"))
                 {
                     unitEntityData.Descriptor.UISettings.SetPortrait(
@@ -212,6 +209,9 @@ namespace VisualAdjustments
                     });
                     return;
                 }
+                var value = newIndex >= 0 && newIndex < DollResourcesManager.CustomPortraits.Count ? DollResourcesManager.CustomPortraits[newIndex] : null;
+                GUILayout.Label(" " + value, GUILayout.ExpandWidth(false));
+
                 GUILayout.EndHorizontal();
                 if (newIndex != currentIndex && value != null)
                 {
@@ -237,9 +237,7 @@ namespace VisualAdjustments
                 {
                     newIndex = currentIndex + 1;
                 }
-                var value = newIndex >= 0 && newIndex < DollResourcesManager.Portrait.Count ? DollResourcesManager.Portrait.Values[newIndex] : null;
-                GUILayout.Label(" " + value, GUILayout.ExpandWidth(false));
-                if (GUILayout.Button("Use Custom"))
+                if (GUILayout.Button("Use Custom", GUILayout.ExpandWidth(false)))
                 {
                     unitEntityData.Descriptor.UISettings.SetPortrait(CustomPortraitsManager.Instance.CreateNewOrLoadDefault());
                     EventBus.RaiseEvent<IUnitPortraitChangedHandler>(delegate (IUnitPortraitChangedHandler h)
@@ -248,6 +246,9 @@ namespace VisualAdjustments
                     });
                     return;
                 }
+                var value = newIndex >= 0 && newIndex < DollResourcesManager.Portrait.Count ? DollResourcesManager.Portrait.Values[newIndex] : null;
+                GUILayout.Label(" " + value, GUILayout.ExpandWidth(false));
+
                 GUILayout.EndHorizontal();
                 if (newIndex != currentIndex && value != null)
                 {
@@ -261,24 +262,41 @@ namespace VisualAdjustments
         }
         static void ChooseAsks(UnitEntityData unitEntityData)
         {
-            int oldIndex = -1;
+            int currentIndex = -1;
             if (unitEntityData.Descriptor.CustomAsks != null)
             {
-                oldIndex = DollResourcesManager.Asks.IndexOfKey(unitEntityData.Descriptor.CustomAsks.name);
+                currentIndex = DollResourcesManager.Asks.IndexOfKey(unitEntityData.Descriptor.CustomAsks.name);
             }
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Voice  ", GUILayout.Width(DefaultLabelWidth));
-            var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(oldIndex, 0, DollResourcesManager.Asks.Count, GUILayout.Width(DefaultSliderWidth)), 0);
+            GUILayout.Label("Custom Voice ", GUILayout.Width(DefaultLabelWidth));
+            var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, -1, DollResourcesManager.Asks.Count - 1, GUILayout.Width(DefaultSliderWidth)), 0);
+            if (GUILayout.Button("Prev", GUILayout.Width(45)) && currentIndex >= 0)
+            {
+                newIndex = currentIndex - 1;
+            }
+            if (GUILayout.Button("Next", GUILayout.Width(45)) && currentIndex < DollResourcesManager.Asks.Count)
+            {
+                newIndex = currentIndex + 1;
+            }
             var value = (newIndex >= 0 && newIndex < DollResourcesManager.Asks.Count) ? DollResourcesManager.Asks.Values[newIndex] : null;
-            GUILayout.Label(" " + value, GUILayout.ExpandWidth(false));
             if (GUILayout.Button("Preview", GUILayout.ExpandWidth(false)))
             {
-                var asks = value?.GetComponent<UnitAsksComponent>();
-                if (asks != null) asks.PlayPreview();
-                else DebugLog("Missing Asks");
+                var component = value?.GetComponent<UnitAsksComponent>();
+                if (component != null && component.PreviewSound != "")
+                {
+                    component.PlayPreview();
+                }
+                else if (component != null && component.Selected.HasBarks)
+                {
+                    var bark = component.Selected.Entries.Random();
+                    AkSoundEngine.PostEvent(bark.AkEvent, unitEntityData.View.gameObject);
+                }
             }
+            GUILayout.Label(" " + (value?.name ?? "None"), GUILayout.ExpandWidth(false));
+
+
             GUILayout.EndHorizontal();
-            if (newIndex != oldIndex && value != null)
+            if (newIndex != currentIndex)
             {
                 unitEntityData.Descriptor.CustomAsks = value;
                 unitEntityData.View?.UpdateAsks();
@@ -395,7 +413,7 @@ namespace VisualAdjustments
                 unitEntityData.Descriptor.ForcceUseClassEquipment = true;
                 CharacterManager.RebuildCharacter(unitEntityData);
             }
-            GUILayout.Label("Note: Colors only applies to non-default outfits");
+            GUILayout.Label("Note: Colors only applies to non-default outfits, the default companion custom voice is None");
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Primary Outfit Color ", GUILayout.Width(DefaultLabelWidth));
@@ -421,6 +439,7 @@ namespace VisualAdjustments
                 }
             }
             ChoosePortrait(unitEntityData);
+            ChooseAsks(unitEntityData);
         }
         static void ChooseToggle(string label, ref bool currentValue, Action onChoose)
         {

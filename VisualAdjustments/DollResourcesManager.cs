@@ -108,7 +108,10 @@ namespace VisualAdjustments
             customPortraits.AddRange(CustomPortraitsManager.Instance.GetExistingCustomPortraitIds());
             foreach (var bp in ResourcesLibrary.GetBlueprints<BlueprintUnitAsksList>())
             {
-                if(bp.DisplayName != "" || bp.name == "PC_None_Barks") asks.Add(bp.name, bp);
+                var component = bp.GetComponent<UnitAsksComponent>();
+                if (component == null) continue;
+                if (!component.Selected.HasBarks && bp.name != "PC_None_Barks") continue;
+                asks.Add(bp.name, bp);
             }
             loaded = true;
         }

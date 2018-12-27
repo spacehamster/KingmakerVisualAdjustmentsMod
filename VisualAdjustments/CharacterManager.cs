@@ -5,13 +5,13 @@ using Kingmaker.Blueprints.Classes;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Items.Slots;
+using Kingmaker.PubSubSystem;
 using Kingmaker.UnitLogic;
 using Kingmaker.View;
 using Kingmaker.Visual.CharacterSystem;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 using static VisualAdjustments.Settings;
 
 namespace VisualAdjustments
@@ -110,6 +110,11 @@ namespace VisualAdjustments
                     new Func<ItemSlot, IEnumerable<EquipmentEntity>>(unitEntityData.View.ExtractEquipmentEntities));
                 unitEntityData.View.CharacterAvatar.AddEquipmentEntities(ees, false);
             }
+            //Add Kineticist Tattoos
+            EventBus.RaiseEvent<IUnitViewAttachedHandler>(unitEntityData, delegate (IUnitViewAttachedHandler h)
+            {
+                h.HandleUnitViewAttached();
+            });
         }
         static void ChangeCompanionOutfit(UnitEntityView __instance, CharacterSettings characterSettings)
         {
@@ -365,40 +370,6 @@ namespace VisualAdjustments
             }
             if (view.EntityData.Descriptor.Doll != null) FixColors(view);
             view.CharacterAvatar.IsDirty = dirty;
-        }
-        /*
-         * There are two sources of handedness, 
-         * UnitDescriptor.IsLeftHanded: which is derived from
-         * Doll.LeftHanded and used to set UnitViewHandSlotData.localScale.x = -x
-         * and UnitEntitiyView.OnAttached to set the Character.Mirror = true; 
-         * DollData.IsLeftHanded is used to set Character.Mirror = true in 
-         * DollData.CreateUnitView
-         * This patch fixes a bug in base game that causes all characters to be right handed,
-         * which mistakenly failed to set localScale.x to negative for left handed characters
-         */
-        [HarmonyPatch(typeof(Character), "UpdateMirrorScale")]
-        static class Character_UpdateMirrorScale_Patch
-        {
-            static bool Prefix(Character __instance, ref Animator ___m_Animator, bool ___m_Mirror)
-            {
-                try
-                {
-                    if (!Main.enabled) return true;
-                    if (___m_Animator == null)
-                    {
-                        return false ;
-                    }
-                    Vector3 localScale = ___m_Animator.transform.localScale;
-                    var sign = !___m_Mirror ? 1 : -1;
-                    localScale.x = Mathf.Abs(localScale.x) * sign;
-                    ___m_Animator.transform.localScale = localScale;
-                    return false;
-                } catch(Exception ex)
-                {
-                    Main.DebugError(ex);
-                    return true;
-                }
-            }
         }
         /*
          * Called by CheatsSilly.UpdatePartyNoArmor and OnDataAttached
