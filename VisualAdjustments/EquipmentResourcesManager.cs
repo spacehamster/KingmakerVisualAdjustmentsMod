@@ -84,10 +84,11 @@ namespace VisualAdjustments
         private static bool loaded = false;
         static void Init()
         {
-            var blueprints = ResourcesLibrary.GetBlueprints<BlueprintItemEquipment>().OrderBy((bp) => bp.name);
+            var blueprints = ResourcesLibrary.GetBlueprints<BlueprintItemEquipment>()
+                .Where(bp => bp.EquipmentEntity != null)
+                .OrderBy(bp => bp.EquipmentEntity.name);
             foreach (var bp in blueprints)
             {
-                if (bp.EquipmentEntity == null) continue;
                 switch (bp.ItemType)
                 {
                     case ItemType.Head:
@@ -141,15 +142,15 @@ namespace VisualAdjustments
             }
             string getViewName(BlueprintUnit bp)
             {
-                if (!ResourcesLibrary.LibraryObject.ResourcePathsByAssetId.ContainsKey(bp.Prefab.AssetId)) return "NULL";
-                var path = ResourcesLibrary.LibraryObject.ResourcePathsByAssetId[bp.Prefab.AssetId].Split('/');
+                if (!ResourcesLibrary.LibraryObject.ResourceNamesByAssetId.ContainsKey(bp.Prefab.AssetId)) return "NULL";
+                var path = ResourcesLibrary.LibraryObject.ResourceNamesByAssetId[bp.Prefab.AssetId].Split('/');
                 return path[path.Length - 1];
             }
             var units = ResourcesLibrary.GetBlueprints<BlueprintUnit>().OrderBy(getViewName);
             foreach (var bp in units)
             {
                 if (bp.Prefab.AssetId == "") continue;
-                if (!ResourcesLibrary.LibraryObject.ResourcePathsByAssetId.ContainsKey(bp.Prefab.AssetId)) continue;             
+                if (!ResourcesLibrary.LibraryObject.ResourceNamesByAssetId.ContainsKey(bp.Prefab.AssetId)) continue;             
                 if (m_Units.ContainsKey(bp.Prefab.AssetId)) continue;
                 m_Units[bp.Prefab.AssetId] = getViewName(bp);
             }

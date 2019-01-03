@@ -149,8 +149,9 @@ namespace VisualAdjustments
         }
         static void ChooseClassOutfit(CharacterSettings characterSettings, UnitEntityData unitEntityData)
         {
-            var normalColor = GUI.skin.button.normal.textColor;
-            var focusedColor = GUI.skin.button.focused.textColor;
+            var focusedStyle = new GUIStyle(GUI.skin.button);
+            focusedStyle.normal.textColor = Color.yellow;
+            focusedStyle.focused.textColor = Color.yellow;
             GUILayout.BeginHorizontal();
             foreach (var _class in classes)
             {
@@ -161,25 +162,14 @@ namespace VisualAdjustments
                 }
                 if (_class == "Kineticist" && !BlueprintRoot.Instance.DlcSettings.Tieflings.Enabled)
                     continue;
-                if (characterSettings.classOutfit == _class)
-                {
-                    GUI.skin.button.normal.textColor = Color.yellow;
-                    GUI.skin.button.focused.textColor = Color.yellow;
-                }
-                else
-                {
-                    GUI.skin.button.normal.textColor = normalColor;
-                    GUI.skin.button.focused.textColor = focusedColor;
-                }
-                if (GUILayout.Button(_class))
+                var style = characterSettings.classOutfit == _class ? focusedStyle : GUI.skin.button;
+                if (GUILayout.Button(_class, style))
                 {
                     characterSettings.classOutfit = _class;
                     CharacterManager.RebuildCharacter(unitEntityData);
                     unitEntityData.View.UpdateClassEquipment();
                 }
             }
-            GUI.skin.button.normal.textColor = normalColor;
-            GUI.skin.button.focused.textColor = focusedColor;
             GUILayout.EndHorizontal();
         }
         static void ChoosePortrait(UnitEntityData unitEntityData)
