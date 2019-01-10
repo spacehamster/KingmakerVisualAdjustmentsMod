@@ -150,6 +150,7 @@ namespace VisualAdjustments
             dollState.SetGender(dollData.Gender);
             dollState.SetRacePreset(dollData.RacePreset);
             dollState.SetLeftHanded(dollData.LeftHanded);
+            dollState.SetEquipColors(dollData.ClothesPrimaryIndex, dollData.ClothesSecondaryIndex);
             foreach(var assetID in dollData.EquipmentEntityIds)
             {
                 if (head.ContainsKey(assetID))

@@ -26,31 +26,41 @@ namespace VisualAdjustments
             public string type = "Unknown";
             public string raceGenderCombos = "";
             public EquipmentEntityLink eel = null;
-            public bool expanded = false;
         }
-        static readonly Dictionary<string, EquipmentEntityInfo> lookup = new Dictionary<string, EquipmentEntityInfo>();
+        static private Dictionary<string, EquipmentEntityInfo> m_lookup = null;
+        static Dictionary<string, EquipmentEntityInfo> lookup
+        {
+            get
+            {
+                if (m_lookup == null) BuildLookup();
+                return m_lookup;
+            }
+        }
         static BlueprintBuff[] blueprintBuffs = new BlueprintBuff[] { };
-        static bool loaded = false;
         static bool showWeapons = false;
-        static bool showArmor = false;
+        static bool showCharacter = false;
         static bool showBuffs = false;
         static bool showFx = false;
         static bool showAsks = false;
         static bool showDoll = false;
         static bool showPortrait = false;
+        static string GetName(EquipmentEntityLink eel)
+        {
+            if (ResourcesLibrary.LibraryObject.ResourceNamesByAssetId.ContainsKey(eel.AssetId)) return ResourcesLibrary.LibraryObject.ResourceNamesByAssetId[eel.AssetId];
+            return null;
+        }
         static void AddLinks(EquipmentEntityLink[] links, string type, Race race, Gender gender)
         {
             foreach (var link in links)
             {
-                var ee = link.Load();
-                if (ee == null) continue; //happens with bad custom mods
-                if (lookup.ContainsKey(ee.name))
+                var name = GetName(link);
+                if (lookup.ContainsKey(name))
                 {
-                    lookup[ee.name].raceGenderCombos += ", " + race + gender;
+                    lookup[name].raceGenderCombos += ", " + race + gender;
                 }
                 else
                 {
-                    lookup[ee.name] = new EquipmentEntityInfo
+                    lookup[name] = new EquipmentEntityInfo
                     {
                         type = type,
                         raceGenderCombos = "" + race + gender,
@@ -59,8 +69,9 @@ namespace VisualAdjustments
                 }
             }
         }
-        static void Init()
+        static void BuildLookup()
         {
+            m_lookup = new Dictionary<string, EquipmentEntityInfo>(); ;
             var races = ResourcesLibrary.GetBlueprints<BlueprintRace>();
             var racePresets = ResourcesLibrary.GetBlueprints<BlueprintRaceVisualPreset>();
             var classes = ResourcesLibrary.GetBlueprints<BlueprintCharacterClass>();
@@ -106,11 +117,9 @@ namespace VisualAdjustments
                 }
             }
             blueprintBuffs = ResourcesLibrary.GetBlueprints<BlueprintBuff>().ToArray();
-            loaded = true;
         }
         public static void ShowInfo(UnitEntityData unitEntityData)
-        {
-            if (!loaded) Init();
+        {;
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Rebuild Character"))
             {
@@ -152,6 +161,8 @@ namespace VisualAdjustments
             {
                 CharacterManager.UpdateModel(unitEntityData.View);
             }
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
             GUILayout.Label($"Original size {unitEntityData.Descriptor.OriginalSize}");
             GUILayout.Label($"Current size {unitEntityData.Descriptor.State.Size}");
             var m_OriginalScale = Traverse.Create(unitEntityData.View).Field("m_OriginalScale").GetValue<Vector3>();
@@ -165,11 +176,10 @@ namespace VisualAdjustments
             var message =
                     unitEntityData.View == null ? "No View" :
                     unitEntityData.View.CharacterAvatar == null ? "No Character Avatar" :
-                    unitEntityData.View.CharacterAvatar.BakedCharacter == null ? "No Baked Character" : 
-                    "Baked Character";
-            GUILayout.Label(message);
+                    null;
+            if(message != null) GUILayout.Label(message);
             GUILayout.BeginHorizontal();
-            showArmor = GUILayout.Toggle(showArmor, "Show Armor");
+            showCharacter = GUILayout.Toggle(showCharacter, "Show Character");
             showWeapons = GUILayout.Toggle(showWeapons, "Show Weapons");
             showDoll = GUILayout.Toggle(showDoll, "Show Doll");
             showBuffs = GUILayout.Toggle(showBuffs, "Show Buffs");
@@ -178,7 +188,7 @@ namespace VisualAdjustments
             showAsks = GUILayout.Toggle(showAsks, "Show Asks");
 
             GUILayout.EndHorizontal();
-            if (showArmor) ShowArmorInfo(unitEntityData);
+            if (showCharacter) ShowCharacterInfo(unitEntityData);
             if (showWeapons) ShowWeaponInfo(unitEntityData);
             if (showDoll) ShowDollInfo(unitEntityData);
             if (showBuffs) ShowBuffInfo(unitEntityData);
@@ -187,27 +197,32 @@ namespace VisualAdjustments
             if (showAsks) ShowAsksInfo(unitEntityData);
 
         }
-        static void ShowArmorInfo(UnitEntityData unitEntityData)
+        static string expandedEE = null;
+        static void ShowCharacterInfo(UnitEntityData unitEntityData)
         {
             var character = unitEntityData.View.CharacterAvatar;
             if (character == null) return;
-            GUILayout.Label("Equipment", GUILayout.Width(300));
+            GUILayout.Label($"View: {unitEntityData.View.name}");
+            GUILayout.Label($"BakedCharacter: {character.BakedCharacter?.name ?? "NULL"}");
+            GUILayout.Label("Equipment");
             foreach (var ee in character.EquipmentEntities.ToArray())
             {
-                EquipmentEntityInfo settings = lookup.ContainsKey(ee.name) ? lookup[ee.name] : new EquipmentEntityInfo();
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(
-                        String.Format("{0}:{1}:{2}:{3}:P{4}:S{5}", ee.name, settings.type, ee.BodyParts.Count, ee.OutfitParts.Count, 
+                        String.Format("{0}:{1}:{2}:P{3}:S{4}", ee.name, ee.BodyParts.Count, ee.OutfitParts.Count, 
                             character.GetPrimaryRampIndex(ee), character.GetSecondaryRampIndex(ee)),
-                        GUILayout.ExpandWidth(false));
-                if (GUILayout.Button("Remove"))
+                        GUILayout.ExpandWidth(true));
+                if (GUILayout.Button("Remove", GUILayout.ExpandWidth(false)))
                 {
                     character.RemoveEquipmentEntity(ee);
                 }
-                settings.expanded = GUILayout.Toggle(settings.expanded, "Expand", GUILayout.ExpandWidth(false));
+                bool expanded = ee.name == expandedEE;
+                if (expanded && GUILayout.Button("Shrink ", GUILayout.ExpandWidth(false))) expandedEE = null;
+                if (!expanded && GUILayout.Button("Expand", GUILayout.ExpandWidth(false))) expandedEE = ee.name;
                 GUILayout.EndHorizontal();
-                if (settings.expanded)
+                if (expanded)
                 {
+                    EquipmentEntityInfo settings = lookup.ContainsKey(ee.name) ? lookup[ee.name] : new EquipmentEntityInfo();
                     GUILayout.Label($" HideFlags: {ee.HideBodyParts}");
                     foreach (var bodypart in ee.BodyParts.ToArray())
                     {
@@ -232,6 +247,24 @@ namespace VisualAdjustments
                     }
                 }
             }
+            GUILayout.Label("Character", GUILayout.Width(300));
+            GUILayout.Label("RampIndices");
+            foreach(var index in Traverse.Create(character).Field("m_RampIndices").GetValue<List<Character.SelectedRampIndices>>())
+            {
+                GUILayout.Label($"  {index.EquipmentEntity.name} - {index.PrimaryIndex}, {index.SecondaryIndex}");
+            }
+            GUILayout.Label("SavedRampIndices");
+            foreach (var index in Traverse.Create(character).Field("m_SavedRampIndices").GetValue<List<Character.SavedSelectedRampIndices>>())
+            {
+                GUILayout.Label($"  {GetName(index.EquipmentEntityLink)} - {index.PrimaryIndex}, {index.SecondaryIndex}");
+            }
+            GUILayout.Label("SavedEquipmentEntities");
+            foreach (var link in Traverse.Create(character).Field("m_SavedEquipmentEntities").GetValue<List<EquipmentEntityLink>>())
+            {
+                var name = GetName(link);
+                GUILayout.Label($"  {name}");
+            }
+
         }
         static void ShowAsksInfo(UnitEntityData unitEntityData)
         {

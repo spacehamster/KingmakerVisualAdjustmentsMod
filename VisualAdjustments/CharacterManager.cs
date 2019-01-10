@@ -100,15 +100,11 @@ namespace VisualAdjustments
             }
             else
             {
-                UnitEntityView viewTemplate = (!string.IsNullOrEmpty(unitEntityData.Descriptor.CustomPrefabGuid)) ?
-                    ResourcesLibrary.TryGetResource<UnitEntityView>(unitEntityData.Descriptor.CustomPrefabGuid) :
-                    unitEntityData.Blueprint.Prefab.Load();
-                var characterBase = viewTemplate.GetComponentInChildren<Character>();
-                character.CopyEquipmentFrom(characterBase);
-                //Note UpdateBodyEquipmentModel does nothing for baked characters
-                IEnumerable<EquipmentEntity> ees = unitEntityData.Body.AllSlots.SelectMany(
+                character.RemoveAllEquipmentEntities();
+                character.RestoreSavedEquipment();
+                IEnumerable<EquipmentEntity> bodyEquipment = unitEntityData.Body.AllSlots.SelectMany(
                     new Func<ItemSlot, IEnumerable<EquipmentEntity>>(unitEntityData.View.ExtractEquipmentEntities));
-                unitEntityData.View.CharacterAvatar.AddEquipmentEntities(ees, false);
+                character.AddEquipmentEntities(bodyEquipment, false);
             }
             //Add Kineticist Tattoos
             EventBus.RaiseEvent<IUnitViewAttachedHandler>(unitEntityData, delegate (IUnitViewAttachedHandler h)
@@ -378,7 +374,7 @@ namespace VisualAdjustments
             {
                 FixRangerCloak(view);
             }
-            if (view.EntityData.Descriptor.Doll != null) FixColors(view);
+            //if (view.EntityData.Descriptor.Doll != null) FixColors(view);
             view.CharacterAvatar.IsDirty = dirty;
         }
         /*
