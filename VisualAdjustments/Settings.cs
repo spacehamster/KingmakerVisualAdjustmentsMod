@@ -38,6 +38,7 @@ namespace VisualAdjustments
             public string overrideBracers = "";
             public string overrideGloves = "";
             public string overrideBoots = "";
+            public string overrideTattoo = "";
             public string overrideView = "";
             public bool overrideScale = false;
             public bool overrideScaleShapeshiftOnly = false;

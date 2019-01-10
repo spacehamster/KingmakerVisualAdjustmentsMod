@@ -364,7 +364,17 @@ namespace VisualAdjustments
                     characterSettings.overrideBoots = "";
                 }
             }
-            if (view.EntityData.Descriptor.Progression.GetEquipmentClass().Name == "Ranger")
+            if (characterSettings.overrideTattoo != "")
+            {
+                foreach(var assetId in EquipmentResourcesManager.Tattoos.Keys)
+                {
+                    var ee = ResourcesLibrary.TryGetResource<EquipmentEntity>(assetId);
+                    if (ee != null) view.CharacterAvatar.RemoveEquipmentEntity(ee);
+                }
+                var tattoo = ResourcesLibrary.TryGetResource<EquipmentEntity>(characterSettings.overrideTattoo);
+                if(tattoo != null) view.CharacterAvatar.AddEquipmentEntity(tattoo);
+            }
+            if (view.EntityData.Descriptor.Progression?.GetEquipmentClass().Name == "Ranger")
             {
                 FixRangerCloak(view);
             }

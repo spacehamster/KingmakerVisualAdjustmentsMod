@@ -533,11 +533,12 @@ namespace VisualAdjustments
             GUILayout.Label("Equipment", "box", GUILayout.Width(DefaultLabelWidth));
             void onView() => ViewManager.ReplaceView(unitEntityData, characterSettings.overrideView);
             ChooseSlider("Override Helm", EquipmentResourcesManager.Helm, ref characterSettings.overrideHelm, onEquipment);
-            ChooseSlider("Override Cloak ", EquipmentResourcesManager.Cloak, ref characterSettings.overrideCloak, onEquipment);
-            ChooseSlider("Override Armor ", EquipmentResourcesManager.Armor, ref characterSettings.overrideArmor, onEquipment);
-            ChooseSlider("Override Bracers ", EquipmentResourcesManager.Bracers, ref characterSettings.overrideBracers, onEquipment);
-            ChooseSlider("Override Gloves ", EquipmentResourcesManager.Gloves, ref characterSettings.overrideGloves, onEquipment);
-            ChooseSlider("Override Boots ", EquipmentResourcesManager.Boots, ref characterSettings.overrideBoots, onEquipment);
+            ChooseSlider("Override Cloak", EquipmentResourcesManager.Cloak, ref characterSettings.overrideCloak, onEquipment);
+            ChooseSlider("Override Armor", EquipmentResourcesManager.Armor, ref characterSettings.overrideArmor, onEquipment);
+            ChooseSlider("Override Bracers", EquipmentResourcesManager.Bracers, ref characterSettings.overrideBracers, onEquipment);
+            ChooseSlider("Override Gloves", EquipmentResourcesManager.Gloves, ref characterSettings.overrideGloves, onEquipment);
+            ChooseSlider("Override Boots", EquipmentResourcesManager.Boots, ref characterSettings.overrideBoots, onEquipment);
+            ChooseSlider("Override Tattoos", EquipmentResourcesManager.Tattoos, ref characterSettings.overrideTattoo, onEquipment);
             GUILayout.Label("Weapons", "box", GUILayout.Width(DefaultLabelWidth));
             foreach (var kv in EquipmentResourcesManager.Weapons)
             {

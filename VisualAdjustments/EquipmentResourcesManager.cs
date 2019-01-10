@@ -73,12 +73,27 @@ namespace VisualAdjustments
                 return m_Weapons;
             }
         }
+        public static UnorderedList<string, string> Tattoos
+        {
+            get
+            {
+                if(m_Tattoo.Count == 0)
+                {
+                    m_Tattoo["326c1affb2a6a26489921bf588f717b6"] = "EE_KineticistTattooWind_U";
+                    m_Tattoo["23b9e367a73b5534d918675405de5aa0"] = "EE_KineticistTattooEarth_U";
+                    m_Tattoo["c4aee0b105e3e7e45994f4d8619a5974"] = "EE_KineticistTattooFire_U";
+                    m_Tattoo["5dcf740907a3ec94bb4deeac33f0c2b3"] = "EE_KineticistTattooWater_U";
+                }
+                return m_Tattoo;
+            }
+        }
         private static UnorderedList<string, string> m_Helm = new UnorderedList<string, string>();
         private static UnorderedList<string, string> m_Cloak = new UnorderedList<string, string>();
         private static UnorderedList<string, string> m_Armor = new UnorderedList<string, string>();
         private static UnorderedList<string, string> m_Bracers = new UnorderedList<string, string>();
         private static UnorderedList<string, string> m_Gloves = new UnorderedList<string, string>();
         private static UnorderedList<string, string> m_Boots = new UnorderedList<string, string>();
+        private static UnorderedList<string, string> m_Tattoo = new UnorderedList<string, string>();
         private static UnorderedList<string, string> m_Units = new UnorderedList<string, string>();
         private static SortedList<string, UnorderedList<string, string>> m_Weapons = new SortedList<string, UnorderedList<string, string>>();
         private static bool loaded = false;
