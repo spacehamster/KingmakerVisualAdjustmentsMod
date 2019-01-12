@@ -124,51 +124,108 @@ namespace VisualAdjustments
                    __instance.CharacterAvatar.EquipmentEntities.Where((ee) => ee.name.Contains(name)).ToArray()
                 );
             }
+            /*
+             * Colors
+             * Scale Darker, Dark, Medium, Light, Lighter
+             * Blue 0-4
+             * Green 5-9
+             * Yellow 10-14
+             * Orange 15-19
+             * Red 20-24
+             * Purple 25-29
+             * Black 30-34
+             */
+            int primaryIndex = -1;
+            int secondaryIndex = -1;
             switch (__instance.EntityData.Blueprint.AssetGuid)
             {
                 case "77c11edb92ce0fd408ad96b40fd27121": //"Linzi",
                     FilterOutfit("Bard");
+                    //Class Color 12, 16, EE NULL, Visual 13, 17
+                    primaryIndex = 13;
+                    secondaryIndex = 17;
                     break;
                 case "5455cd3cd375d7a459ca47ea9ff2de78": //"Tartuccio",
                     FilterOutfit("Sorcerer");
+                    //Class 22, 3, EE 4, 32 (BlueLighter, BlackMedium)
+                    primaryIndex = 4;
+                    secondaryIndex = 32;
                     break;
                 case "54be53f0b35bf3c4592a97ae335fe765": //"Valerie",
                     FilterOutfit("Fighter");
+                    //Class 3, 23, EE 31, 17 (BlackDark, OrangeMedium)
+                    primaryIndex = 31;
+                    secondaryIndex = 17;
                     break;
                 case "b3f29faef0a82b941af04f08ceb47fa2": //"Amiri",
                     FilterOutfit("Barbarian");
+                    //Class 22, 2, EE 15, 3 (OrangeDarker, BlueLight)
+                    primaryIndex = 15;
+                    secondaryIndex = 3;
                     break;
                 case "aab03d0ab5262da498b32daa6a99b507": //"Harrim",
                     FilterOutfit("Cleric");
+                    //Class 34, 22, EE 30, 34 (BlackDarker, BlackLighter)
+                    primaryIndex = 30;
+                    secondaryIndex = 34;
                     break;
                 case "32d2801eddf236b499d42e4a7d34de23": //"Jaethal",
-                    FilterOutfit("Inquistor");
+                    FilterOutfit("Inquisitor");
+                    //CLass 23, 3, EE None, Visually 22, 3
+                    primaryIndex = 22;
+                    secondaryIndex = 3;
                     break;
                 case "b090918d7e9010a45b96465de7a104c3": //"Regongar",
                     FilterOutfit("Magus");
+                    //Class 2, 22, EE 2, 22 (BlueMedium, RedMedium)
+                    primaryIndex = 2;
+                    secondaryIndex = 22;
                     break;
                 case "f9161aa0b3f519c47acbce01f53ee217": //"Octavia",
                     FilterOutfit("Wizard");
+                    //Class 27, 2, EE 3, 24 (BlueLight, RedLighter)
+                    primaryIndex = 3;
+                    secondaryIndex = 24;
                     break;
                 case "f6c23e93512e1b54dba11560446a9e02": //"Tristian",
                     FilterOutfit("Cleric");
+                    //Class 34, 22, EE 34, 13 (BlackLighter, YellowLight)
+                    primaryIndex = 34;
+                    secondaryIndex = 13;
                     break;
                 case "d5bc1d94cd3e5be4bbc03f3366f67afc": //"Ekundayo",
                     FilterOutfit("Ranger");
+                    //Class 23, 7, EE 23, 33 (RedLight, Black Light)
+                    primaryIndex = 23;
+                    secondaryIndex = 33;
                     break;
                 case "3f5777b51d301524c9b912812955ee1e": //"Jubilost",
                     FilterOutfit("Alchemist");
+                    //Class 17, 31, EE 17, 31 (OrangeMedium, BlackDark)
+                    primaryIndex = 17;
+                    secondaryIndex = 31;
                     break;
                 case "f9417988783876044b76f918f8636455": //"Nok-Nok",
                     FilterOutfit("Rogue");
+                    //Class 31, 22, EE NULL, Visual 32, 23
+                    primaryIndex = 32;
+                    secondaryIndex = 23;
                     break;
                 case "c807d18a89f96c74f8bb48b31b616323": //"Kalikke",
                     FilterOutfit("Kineticist");
+                    //Class 23, 18, EE 23, 17 (RedLight, OrangeMedium)
+                    primaryIndex = 23;
+                    secondaryIndex = 17;
                     break;
                 case "f1c0b181a534f4940ae17f243a5968ec": //"Kanerah",
                     FilterOutfit("Kineticist");
+                    //Class 23, 18, EE 23, 17 (RedLight, OrangeMedium)
+                    primaryIndex = 23;
+                    secondaryIndex = 17;
                     break;
             }
+            if (characterSettings.companionPrimary >= 0) primaryIndex = characterSettings.companionPrimary;
+            if (characterSettings.companionSecondary >= 0) secondaryIndex = characterSettings.companionSecondary;
             var _class = __instance.EntityData.Descriptor.Progression.GetEquipmentClass();
             var gender = __instance.EntityData.Descriptor.Gender;
             var race = __instance.EntityData.Descriptor.Progression.Race;
@@ -176,8 +233,8 @@ namespace VisualAdjustments
             __instance.CharacterAvatar.AddEquipmentEntities(ees);
             foreach (var ee in ees)
             {
-                __instance.CharacterAvatar.SetPrimaryRampIndex(ee, characterSettings.companionPrimary);
-                __instance.CharacterAvatar.SetSecondaryRampIndex(ee, characterSettings.companionSecondary);
+                __instance.CharacterAvatar.SetPrimaryRampIndex(ee, primaryIndex);
+                __instance.CharacterAvatar.SetSecondaryRampIndex(ee, secondaryIndex);
             }
         }
 

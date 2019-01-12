@@ -44,9 +44,9 @@ namespace VisualAdjustments
         static bool showAsks = false;
         static bool showDoll = false;
         static bool showPortrait = false;
-        static string GetName(EquipmentEntityLink eel)
+        static string GetName(EquipmentEntityLink link)
         {
-            if (ResourcesLibrary.LibraryObject.ResourceNamesByAssetId.ContainsKey(eel.AssetId)) return ResourcesLibrary.LibraryObject.ResourceNamesByAssetId[eel.AssetId];
+            if (ResourcesLibrary.LibraryObject.ResourceNamesByAssetId.ContainsKey(link.AssetId)) return ResourcesLibrary.LibraryObject.ResourceNamesByAssetId[link.AssetId];
             return null;
         }
         static void AddLinks(EquipmentEntityLink[] links, string type, Race race, Gender gender)
@@ -54,6 +54,7 @@ namespace VisualAdjustments
             foreach (var link in links)
             {
                 var name = GetName(link);
+                if (name == null) continue;
                 if (lookup.ContainsKey(name))
                 {
                     lookup[name].raceGenderCombos += ", " + race + gender;
@@ -224,15 +225,28 @@ namespace VisualAdjustments
                 {
                     EquipmentEntityInfo settings = lookup.ContainsKey(ee.name) ? lookup[ee.name] : new EquipmentEntityInfo();
                     GUILayout.Label($" HideFlags: {ee.HideBodyParts}");
+                    var primaryIndex = character.GetPrimaryRampIndex(ee);
+                    Texture2D primaryRamp = null;
+                    if (primaryIndex < 0 || primaryIndex > ee.PrimaryRamps.Count - 1) primaryRamp = ee.PrimaryRamps.FirstOrDefault();
+                    else primaryRamp = ee.PrimaryRamps[primaryIndex];
+                    GUILayout.Label($"PrimaryRamp: {primaryRamp?.name ?? "NULL"}");
+
+                    var secondaryIndex = character.GetSecondaryRampIndex(ee);
+                    Texture2D secondaryRamp = null;
+                    if (secondaryIndex < 0 || secondaryIndex > ee.PrimaryRamps.Count - 1) secondaryRamp = ee.SecondaryRamps.FirstOrDefault();
+                    else secondaryRamp = ee.SecondaryRamps[secondaryIndex];
+                    GUILayout.Label($"SecondaryRamp: {secondaryRamp?.name ?? "NULL"}");
+
                     foreach (var bodypart in ee.BodyParts.ToArray())
                     {
                         GUILayout.BeginHorizontal();
                         GUILayout.Label(String.Format(" BP {0}:{1}", bodypart?.RendererPrefab?.name ?? "NULL", bodypart?.Type), GUILayout.ExpandWidth(false));
-                        if (GUILayout.Button("Remove"))
+                        if (GUILayout.Button("Remove", GUILayout.ExpandWidth(false)))
                         {
                             ee.BodyParts.Remove(bodypart);
                         }
                         GUILayout.EndHorizontal();
+                        
                     }
                     foreach (var outfitpart in ee.OutfitParts.ToArray())
                     {

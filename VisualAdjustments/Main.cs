@@ -407,7 +407,7 @@ namespace VisualAdjustments
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Primary Outfit Color ", GUILayout.Width(DefaultLabelWidth));
-                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(characterSettings.companionPrimary, 0, 35, GUILayout.Width(DefaultSliderWidth)), 0);
+                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(characterSettings.companionPrimary, -1, 35, GUILayout.Width(DefaultSliderWidth)), 0);
                 GUILayout.Label(" " + newIndex, GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
                 if (newIndex != characterSettings.companionPrimary)
@@ -419,7 +419,7 @@ namespace VisualAdjustments
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Secondary Outfit Color ", GUILayout.Width(DefaultLabelWidth));
-                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(characterSettings.companionSecondary, 0, 35, GUILayout.Width(DefaultSliderWidth)), 0);
+                var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(characterSettings.companionSecondary, -1, 35, GUILayout.Width(DefaultSliderWidth)), 0);
                 GUILayout.Label(" " + newIndex, GUILayout.ExpandWidth(false));
                 GUILayout.EndHorizontal();
                 if (newIndex != characterSettings.companionSecondary)
