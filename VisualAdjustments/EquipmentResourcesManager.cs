@@ -1,4 +1,5 @@
 ﻿using Kingmaker.Blueprints;
+using Kingmaker.Blueprints.Items.Ecnchantments;
 using Kingmaker.Blueprints.Items.Equipment;
 using System;
 using System.Collections.Generic;
@@ -73,6 +74,14 @@ namespace VisualAdjustments
                 return m_Weapons;
             }
         }
+        public static UnorderedList<string, string> WeaponEnchantments
+        {
+            get
+            {
+                if (!loaded) Init();
+                return m_WeaponEnchantments;
+            }
+        }
         public static UnorderedList<string, string> Tattoos
         {
             get
@@ -95,9 +104,10 @@ namespace VisualAdjustments
         private static UnorderedList<string, string> m_Boots = new UnorderedList<string, string>();
         private static UnorderedList<string, string> m_Tattoo = new UnorderedList<string, string>();
         private static UnorderedList<string, string> m_Units = new UnorderedList<string, string>();
+        private static UnorderedList<string, string> m_WeaponEnchantments = new UnorderedList<string, string>();
         private static SortedList<string, UnorderedList<string, string>> m_Weapons = new SortedList<string, UnorderedList<string, string>>();
         private static bool loaded = false;
-        static void Init()
+        static void BuildEquipmentLookup()
         {
             var blueprints = ResourcesLibrary.GetBlueprints<BlueprintItemEquipment>()
                 .Where(bp => bp.EquipmentEntity != null)
@@ -134,6 +144,9 @@ namespace VisualAdjustments
                         break;
                 }
             }
+        }
+        static void BuildWeaponLookup()
+        {
             var weapons = ResourcesLibrary.GetBlueprints<BlueprintItemEquipmentHand>().OrderBy((bp) => bp.name);
             foreach (var bp in weapons)
             {
@@ -145,7 +158,8 @@ namespace VisualAdjustments
                 {
                     eeList = new UnorderedList<string, string>();
                     m_Weapons[animationStyle] = eeList;
-                } else
+                }
+                else
                 {
                     eeList = m_Weapons[animationStyle];
                 }
@@ -155,6 +169,22 @@ namespace VisualAdjustments
                 }
                 eeList[bp.AssetGuid] = bp.name;
             }
+        }
+        static void BuildWeaponEnchantmentLookup()
+        {
+            var enchantments = ResourcesLibrary.GetBlueprints<BlueprintWeaponEnchantment>()
+                    .Where(bp => bp.WeaponFxPrefab != null)
+                    .OrderBy(bp => bp.name);
+            HashSet<int> seen = new HashSet<int>();
+            foreach(var enchantment in enchantments)
+            {
+                if (seen.Contains(enchantment.WeaponFxPrefab.GetInstanceID())) continue;
+                seen.Add(enchantment.WeaponFxPrefab.GetInstanceID());
+                m_WeaponEnchantments[enchantment.AssetGuid] = enchantment.name;
+            }
+        }
+        static void BuildViewLookup()
+        {
             string getViewName(BlueprintUnit bp)
             {
                 if (!ResourcesLibrary.LibraryObject.ResourceNamesByAssetId.ContainsKey(bp.Prefab.AssetId)) return "NULL";
@@ -169,6 +199,14 @@ namespace VisualAdjustments
                 if (m_Units.ContainsKey(bp.Prefab.AssetId)) continue;
                 m_Units[bp.Prefab.AssetId] = getViewName(bp);
             }
+
+        }
+        static void Init()
+        {
+            BuildEquipmentLookup();
+            BuildWeaponLookup();
+            BuildWeaponEnchantmentLookup();
+            BuildViewLookup();
             loaded = true;
         }
     }

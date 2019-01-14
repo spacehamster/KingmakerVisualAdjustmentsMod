@@ -40,6 +40,8 @@ namespace VisualAdjustments
             public string overrideBoots = "";
             public string overrideTattoo = "";
             public string overrideView = "";
+            public List<string> overrideMainWeaponEnchantments = new List<string>();
+            public List<string> overrideOffhandWeaponEnchantments = new List<string>();
             public bool overrideScale = false;
             public bool overrideScaleShapeshiftOnly = false;
             public bool overrideScaleAdditive = false;

@@ -162,6 +162,10 @@ namespace VisualAdjustments
             {
                 CharacterManager.UpdateModel(unitEntityData.View);
             }
+            if (GUILayout.Button("Toggle Stance"))
+            {
+                unitEntityData.View.HandsEquipment.ForceSwitch(!unitEntityData.View.HandsEquipment.InCombat);
+            }
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label($"Original size {unitEntityData.Descriptor.OriginalSize}");
