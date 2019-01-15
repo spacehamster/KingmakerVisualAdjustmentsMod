@@ -174,13 +174,15 @@ namespace VisualAdjustments
         {
             var enchantments = ResourcesLibrary.GetBlueprints<BlueprintWeaponEnchantment>()
                     .Where(bp => bp.WeaponFxPrefab != null)
-                    .OrderBy(bp => bp.name);
+                    .OrderBy(bp => bp.WeaponFxPrefab.name);
             HashSet<int> seen = new HashSet<int>();
             foreach(var enchantment in enchantments)
             {
                 if (seen.Contains(enchantment.WeaponFxPrefab.GetInstanceID())) continue;
                 seen.Add(enchantment.WeaponFxPrefab.GetInstanceID());
-                m_WeaponEnchantments[enchantment.AssetGuid] = enchantment.name;
+                var name = enchantment.WeaponFxPrefab.name.Replace("00_WeaponBuff", "");
+                name = name.TrimEnd('_');
+                m_WeaponEnchantments[enchantment.AssetGuid] = name;
             }
         }
         static void BuildViewLookup()
@@ -199,7 +201,6 @@ namespace VisualAdjustments
                 if (m_Units.ContainsKey(bp.Prefab.AssetId)) continue;
                 m_Units[bp.Prefab.AssetId] = getViewName(bp);
             }
-
         }
         static void Init()
         {

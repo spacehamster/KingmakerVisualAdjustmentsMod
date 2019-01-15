@@ -3,13 +3,16 @@ using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Facts;
 using Kingmaker.Blueprints.Items.Ecnchantments;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.Items;
 using Kingmaker.Items.Slots;
+using Kingmaker.UI.ServiceWindow;
 using Kingmaker.UnitLogic.Buffs;
 using Kingmaker.View.Equipment;
 using Kingmaker.Visual.Particles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace VisualAdjustments
 {
@@ -55,113 +58,121 @@ namespace VisualAdjustments
                 }
             }
         }
-        /*[HarmonyPatch(typeof(ItemEnchantment), "WielderVisibleInInventory", MethodType.Getter)]
-        static class ItemEnchantment_RecreateModel_Patch
+        static GameObject RespawnFx(GameObject prefab, ItemEntity item)
         {
-            static void Postfix(ItemEnchantment __instance, ref bool __result)
-            {
-                if (!Main.enabled) return;
-                __result = true;
-            }
-        }*/
-        static bool IsCustomEnchantment(ItemEnchantment enchantment)
-        {
-            var owner = enchantment.Owner?.Wielder?.Unit;
-            if (owner == null) return false;
-            var characterSettings = Main.settings.GetCharacterSettings(owner);
-            if (characterSettings == null) return false;
-            if (enchantment.Blueprint == null) return false;
-            if (characterSettings.overrideMainWeaponEnchantments.Any(id => id == enchantment.Blueprint.AssetGuid)) return true;
-            return false;
+            WeaponSlot weaponSlot = item.HoldingSlot as WeaponSlot;
+            var weaponSnap = weaponSlot?.FxSnapMap;
+            var unit = item.Wielder.Unit?.View;
+            return FxHelper.SpawnFxOnWeapon(prefab, unit, weaponSnap);
         }
-        static void LogEnchantment(string prefix, ItemEnchantment enchantment)
+        static void DestroyFx(GameObject FxObject)
         {
-            if (enchantment.Blueprint.name != "Corrosive" && enchantment.Blueprint.name != "Agile") return;
-            var weaponSlot = enchantment.Owner.HoldingSlot as WeaponSlot;
-            var unit = enchantment?.Owner?.Wielder?.Unit;
-            if (unit == null)
+            if (FxObject)
             {
-                Main.DebugLog("Unit is null!");
-                return;
-            }
-            if (!unit.IsPlayerFaction)
-            {
-                Main.DebugLog("Unit is not player faction!");
-                return;
-            }
-            var weapon = enchantment.Owner;
-            if (weapon == null)
-            {
-                Main.DebugLog("Weapon is null!");
-                return;
-            }
-            if (!weapon.Enchantments.Any(x => IsCustomEnchantment(x)))
-            {
-                //Main.DebugLog("Weapon is not custom enchantment!");
-                //return;
-            }
-            var unitView = enchantment.Owner.Wielder?.Unit?.View;
-            var __instance = unitView.HandsEquipment.Sets
-                .Select(kv => kv.Value)
-                .SelectMany(pair => new UnitViewHandSlotData[] { pair.MainHand, pair.OffHand })
-                .Where(h => h.Slot.MaybeItem == weapon)
-                .FirstOrDefault();
-            if (__instance == null)
-            {
-                Main.DebugLog("Could not find handslotdata!");
-                return;
-            }
-            var ___m_VisibleEnchantments = Traverse.Create(__instance).Field("m_VisibleEnchantments").GetValue<List<ItemEnchantment>>();
-            var ___m_Equipment = Traverse.Create(__instance).Field("m_Equipment").GetValue<UnitViewHandsEquipment>();
-            var blueprint = enchantment.Blueprint as BlueprintWeaponEnchantment;
-            if (blueprint.WeaponFxPrefab == null) return;
-            var visibleInInventory = Traverse.Create(enchantment).Property<bool>("WielderVisibleInInventory").Value;
-            var owner = enchantment.Owner;
-            var prefab = blueprint.WeaponFxPrefab;
-
-            var slot = enchantment.Owner.HoldingSlot as WeaponSlot;
-            var weaponSnap = slot.FxSnapMap;
-            WeaponParticlesSnapMap weaponParticlesSnapMap = __instance.VisualModel?.GetComponent<WeaponParticlesSnapMap>();
-            Main.DebugLog($"{prefix, 46} enchantment {blueprint?.name,9} to {__instance?.Slot?.MaybeItem?.Name ?? "NULL"}, Active {enchantment.Active}, " +
-                $"IsDollRoom {___m_Equipment.IsDollRoom}, VisibleInventory {visibleInInventory}, " +
-                $"Owner {owner?.Name ?? "NULL"}({owner?.GetHashCode()}), Prefab {prefab?.name ?? "NULL",22}," +
-                $"UnitView {unitView?.name ?? "NULL"}({unitView?.GetInstanceID()}, {unitView?.GetHashCode()}), WeaponSnap {weaponSnap?.name ?? "NULL"}" +
-                $"Owner {owner == ___m_VisibleEnchantments[0].Owner} Unit {unitView == ___m_VisibleEnchantments[0].Owner.Wielder?.Unit?.View} " +
-                $"ParticleSnapMap {weaponParticlesSnapMap == __instance.Slot.FxSnapMap} FxObject {enchantment.FxObject != null}");
-        }
-        [HarmonyPatch(typeof(ItemEnchantment), "RespawnFx")]
-        static class ItemEnchantment_RespawnFx_Patch
-        {
-            static void Postfix(ItemEnchantment __instance)
-            {
-                LogEnchantment("ItemEnchantment.RespawnFx", __instance);
+                FxHelper.Destroy(FxObject);
+                FxObject = null;
             }
         }
-        [HarmonyPatch(typeof(ItemEnchantment), "Activate")]
-        static class ItemEnchantment_Activate_Patch
+        [HarmonyPatch(typeof(DollRoom), "UpdateAvatarRenderers")]
+        static class DollRoom_UpdateAvatarRenderers_Patch
         {
-            static void Postfix(ItemEnchantment __instance)
+            static void Postfix(DollRoom __instance, UnitViewHandsEquipment ___m_AvatarHands, UnitEntityData ___m_Unit)
             {
-                LogEnchantment("ItemEnchantment.Activate", __instance);
+                try
+                {
+                    var characterSettings = Main.settings.GetCharacterSettings(___m_Unit);
+                    if (characterSettings == null) return;
+                    foreach (var isOffhand in new bool[] { true, false })
+                    {
+                        WeaponParticlesSnapMap weaponParticlesSnapMap = ___m_AvatarHands?.GetWeaponModel(isOffhand)?.GetComponent<WeaponParticlesSnapMap>();
+                        if (weaponParticlesSnapMap)
+                        {
+                            UnityEngine.Object x = weaponParticlesSnapMap;
+                            UnityEngine.Object y = isOffhand ?
+                                ___m_Unit?.Body?.SecondaryHand.FxSnapMap :
+                                ___m_Unit?.Body?.PrimaryHand.FxSnapMap;
+                            if (x == y)
+                            {
+                                var weapon = isOffhand ?
+                                        ___m_Unit?.Body?.SecondaryHand?.MaybeItem :
+                                        ___m_Unit?.Body?.PrimaryHand?.MaybeItem;
+                                WeaponEnchantments.TryGetValue(weapon, out List<GameObject> fxObjects);
+                                if (fxObjects != null)
+                                {
+                                    foreach (var fxObject in fxObjects)
+                                    {
+                                        Traverse.Create(__instance).Method("UnscaleFxTimes", new object[] { fxObject } ).GetValue();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch(Exception ex)
+                {
+                    Main.DebugError(ex);
+                }
             }
         }
+        public static Dictionary<ItemEntity, List<GameObject>> WeaponEnchantments = new Dictionary<ItemEntity, List<GameObject>>();
         [HarmonyPatch(typeof(UnitViewHandSlotData), "UpdateWeaponEnchantmentFx")]
         static class UnitViewHandSlotData_UpdateWeaponEnchantmentFx_Patch
         {
             static void Postfix(UnitViewHandSlotData __instance, bool isVisible, ref List<ItemEnchantment> ___m_VisibleEnchantments, UnitViewHandsEquipment ___m_Equipment)
             {
-                if (__instance.IsInHand && isVisible)
-                {
-                    foreach (var enchantment in ___m_VisibleEnchantments)
+                try {
+                    if (!Main.enabled) return;
+                    if (!__instance.Owner.IsPlayerFaction) return;
+                    var characterSettings = Main.settings.GetCharacterSettings(__instance.Owner);
+                    if (characterSettings == null) return;
+                    if (__instance.Slot.MaybeItem == null) return;
+                    if (WeaponEnchantments.ContainsKey(__instance.Slot.MaybeItem))
                     {
-                        LogEnchantment("UnitViewHandSlotData.UpdateWeaponEnchantmentFx", enchantment);
-                        if (IsCustomEnchantment(enchantment))
+                        foreach (var fxObject in WeaponEnchantments[__instance.Slot.MaybeItem])
                         {
-                            Main.DebugLog("'Activate enchantment'");
-                            //enchantment.Activate();
-                            //enchantment.RespawnFx();
+                            DestroyFx(fxObject);
+                        }
+                        WeaponEnchantments[__instance.Slot.MaybeItem].Clear();
+                    }
+                    if (__instance.IsInHand && isVisible)
+                    {
+                        if (!WeaponEnchantments.ContainsKey(__instance.Slot.MaybeItem)) WeaponEnchantments[__instance.Slot.MaybeItem] = new List<GameObject>();
+                        var enchantments = __instance.IsOff ?
+                            characterSettings.overrideOffhandWeaponEnchantments :
+                            characterSettings.overrideMainWeaponEnchantments;
+                        foreach (var enchantmentId in enchantments) {
+                            var blueprint = ResourcesLibrary.TryGetBlueprint<BlueprintWeaponEnchantment>(enchantmentId);
+                            var fxObject = RespawnFx(blueprint.WeaponFxPrefab, __instance.Slot.MaybeItem);
+                            WeaponEnchantments[__instance.Slot.MaybeItem].Add(fxObject);
                         }
                     }
+                } catch(Exception ex)
+                {
+                    Main.DebugError(ex);
+                }
+    }
+        }
+        [HarmonyPatch(typeof(UnitViewHandSlotData), "DestroyModel")]
+        static class UnitViewHandSlotData_DestroyModel_Patch
+        {
+            static void Postfix(UnitViewHandSlotData __instance, ref List<ItemEnchantment> ___m_VisibleEnchantments, UnitViewHandsEquipment ___m_Equipment)
+            {
+                try
+                {
+                    if (!Main.enabled) return;
+                    if (!__instance.Owner.IsPlayerFaction) return;
+                    var characterSettings = Main.settings.GetCharacterSettings(__instance.Owner);
+                    if (characterSettings == null) return;
+                    if (__instance.Slot.MaybeItem == null) return;
+                    if (!WeaponEnchantments.ContainsKey(__instance.Slot.MaybeItem)) return;
+                    foreach (var fxObject in WeaponEnchantments[__instance.Slot.MaybeItem])
+                    {
+                        DestroyFx(fxObject);
+                    }
+                    WeaponEnchantments[__instance.Slot.MaybeItem].Clear();
+                    WeaponEnchantments.Remove(__instance.Slot.MaybeItem);
+                } catch(Exception ex)
+                {
+                    Main.DebugError(ex);
                 }
             }
         }
@@ -176,48 +187,10 @@ namespace VisualAdjustments
                     if (!__instance.Owner.IsPlayerFaction) return;
                     var characterSettings = Main.settings.GetCharacterSettings(__instance.Owner);
                     if (characterSettings == null) return;
-                    if (__instance.Slot.MaybeItem == null || __instance.Slot.MaybeItem.Wielder == null) return;
-                    if (!__instance.IsOff && characterSettings.overrideMainWeaponEnchantments.Count > 0)
-                    {
-                        foreach (var enchantment in ___m_VisibleEnchantments)
-                        {
-                            LogEnchantment("UnitViewHandSlotData.RecreateModel Existing", enchantment);
-                        }
-                    }
+                    if (__instance.Slot.MaybeItem == null) return;
                     if (characterSettings.hideWeaponEnchantments)
                     {
                         ___m_VisibleEnchantments.Clear();
-                    }
-                    if (!__instance.IsOff)
-                    {
-                        foreach (var id in characterSettings.overrideMainWeaponEnchantments)
-                        {
-                            var blueprint = ResourcesLibrary.TryGetBlueprint<BlueprintWeaponEnchantment>(id);
-                            if (blueprint == null) continue;
-                            if (!__instance.Slot.MaybeItem.Enchantments.Any(x => x.Blueprint == blueprint))
-                            {
-                                //var enchantment = __instance.Slot.MaybeItem.AddEnchantment(blueprint, null);
-                                var enchantment = new ItemEnchantment(blueprint, __instance.Slot.MaybeItem);
-                                AccessTools.Property(typeof(Fact), "Active").SetValue(enchantment, true);
-                                enchantment.RespawnFx();
-                                ___m_VisibleEnchantments.Add(enchantment);
-                                LogEnchantment("UnitViewHandSlotData.RecreateModel New", enchantment);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        foreach (var id in characterSettings.overrideOffhandWeaponEnchantments)
-                        {
-                            var blueprint = ResourcesLibrary.TryGetBlueprint<BlueprintWeaponEnchantment>(id);
-                            if (blueprint == null) continue;
-                            var enchantment = new ItemEnchantment(blueprint, __instance.Slot.MaybeItem);
-                            //AccessTools.Property(typeof(Fact), "Active").SetValue(enchantment, true);
-                            //Traverse.Create(enchantment).Property<bool>("Active").Value = true;
-                            enchantment.Activate();
-                            ___m_VisibleEnchantments.Add(enchantment);
-                            LogEnchantment("UnitViewHandSlotData.RecreateModel New", enchantment);
-                        }
                     }
                 }
                 catch (Exception ex)

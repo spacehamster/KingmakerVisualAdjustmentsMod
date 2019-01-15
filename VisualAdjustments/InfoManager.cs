@@ -154,13 +154,13 @@ namespace VisualAdjustments
                 unitEntityData.View.UpdateBodyEquipmentModel();
                 unitEntityData.View.CharacterAvatar.BakedCharacter = bakedCharacter;
             }
-            if (GUILayout.Button("Mark Dirty"))
-            {
-                unitEntityData.View.CharacterAvatar.IsDirty = true;
-            }
             if (GUILayout.Button("Update Model"))
             {
                 CharacterManager.UpdateModel(unitEntityData.View);
+            }
+            if (GUILayout.Button("Update HandsEquipment"))
+            {
+                unitEntityData.View.HandsEquipment.UpdateAll();
             }
             if (GUILayout.Button("Toggle Stance"))
             {
@@ -431,7 +431,7 @@ namespace VisualAdjustments
             //Refer FxHelper.SpawnFxOnGameObject
             static void ShowFxInfo(UnitEntityData unitEntityData)
         {
-            GUILayout.Label("Global");
+            /*GUILayout.Label("Global");
             for (int i = FxHelper.FxRoot.childCount - 1; i >= 0; i--)
             {
                 var fx = FxHelper.FxRoot.GetChild(i);
@@ -442,7 +442,7 @@ namespace VisualAdjustments
                     GameObject.Destroy(fx.gameObject);
                 }
                 GUILayout.EndHorizontal();
-            }
+            }*/
 
             var spawnOnStart = unitEntityData.View.GetComponent<SpawnFxOnStart>();
             if (spawnOnStart)
@@ -461,6 +461,22 @@ namespace VisualAdjustments
                 {
                     GameObject.Destroy(decal.gameObject);
                     decals.RemoveAt(i);
+                }
+            }
+            GUILayout.Label("CustomWeaponEffects");
+            var dollroom = Game.Instance.UI.Common.DollRoom;
+            foreach(var kv in EffectsManager.WeaponEnchantments)
+            {
+                GUILayout.Label($"{kv.Key.Name} - {kv.Value.Count}");
+                foreach(var go in kv.Value)
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label($"  {go?.name ?? "NULL"}");
+                    if (dollroom != null && GUILayout.Button("UnscaleFXTimes", GUILayout.ExpandWidth(false)))
+                    {
+                        Traverse.Create(dollroom).Method("UnscaleFxTimes", new object[] { go }).GetValue();
+                    }
+                    GUILayout.EndHorizontal();
                 }
             }
         }

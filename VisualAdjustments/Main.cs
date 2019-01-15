@@ -454,7 +454,7 @@ namespace VisualAdjustments
             }
             void onWeaponChanged()
             {
-                unitEntityData.View.HandsEquipment.HandleEquipmentSetChanged();
+                unitEntityData.View.HandsEquipment.UpdateAll();
             }
             ChooseToggle("Hide Cap", ref characterSettings.hideCap, onHideEquipment);
             ChooseToggle("Hide Backpack", ref characterSettings.hideBackpack, onHideEquipment);
@@ -541,6 +541,7 @@ namespace VisualAdjustments
             if (GUILayout.Button("Remove", GUILayout.ExpandWidth(false)))
             {
                 saved.RemoveAt(savedIndex);
+                onChoose();
                 return;
             }
             var displayText = newIndex == -1 ? "None" : items.Values[newIndex];
@@ -553,7 +554,6 @@ namespace VisualAdjustments
                 onChoose();
             }
         }
-        static string dummyEnchantments = "";
         static void ChooseEquipmentOverride(UnitEntityData unitEntityData, CharacterSettings characterSettings)
         {
             void onEquipment()
