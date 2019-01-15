@@ -141,6 +141,7 @@ namespace VisualAdjustments
                             characterSettings.overrideMainWeaponEnchantments;
                         foreach (var enchantmentId in enchantments) {
                             var blueprint = ResourcesLibrary.TryGetBlueprint<BlueprintWeaponEnchantment>(enchantmentId);
+                            if (blueprint == null || blueprint.WeaponFxPrefab == null) continue;
                             var fxObject = RespawnFx(blueprint.WeaponFxPrefab, __instance.Slot.MaybeItem);
                             WeaponEnchantments[__instance.Slot.MaybeItem].Add(fxObject);
                         }
