@@ -558,12 +558,18 @@ namespace VisualAdjustments
         {
             static void Postfix()
             {
-                if (!Main.enabled) return;
-                if (!Main.settings.rebuildCharacters) return;
-                Main.DebugLog("Rebuilding characters");
-                foreach (var character in Game.Instance.Player.ControllableCharacters)
+                try
                 {
-                    RebuildCharacter(character);
+                    if (!Main.enabled) return;
+                    if (!Main.settings.rebuildCharacters) return;
+                    Main.DebugLog("Rebuilding characters");
+                    foreach (var character in Game.Instance.Player.ControllableCharacters)
+                    {
+                        RebuildCharacter(character);
+                    }
+                } catch(Exception ex)
+                {
+                    Main.DebugError(ex);
                 }
             }
         }

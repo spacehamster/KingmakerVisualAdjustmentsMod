@@ -118,8 +118,8 @@ namespace VisualAdjustments
                     {
                         originalSize = size;
                     }
-                    int sizeDiff = characterSettings.overrideScaleAdditive ?
-                        (size + characterSettings.additiveScaleFactor - originalSize) :
+                    float sizeDiff = characterSettings.overrideScaleAdditive ?
+                        ((int)size + characterSettings.additiveScaleFactor - (int)originalSize) :
                        (characterSettings.overrideScaleFactor - (int)originalSize);
                    float sizeScale = Mathf.Pow(1 / 0.66f, sizeDiff);
                     __result = sizeScale;
@@ -148,8 +148,11 @@ namespace VisualAdjustments
                         return;
                     }
                     __result *= __instance.GetSizeScale();
-                    var sizeDiff = 0;
-                    if (characterSettings.overrideScaleAdditive) sizeDiff = __instance.EntityData.Descriptor.State.Size + characterSettings.additiveScaleFactor - __instance.EntityData.Descriptor.OriginalSize;
+                    var sizeDiff = 0f;
+                    if (characterSettings.overrideScaleAdditive)
+                    {
+                        sizeDiff = (int)__instance.EntityData.Descriptor.State.Size + characterSettings.additiveScaleFactor - (int)__instance.EntityData.Descriptor.OriginalSize;
+                    }
                     else sizeDiff = characterSettings.overrideScaleFactor - (int)__instance.EntityData.Descriptor.OriginalSize;
                     var newScaleFactor = Mathf.Pow(1 / 0.66f, sizeDiff);
                     __result /= newScaleFactor;

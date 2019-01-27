@@ -47,8 +47,9 @@ namespace VisualAdjustments
             public bool overrideScaleShapeshiftOnly = false;
             public bool overrideScaleAdditive = false;
             public bool overrideScaleCheatMode = false;
-            public int overrideScaleFactor = 0;
-            public int additiveScaleFactor = 0;
+            public bool overrideScaleFloatMode = false;
+            public float overrideScaleFactor = 4;
+            public float additiveScaleFactor = 0;
             public Dictionary<string, string> overrideWeapons = new Dictionary<string, string>();
 
             public bool hideWeapons = false;

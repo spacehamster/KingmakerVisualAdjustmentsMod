@@ -509,17 +509,19 @@ namespace VisualAdjustments
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label("Additive Scale Factor", GUILayout.Width(300));
-            var sizeModifier = (int)GUILayout.HorizontalSlider(characterSettings.additiveScaleFactor, -4, 4, GUILayout.Width(DefaultSliderWidth));
+            var sizeModifier = GUILayout.HorizontalSlider(characterSettings.additiveScaleFactor, -4, 4, GUILayout.Width(DefaultSliderWidth));
+            if (!characterSettings.overrideScaleFloatMode) sizeModifier = (int)sizeModifier;
             characterSettings.additiveScaleFactor = sizeModifier;
             var sign = sizeModifier >= 0 ? "+" : "";
-            GUILayout.Label($" {sign}{sizeModifier}", GUILayout.ExpandWidth(false));
+            GUILayout.Label($" {sign}{sizeModifier:0.##}", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
         }
         static void ChooseSizeOverride(UnitEntityData unitEntityData, CharacterSettings characterSettings)
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label("Override Scale Factor", GUILayout.Width(300));
-            var sizeModifier = (int)GUILayout.HorizontalSlider(characterSettings.overrideScaleFactor, 0, 8, GUILayout.Width(DefaultSliderWidth));
+            var sizeModifier = GUILayout.HorizontalSlider(characterSettings.overrideScaleFactor, 0, 8, GUILayout.Width(DefaultSliderWidth));
+            if (!characterSettings.overrideScaleFloatMode) sizeModifier = (int)sizeModifier;
             characterSettings.overrideScaleFactor = sizeModifier;
             GUILayout.Label($" {(Size)(sizeModifier)}", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
@@ -623,6 +625,7 @@ namespace VisualAdjustments
             ChooseToggle("Restrict to polymorph", ref characterSettings.overrideScaleShapeshiftOnly, onChooseScale);
             ChooseToggle("Use Additive Factor", ref characterSettings.overrideScaleAdditive, onChooseScale);
             ChooseToggle("Use Cheat Mode", ref characterSettings.overrideScaleCheatMode, onChooseScale);
+            ChooseToggle("Use Continuous Factor", ref characterSettings.overrideScaleFloatMode, onChooseScale);
             GUILayout.EndHorizontal();
             if (characterSettings.overrideScale && characterSettings.overrideScaleAdditive) ChooseSizeAdditive(unitEntityData, characterSettings);
             if (characterSettings.overrideScale && !characterSettings.overrideScaleAdditive) ChooseSizeOverride(unitEntityData, characterSettings);
