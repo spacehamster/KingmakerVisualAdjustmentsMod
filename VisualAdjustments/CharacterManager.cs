@@ -4,70 +4,24 @@ using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Classes;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.EntitySystem.Entities;
+using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.Items.Slots;
 using Kingmaker.PubSubSystem;
+using Kingmaker.ResourceLinks;
 using Kingmaker.UnitLogic;
 using Kingmaker.View;
 using Kingmaker.Visual.CharacterSystem;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 using static VisualAdjustments.Settings;
 
 namespace VisualAdjustments
 {
-    class CharacterManager
+    public class CharacterManager
     {
         public static bool disableEquipmentClassPatch;
-        static int GetPrimaryColor(UnitEntityData unitEntityData)
-        {
-            if (unitEntityData.Descriptor.Doll == null) return -1;
-            var doll = unitEntityData.Descriptor.Doll;
-            foreach (var assetId in doll.EntityRampIdices.Keys)
-            {
-                if (DollResourcesManager.ClassOutfits.ContainsKey(assetId)) return doll.EntityRampIdices[assetId];
-            }
-            return -1;
-        }
-        static int GetSecondaryColor(UnitEntityData unitEntityData)
-        {
-            if (unitEntityData.Descriptor.Doll == null) return -1;
-            var doll = unitEntityData.Descriptor.Doll;
-            foreach (var assetId in doll.EntitySecondaryRampIdices.Keys)
-            {
-                if (DollResourcesManager.ClassOutfits.ContainsKey(assetId)) return doll.EntitySecondaryRampIdices[assetId];
-            }
-            return -1;
-        }
-        /*
-         * Fix bug where class outfit colors would switch dark blue when a characters'
-         * secondary class was returned by UnitProgressionData.GetEquipmentClass,
-         * as only the character's starting class has ramp indexs in the DollData 
-         */
-        static void FixColors(UnitEntityView unitEntityView)
-        {
-            //Probably not necessary, don't update colors if doll contains current class
-            var dollEE = new List<EquipmentEntity>();
-            var doll = unitEntityView.EntityData.Descriptor.Doll;
-            if (doll == null) return;
-            foreach (var assetId in doll.EquipmentEntityIds)
-            {
-                EquipmentEntity ee = ResourcesLibrary.TryGetResource<EquipmentEntity>(assetId);
-                if (ee == null) continue;
-                dollEE.Add(ee);
-            }
-            var character = unitEntityView.CharacterAvatar;
-            var equipmentClass = unitEntityView.EntityData.Descriptor.Progression.GetEquipmentClass();
-            var clothes = equipmentClass.LoadClothes(unitEntityView.EntityData.Descriptor.Gender, unitEntityView.EntityData.Descriptor.Progression.Race);
-            var primaryIndex = GetPrimaryColor(unitEntityView.EntityData);
-            var secondaryIndex = GetSecondaryColor(unitEntityView.EntityData);
-            foreach (var ee in clothes)
-            {
-                if (dollEE.Contains(ee)) continue;
-                character.SetPrimaryRampIndex(ee, primaryIndex);
-                character.SetSecondaryRampIndex(ee, secondaryIndex);
-            }
-        }
         /*
          * Based on DollData.CreateUnitView, DollRoom.CreateAvatar and 
          * UnitEntityData.CreateView
@@ -121,7 +75,7 @@ namespace VisualAdjustments
             void FilterOutfit(string name)
             {
                 __instance.CharacterAvatar.RemoveEquipmentEntities(
-                   __instance.CharacterAvatar.EquipmentEntities.Where((ee) => ee.name.Contains(name)).ToArray()
+                   __instance.CharacterAvatar.EquipmentEntities.Where((ee) => ee != null && ee.name.Contains(name)).ToArray()
                 );
             }
             /*
@@ -281,9 +235,9 @@ namespace VisualAdjustments
         }
         public static void UpdateModel(UnitEntityView view)
         {
-            if (view.CharacterAvatar == null) return;
+            if (view.CharacterAvatar == null || view.EntityData == null) return;
             if (!view.EntityData.IsPlayerFaction) return;
-
+            PreloadUnit(view);
             Settings.CharacterSettings characterSettings = Main.settings.GetCharacterSettings(view.EntityData);
             if (characterSettings == null) return;
             bool dirty = view.CharacterAvatar.IsDirty;
@@ -431,8 +385,36 @@ namespace VisualAdjustments
             {
                 FixRangerCloak(view);
             }
-            //if (view.EntityData.Descriptor.Doll != null) FixColors(view);
             view.CharacterAvatar.IsDirty = dirty;
+        }
+        //Doesn't seem to do anything
+        static void TryPreload(string assetId, Gender gender, Race race)
+        {
+            if (string.IsNullOrEmpty(assetId)) return;
+            var link = ResourcesLibrary.TryGetBlueprint<KingmakerEquipmentEntity>(assetId);
+            if (link != null) link.Preload(gender, race);
+        }
+        public static void PreloadUnit(UnitEntityView __instance)
+        {
+            if (__instance == null) return;
+            var unit = __instance.EntityData;
+            if (!unit.IsPlayerFaction) return;
+            var characterSettings = Main.settings.GetCharacterSettings(unit);
+            if (characterSettings == null) return;
+            var blueprintRace = unit.Descriptor.Progression.Race;
+            var race = blueprintRace?.RaceId ?? Race.Human;
+            var gender = unit.Gender;
+            TryPreload(characterSettings.overrideHelm, gender, race);
+            TryPreload(characterSettings.overrideCloak, gender, race);
+            TryPreload(characterSettings.overrideArmor, gender, race);
+            TryPreload(characterSettings.overrideBracers, gender, race);
+            TryPreload(characterSettings.overrideGloves, gender, race);
+            TryPreload(characterSettings.overrideBoots, gender, race);
+            TryPreload(characterSettings.overrideTattoo, gender, race);
+            if (!string.IsNullOrEmpty(characterSettings.overrideView))
+            {
+                ResourcesLibrary.PreloadResource<GameObject>(characterSettings.overrideView);
+            }
         }
         /*
          * Called by CheatsSilly.UpdatePartyNoArmor and OnDataAttached
@@ -568,6 +550,20 @@ namespace VisualAdjustments
                 {
                     Main.DebugError(ex);
                     return true;
+                }
+            }
+        }
+        [HarmonyPatch(typeof(Game), "OnAreaLoaded")]
+        static class Game_OnAreaLoaded_Patch
+        {
+            static void Postfix()
+            {
+                if (!Main.enabled) return;
+                if (!Main.settings.rebuildCharacters) return;
+                Main.DebugLog("Rebuilding characters");
+                foreach (var character in Game.Instance.Player.ControllableCharacters)
+                {
+                    RebuildCharacter(character);
                 }
             }
         }

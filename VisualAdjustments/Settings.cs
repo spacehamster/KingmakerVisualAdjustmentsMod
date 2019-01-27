@@ -11,6 +11,7 @@ namespace VisualAdjustments
 {
     public class Settings : UnityModManager.ModSettings
     {
+        internal bool rebuildCharacters = false;
         public class CharacterSettings
         {
             public string characterName = "";

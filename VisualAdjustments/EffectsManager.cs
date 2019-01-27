@@ -76,10 +76,17 @@ namespace VisualAdjustments
         [HarmonyPatch(typeof(DollRoom), "UpdateAvatarRenderers")]
         static class DollRoom_UpdateAvatarRenderers_Patch
         {
+            static FastInvoker<DollRoom, GameObject, object> UnscaleFxTimes;
+            static bool Prepare()
+            {
+                UnscaleFxTimes = Accessors.CreateInvoker<DollRoom, GameObject, object>("UnscaleFxTimes");
+                return true;
+            }
             static void Postfix(DollRoom __instance, UnitViewHandsEquipment ___m_AvatarHands, UnitEntityData ___m_Unit)
             {
                 try
                 {
+                    if (___m_Unit == null) return;
                     var characterSettings = Main.settings.GetCharacterSettings(___m_Unit);
                     if (characterSettings == null) return;
                     foreach (var isOffhand in new bool[] { true, false })
@@ -101,7 +108,7 @@ namespace VisualAdjustments
                                 {
                                     foreach (var fxObject in fxObjects)
                                     {
-                                        Traverse.Create(__instance).Method("UnscaleFxTimes", new object[] { fxObject } ).GetValue();
+                                        UnscaleFxTimes(__instance, fxObject);
                                     }
                                 }
                             }

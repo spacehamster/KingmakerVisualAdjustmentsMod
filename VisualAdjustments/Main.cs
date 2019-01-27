@@ -141,6 +141,7 @@ namespace VisualAdjustments
                     if (characterSettings.showInfo) InfoManager.ShowInfo(unitEntityData);
 #endif
                 }
+                settings.rebuildCharacters = GUILayout.Toggle(settings.rebuildCharacters, " Fix visual gitches after load screen");
             }
             catch (Exception e)
             {

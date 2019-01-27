@@ -162,6 +162,8 @@ namespace VisualAdjustments
             {
                 unitEntityData.View.HandsEquipment.UpdateAll();
             }
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
             if (GUILayout.Button("Toggle Stance"))
             {
                 unitEntityData.View.HandsEquipment.ForceSwitch(!unitEntityData.View.HandsEquipment.InCombat);
@@ -213,13 +215,25 @@ namespace VisualAdjustments
             foreach (var ee in character.EquipmentEntities.ToArray())
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(
-                        String.Format("{0}:{1}:{2}:P{3}:S{4}", ee.name, ee.BodyParts.Count, ee.OutfitParts.Count, 
+                if (ee == null)
+                {
+                    GUILayout.Label("Null");
+                } 
+                else
+                {
+                    GUILayout.Label(
+                        String.Format("{0}:{1}:{2}:P{3}:S{4}", ee.name, ee.BodyParts.Count, ee.OutfitParts.Count,
                             character.GetPrimaryRampIndex(ee), character.GetSecondaryRampIndex(ee)),
                         GUILayout.ExpandWidth(true));
+                }
                 if (GUILayout.Button("Remove", GUILayout.ExpandWidth(false)))
                 {
                     character.RemoveEquipmentEntity(ee);
+                }
+                if(ee == null)
+                {
+                    GUILayout.EndHorizontal();
+                    continue;
                 }
                 bool expanded = ee.name == expandedEE;
                 if (expanded && GUILayout.Button("Shrink ", GUILayout.ExpandWidth(false))) expandedEE = null;
@@ -269,7 +283,8 @@ namespace VisualAdjustments
             GUILayout.Label("RampIndices");
             foreach(var index in Traverse.Create(character).Field("m_RampIndices").GetValue<List<Character.SelectedRampIndices>>())
             {
-                GUILayout.Label($"  {index.EquipmentEntity.name} - {index.PrimaryIndex}, {index.SecondaryIndex}");
+                var name = index.EquipmentEntity != null ? index.EquipmentEntity.name : "NULL";
+                GUILayout.Label($"  {name} - {index.PrimaryIndex}, {index.SecondaryIndex}");
             }
             GUILayout.Label("SavedRampIndices");
             foreach (var index in Traverse.Create(character).Field("m_SavedRampIndices").GetValue<List<Character.SavedSelectedRampIndices>>())

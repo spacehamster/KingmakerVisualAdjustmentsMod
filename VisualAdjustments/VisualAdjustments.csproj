@@ -42,6 +42,9 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony12">
       <HintPath>libs\0Harmony12.dll</HintPath>
@@ -84,6 +87,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Accessors.cs" />
     <Compile Include="CharacterManager.cs" />
     <Compile Include="DollResourcesManager.cs" />
     <Compile Include="EffectsManager.cs" />

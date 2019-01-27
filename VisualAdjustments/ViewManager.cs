@@ -102,6 +102,7 @@ namespace VisualAdjustments
                 try
                 {
                     if (!Main.enabled) return;
+                    if (__instance.EntityData == null) return;
                     if (!__instance.EntityData.IsPlayerFaction) return;
                     var characterSettings = Main.settings.GetCharacterSettings(__instance.EntityData);
                     if (characterSettings == null) return;
@@ -175,7 +176,7 @@ namespace VisualAdjustments
             float sizeScale = 1;
             if (characterSettings.overrideScaleAdditive) sizeScale = originalScale * Mathf.Pow(1 / 0.66f, characterSettings.additiveScaleFactor);
             else sizeScale = Mathf.Pow(1 / 0.66f, characterSettings.overrideScaleFactor - originalSize);
-            var m_OriginalScale = Traverse.Create(__instance).Field("m_OriginalScale").GetValue<Vector3>();
+            var m_OriginalScale = m_OriginalScaleRef(__instance);
             var m_Scale = __instance.transform.localScale.x / m_OriginalScale.x;
             if (!sizeScale.Equals(m_Scale) && !__instance.DoNotAdjustScale)
             {
@@ -193,17 +194,25 @@ namespace VisualAdjustments
                 __instance.ParticlesSnapMap.AdditionalScale = __instance.transform.localScale.x / m_OriginalScale.x;
             }
             //Prevent fighting m_Scale to set transform scale
-            Traverse.Create(__instance).Field("m_Scale").SetValue(__instance.GetSizeScale());
+            m_ScaleRef(__instance) = __instance.GetSizeScale();
         }
+        static Harmony12.AccessTools.FieldRef<UnitEntityView, Vector3> m_OriginalScaleRef;
+        static Harmony12.AccessTools.FieldRef<UnitEntityView, float> m_ScaleRef;
         [HarmonyPatch(typeof(UnitEntityView), "LateUpdate")]
         static class UnitEntityView_LateUpdate_Patch
         {
+            static bool Prepare()
+            {
+                m_OriginalScaleRef = Accessors.CreateFieldRef<UnitEntityView, Vector3>("m_OriginalScale");
+                m_ScaleRef = Accessors.CreateFieldRef<UnitEntityView, float>("m_Scale");
+                return true;
+            }
             static void Postfix(UnitEntityView __instance)
             {
                 try
                 {
                     if (!Main.enabled) return;
-                    //if (__instance.EntityData == null) return;
+                    if (__instance.EntityData == null) return;
                     if (!__instance.EntityData.IsPlayerFaction) return;
                     var characterSettings = Main.settings.GetCharacterSettings(__instance.EntityData);
                     if (characterSettings == null) return;
