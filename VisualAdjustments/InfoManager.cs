@@ -3,6 +3,7 @@ using Kingmaker;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.CharGen;
 using Kingmaker.Blueprints.Classes;
+using Kingmaker.Blueprints.Root;
 using Kingmaker.Designers;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Items.Slots;
@@ -13,8 +14,10 @@ using Kingmaker.Visual.CharacterSystem;
 using Kingmaker.Visual.Decals;
 using Kingmaker.Visual.Particles;
 using Kingmaker.Visual.Sound;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 namespace VisualAdjustments
@@ -36,6 +39,11 @@ namespace VisualAdjustments
                 return m_lookup;
             }
         }
+        private static UnorderedList<string, string> m_OrphanedKingmakerEquipment;
+        private static string selectedKingmakerOrphanedEquipment = "";
+        private static UnorderedList<string, string> m_OrphanedMaleEquipment;
+        private static UnorderedList<string, string> m_OrphanedFemaleEquipment;
+        private static string selectedOrphanedEquipment = "";
         static BlueprintBuff[] blueprintBuffs = new BlueprintBuff[] { };
         static bool showWeapons = false;
         static bool showCharacter = false;
@@ -204,6 +212,110 @@ namespace VisualAdjustments
             if (showAsks) ShowAsksInfo(unitEntityData);
 
         }
+        static void BuildOrphanedEquipment()
+        {
+            string maleFilepath = "Mods/VisualAdjustments/MaleOrphanedEquipment.json";
+            if (File.Exists(maleFilepath))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                using (StreamReader sr = new StreamReader(maleFilepath))
+                using (JsonTextReader reader = new JsonTextReader(sr))
+                {
+                    var result = serializer.Deserialize<UnorderedList<string, string>>(reader);
+                    m_OrphanedMaleEquipment = result;
+                    if(m_OrphanedMaleEquipment == null) Main.DebugLog($"Error loading {maleFilepath}");
+                }
+            }
+            var femaleFilepath = "Mods/VisualAdjustments/FemaleOrphanedEquipment.json";
+            if (File.Exists(femaleFilepath))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                using (StreamReader sr = new StreamReader(femaleFilepath))
+                using (JsonTextReader reader = new JsonTextReader(sr))
+                {
+                    var result = serializer.Deserialize<UnorderedList<string, string>>(reader);
+                    m_OrphanedFemaleEquipment = result;
+                    if (m_OrphanedFemaleEquipment == null) Main.DebugLog($"Error loading {femaleFilepath}");
+                }
+            }
+            if (m_OrphanedMaleEquipment == null || m_OrphanedFemaleEquipment == null)
+            {
+                Main.DebugLog("Rebuilding Orphaned Equipment Lookup");
+                var eeBlacklist = new HashSet<string>();
+                foreach (var gender in new Gender[] { Gender.Male, Gender.Female })
+                {
+                    foreach (var race in BlueprintRoot.Instance.Progression.CharacterRaces)
+                    {
+                        var armorLinks = ResourcesLibrary.GetBlueprints<KingmakerEquipmentEntity>()
+                            .SelectMany(kee => kee.GetLinks(gender, race.RaceId));
+                        var options = gender == Gender.Male ? race.MaleOptions : race.FemaleOptions;
+                        var links = race.Presets
+                            .SelectMany(preset => preset.Skin.GetLinks(gender, race.RaceId))
+                            .Concat(armorLinks)
+                            .Concat(options.Beards)
+                            .Concat(options.Eyebrows)
+                            .Concat(options.Hair)
+                            .Concat(options.Heads)
+                            .Concat(options.Horns);
+                        foreach (var link in links)
+                        {
+                            eeBlacklist.Add(link.AssetId);
+                        }
+                    }
+                }
+
+                m_OrphanedMaleEquipment = new UnorderedList<string, string>();
+                m_OrphanedFemaleEquipment = new UnorderedList<string, string>();
+                foreach (var kv in ResourcesLibrary.LibraryObject.ResourceNamesByAssetId.OrderBy(kv => kv.Value))
+                {
+                    if (eeBlacklist.Contains(kv.Key)) continue;
+                    var ee = ResourcesLibrary.TryGetResource<EquipmentEntity>(kv.Key);
+                    if (ee == null) continue;
+                    var nameParts = ee.name.Split('_');
+                    bool isMale = nameParts.Contains("M");
+                    bool isFemale = nameParts.Contains("F");
+                    if (!isMale && !isFemale)
+                    {
+                        isMale = true;
+                        isFemale = true;
+                    }
+                    if (isMale) m_OrphanedMaleEquipment[kv.Key] = kv.Value;
+                    if (isFemale) m_OrphanedFemaleEquipment[kv.Key] = kv.Value;
+                }
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.Formatting = Formatting.Indented;
+                using (StreamWriter sw = new StreamWriter(maleFilepath))
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
+                    serializer.Serialize(writer, m_OrphanedMaleEquipment);
+                }
+                using (StreamWriter sw = new StreamWriter(femaleFilepath))
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
+                    serializer.Serialize(writer, m_OrphanedFemaleEquipment);
+                }
+                ResourcesLibrary.CleanupLoadedCache();
+            }
+        }
+        static void BuildOrphenedKingmakerEquipment()
+        {
+            m_OrphanedKingmakerEquipment = new UnorderedList<string, string>();
+            var itemLinks = EquipmentResourcesManager.Helm.Keys
+                            .Concat(EquipmentResourcesManager.Cloak.Keys)
+                            .Concat(EquipmentResourcesManager.Armor.Keys)
+                            .Concat(EquipmentResourcesManager.Bracers.Keys)
+                            .Concat(EquipmentResourcesManager.Gloves.Keys)
+                            .Concat(EquipmentResourcesManager.Boots.Keys)
+                            .Distinct()
+                            .ToDictionary(key => key);
+            foreach (var kee in ResourcesLibrary.GetBlueprints<KingmakerEquipmentEntity>())
+            {
+                if (!itemLinks.ContainsKey(kee.AssetGuid))
+                {
+                    m_OrphanedKingmakerEquipment[kee.AssetGuid] = kee.name;
+                }
+            }
+        }
         static string expandedEE = null;
         static void ShowCharacterInfo(UnitEntityData unitEntityData)
         {
@@ -211,6 +323,36 @@ namespace VisualAdjustments
             if (character == null) return;
             GUILayout.Label($"View: {unitEntityData.View.name}");
             GUILayout.Label($"BakedCharacter: {character.BakedCharacter?.name ?? "NULL"}");
+
+            if (m_OrphanedKingmakerEquipment == null) BuildOrphenedKingmakerEquipment();
+            if (m_OrphanedMaleEquipment == null || m_OrphanedFemaleEquipment == null)
+            {
+                BuildOrphanedEquipment();
+            }
+            void onEquipment()
+            {
+                unitEntityData.View.CharacterAvatar.RemoveAllEquipmentEntities();
+                var preset = unitEntityData.Descriptor.Progression.Race.Presets.First();
+                var skin = preset.Skin.Load(unitEntityData.Gender, preset.RaceId);
+                unitEntityData.View.CharacterAvatar.AddEquipmentEntities(skin);
+                var kee = ResourcesLibrary.TryGetBlueprint<KingmakerEquipmentEntity>(selectedKingmakerOrphanedEquipment);
+                if(kee != null)
+                {
+                    var ees = kee.Load(unitEntityData.Gender, unitEntityData.Descriptor.Progression.Race.RaceId);
+                    unitEntityData.View.CharacterAvatar.AddEquipmentEntities(ees);
+                    unitEntityData.View.CharacterAvatar.IsDirty = true;
+                }
+                var ee = ResourcesLibrary.TryGetResource<EquipmentEntity>(selectedOrphanedEquipment);
+                if (ee != null)
+                {
+                    unitEntityData.View.CharacterAvatar.AddEquipmentEntity(ee);
+                    unitEntityData.View.CharacterAvatar.IsDirty = true;
+                }
+            }
+            var equipmentList = unitEntityData.Gender == Gender.Male ? m_OrphanedMaleEquipment : m_OrphanedFemaleEquipment;
+            Main.ChooseSlider($"OrphanedKingmakerEquipment", m_OrphanedKingmakerEquipment, ref selectedKingmakerOrphanedEquipment, onEquipment);
+            Main.ChooseSlider($"OrphanedEquipment", equipmentList, ref selectedOrphanedEquipment, onEquipment);
+
             GUILayout.Label("Equipment");
             foreach (var ee in character.EquipmentEntities.ToArray())
             {
@@ -251,7 +393,7 @@ namespace VisualAdjustments
 
                     var secondaryIndex = character.GetSecondaryRampIndex(ee);
                     Texture2D secondaryRamp = null;
-                    if (secondaryIndex < 0 || secondaryIndex > ee.PrimaryRamps.Count - 1) secondaryRamp = ee.SecondaryRamps.FirstOrDefault();
+                    if (secondaryIndex < 0 || secondaryIndex > ee.SecondaryRamps.Count - 1) secondaryRamp = ee.SecondaryRamps.FirstOrDefault();
                     else secondaryRamp = ee.SecondaryRamps[secondaryIndex];
                     GUILayout.Label($"SecondaryRamp: {secondaryRamp?.name ?? "NULL"}");
 
