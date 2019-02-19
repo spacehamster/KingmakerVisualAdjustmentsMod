@@ -11,7 +11,7 @@ namespace VisualAdjustments
 {
     public class Settings : UnityModManager.ModSettings
     {
-        internal bool rebuildCharacters = false;
+        public bool rebuildCharacters = true;
         public class CharacterSettings
         {
             public string characterName = "";
@@ -30,19 +30,21 @@ namespace VisualAdjustments
             public bool hideBoots = false;
             public bool hideWings = false;
             public bool hideWeaponEnchantments = false;
-            public bool hideTail;
-            public bool hideHorns;
+            public bool hideTail = false;
+            public bool hideHorns = false;
+            public bool hideWeapons = false;
+            public bool hideBeltSlots = false;
 
-            public string overrideHelm = "";
-            public string overrideCloak = "";
-            public string overrideArmor = "";
-            public string overrideBracers = "";
-            public string overrideGloves = "";
-            public string overrideBoots = "";
-            public string overrideTattoo = "";
-            public string overrideView = "";
-            public List<string> overrideMainWeaponEnchantments = new List<string>();
-            public List<string> overrideOffhandWeaponEnchantments = new List<string>();
+            public BlueprintRef overrideHelm = null;
+            public BlueprintRef overrideCloak = null;
+            public BlueprintRef overrideArmor = null;
+            public BlueprintRef overrideBracers = null;
+            public BlueprintRef overrideGloves = null;
+            public BlueprintRef overrideBoots = null;
+            public ResourceRef overrideTattoo = null;
+            public ResourceRef overrideView = null;
+            public List<BlueprintRef> overrideMainWeaponEnchantments = new List<BlueprintRef>();
+            public List<BlueprintRef> overrideOffhandWeaponEnchantments = new List<BlueprintRef>();
             public bool overrideScale = false;
             public bool overrideScaleShapeshiftOnly = false;
             public bool overrideScaleAdditive = false;
@@ -50,10 +52,9 @@ namespace VisualAdjustments
             public bool overrideScaleFloatMode = false;
             public float overrideScaleFactor = 4;
             public float additiveScaleFactor = 0;
-            public Dictionary<string, string> overrideWeapons = new Dictionary<string, string>();
+            public Dictionary<string, BlueprintRef> overrideWeapons = new Dictionary<string, BlueprintRef>();
 
-            public bool hideWeapons = false;
-            public bool hideBeltSlots = false;
+
 #if (DEBUG)
             public bool showInfo = false;
 #endif
@@ -68,6 +69,7 @@ namespace VisualAdjustments
             var filepath = Path.Combine(modEntry.Path, "Settings.json");
             try
             {
+
                 JsonSerializer serializer = new JsonSerializer();
 #if (DEBUG)
                 serializer.Formatting = Formatting.Indented;

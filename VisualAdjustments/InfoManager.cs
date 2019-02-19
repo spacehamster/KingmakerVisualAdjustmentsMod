@@ -350,8 +350,8 @@ namespace VisualAdjustments
                 }
             }
             var equipmentList = unitEntityData.Gender == Gender.Male ? m_OrphanedMaleEquipment : m_OrphanedFemaleEquipment;
-            Main.ChooseSlider($"OrphanedKingmakerEquipment", m_OrphanedKingmakerEquipment, ref selectedKingmakerOrphanedEquipment, onEquipment);
-            Main.ChooseSlider($"OrphanedEquipment", equipmentList, ref selectedOrphanedEquipment, onEquipment);
+            Util.ChooseSlider($"OrphanedKingmakerEquipment", m_OrphanedKingmakerEquipment, ref selectedKingmakerOrphanedEquipment, onEquipment);
+            Util.ChooseSlider($"OrphanedEquipment", equipmentList, ref selectedOrphanedEquipment, onEquipment);
 
             GUILayout.Label("Equipment");
             foreach (var ee in character.EquipmentEntities.ToArray())
@@ -476,14 +476,6 @@ namespace VisualAdjustments
             var pItem = handSlot != null && handSlot.HasItem ? handSlot.Item : null;
             GUILayout.Label(string.Format("Slot {0}, {1}, Active {2}", 
                 pItem?.Name, pItem?.GetType(), handSlot?.Active), GUILayout.Width(500));
-            /*if (GUILayout.Button("Active"))
-            {
-                Traverse.Create(handSlot).Property("Active").SetValue(!handSlot.Active);
-            }
-            if (GUILayout.Button("Disabled"))
-            {
-                Traverse.Create(handSlot).Property("Disabled").SetValue(!handSlot.Disabled);
-            }*/
             if (GUILayout.Button("Remove"))
             {
                 handSlot.RemoveItem();
@@ -588,19 +580,6 @@ namespace VisualAdjustments
             //Refer FxHelper.SpawnFxOnGameObject
             static void ShowFxInfo(UnitEntityData unitEntityData)
         {
-            /*GUILayout.Label("Global");
-            for (int i = FxHelper.FxRoot.childCount - 1; i >= 0; i--)
-            {
-                var fx = FxHelper.FxRoot.GetChild(i);
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("FX: " + fx.name, GUILayout.Width(400));
-                if (GUILayout.Button("Destroy"))
-                {
-                    GameObject.Destroy(fx.gameObject);
-                }
-                GUILayout.EndHorizontal();
-            }*/
-
             var spawnOnStart = unitEntityData.View.GetComponent<SpawnFxOnStart>();
             if (spawnOnStart)
             {

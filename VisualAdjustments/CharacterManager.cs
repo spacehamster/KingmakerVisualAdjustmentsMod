@@ -2,9 +2,9 @@
 using Kingmaker;
 using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.Classes;
+using Kingmaker.Blueprints.Items.Equipment;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.EntitySystem.Entities;
-using Kingmaker.EntitySystem.Persistence;
 using Kingmaker.Items.Slots;
 using Kingmaker.PubSubSystem;
 using Kingmaker.ResourceLinks;
@@ -237,7 +237,6 @@ namespace VisualAdjustments
         {
             if (view.CharacterAvatar == null || view.EntityData == null) return;
             if (!view.EntityData.IsPlayerFaction) return;
-            PreloadUnit(view);
             Settings.CharacterSettings characterSettings = Main.settings.GetCharacterSettings(view.EntityData);
             if (characterSettings == null) return;
             bool dirty = view.CharacterAvatar.IsDirty;
@@ -329,49 +328,49 @@ namespace VisualAdjustments
                     }
                 }
             }
-            if (characterSettings.overrideHelm != "" && !characterSettings.hideHelmet)
+            if (characterSettings.overrideHelm != null && !characterSettings.hideHelmet)
             {
                 if (!OverrideEquipment(view, view.EntityData.Body.Head, characterSettings.overrideHelm, ref dirty))
                 {
-                    characterSettings.overrideHelm = "";
+                    characterSettings.overrideHelm = null;
                 }
             }
-            if (characterSettings.overrideCloak != "" && !characterSettings.hideItemCloak)
+            if (characterSettings.overrideCloak != null && !characterSettings.hideItemCloak)
             {
                 if (!OverrideEquipment(view, view.EntityData.Body.Shoulders, characterSettings.overrideCloak, ref dirty))
                 {
-                    characterSettings.overrideCloak = "";
+                    characterSettings.overrideCloak = null;
                 }
             }
-            if (characterSettings.overrideArmor != "" && !characterSettings.hideArmor)
+            if (characterSettings.overrideArmor != null && !characterSettings.hideArmor)
             {
                 if (!OverrideEquipment(view, view.EntityData.Body.Armor, characterSettings.overrideArmor, ref dirty))
                 {
-                    characterSettings.overrideArmor = "";
+                    characterSettings.overrideArmor = null;
                 }
             }
-            if (characterSettings.overrideBracers != "" && !characterSettings.hideBracers)
+            if (characterSettings.overrideBracers != null && !characterSettings.hideBracers)
             {
                 if (!OverrideEquipment(view, view.EntityData.Body.Wrist, characterSettings.overrideBracers, ref dirty))
                 {
-                    characterSettings.overrideBracers = "";
+                    characterSettings.overrideBracers = null;
                 }
             }
-            if (characterSettings.overrideGloves != "" && !characterSettings.hideGloves)
+            if (characterSettings.overrideGloves != null && !characterSettings.hideGloves)
             {
                 if (!OverrideEquipment(view, view.EntityData.Body.Gloves, characterSettings.overrideGloves, ref dirty))
                 {
-                    characterSettings.overrideGloves = "";
+                    characterSettings.overrideGloves = null;
                 }
             }
-            if (characterSettings.overrideBoots != "" && !characterSettings.hideBoots)
+            if (characterSettings.overrideBoots != null && !characterSettings.hideBoots)
             {
                 if (!OverrideEquipment(view, view.EntityData.Body.Feet, characterSettings.overrideBoots, ref dirty))
                 {
-                    characterSettings.overrideBoots = "";
+                    characterSettings.overrideBoots = null;
                 }
             }
-            if (characterSettings.overrideTattoo != "")
+            if (characterSettings.overrideTattoo != null)
             {
                 foreach(var assetId in EquipmentResourcesManager.Tattoos.Keys)
                 {
@@ -386,35 +385,6 @@ namespace VisualAdjustments
                 FixRangerCloak(view);
             }
             view.CharacterAvatar.IsDirty = dirty;
-        }
-        //Doesn't seem to do anything
-        static void TryPreload(string assetId, Gender gender, Race race)
-        {
-            if (string.IsNullOrEmpty(assetId)) return;
-            var link = ResourcesLibrary.TryGetBlueprint<KingmakerEquipmentEntity>(assetId);
-            if (link != null) link.Preload(gender, race);
-        }
-        public static void PreloadUnit(UnitEntityView __instance)
-        {
-            if (__instance == null) return;
-            var unit = __instance.EntityData;
-            if (!unit.IsPlayerFaction) return;
-            var characterSettings = Main.settings.GetCharacterSettings(unit);
-            if (characterSettings == null) return;
-            var blueprintRace = unit.Descriptor.Progression.Race;
-            var race = blueprintRace?.RaceId ?? Race.Human;
-            var gender = unit.Gender;
-            TryPreload(characterSettings.overrideHelm, gender, race);
-            TryPreload(characterSettings.overrideCloak, gender, race);
-            TryPreload(characterSettings.overrideArmor, gender, race);
-            TryPreload(characterSettings.overrideBracers, gender, race);
-            TryPreload(characterSettings.overrideGloves, gender, race);
-            TryPreload(characterSettings.overrideBoots, gender, race);
-            TryPreload(characterSettings.overrideTattoo, gender, race);
-            if (!string.IsNullOrEmpty(characterSettings.overrideView))
-            {
-                ResourcesLibrary.PreloadResource<GameObject>(characterSettings.overrideView);
-            }
         }
         /*
          * Called by CheatsSilly.UpdatePartyNoArmor and OnDataAttached
@@ -553,6 +523,77 @@ namespace VisualAdjustments
                 }
             }
         }
+        static void TryPreloadKEE(BlueprintRef assetId, Gender gender, Race race)
+        {
+            if (string.IsNullOrEmpty(assetId)) return;
+            var link = ResourcesLibrary.TryGetBlueprint<KingmakerEquipmentEntity>(assetId);
+            if (link != null) link.Preload(gender, race);
+        }
+        static void TryPreloadEE(ResourceRef assetId, Gender gender, Race race)
+        {
+            if (string.IsNullOrEmpty(assetId)) return;
+            ResourcesLibrary.PreloadResource<EquipmentEntity>(assetId);
+        }
+        static void TryPreloadUnitView(ResourceRef assetId, Gender gender, Race race)
+        {
+            if (string.IsNullOrEmpty(assetId)) return;
+            ResourcesLibrary.PreloadResource<UnitEntityView>(assetId);
+        }
+        static void TryPreloadWeapon(BlueprintRef assetId, Gender gender, Race race)
+        {
+            if (string.IsNullOrEmpty(assetId)) return;
+            var item = ResourcesLibrary.TryGetBlueprint<BlueprintItemEquipment>(assetId);
+            item?.EquipmentEntity?.Preload(gender, race);
+        }
+        public static void PreloadUnit(UnitEntityView __instance)
+        {
+            if (__instance == null) return;
+            var unit = __instance.EntityData;
+            if (!unit.IsPlayerFaction) return;
+            var characterSettings = Main.settings.GetCharacterSettings(unit);
+            if (characterSettings == null) return;
+            var blueprintRace = unit.Descriptor.Progression.Race;
+            var race = blueprintRace?.RaceId ?? Race.Human;
+            var gender = unit.Gender;
+            TryPreloadKEE(characterSettings.overrideHelm, gender, race);
+            TryPreloadKEE(characterSettings.overrideCloak, gender, race);
+            TryPreloadKEE(characterSettings.overrideArmor, gender, race);
+            TryPreloadKEE(characterSettings.overrideBracers, gender, race);
+            TryPreloadKEE(characterSettings.overrideGloves, gender, race);
+            TryPreloadKEE(characterSettings.overrideBoots, gender, race);
+            TryPreloadEE(characterSettings.overrideTattoo, gender, race);
+            foreach(var kv in characterSettings.overrideWeapons)
+            {
+                TryPreloadWeapon(kv.Value, gender, race);
+            }
+            if (!string.IsNullOrEmpty(characterSettings.overrideView))
+            {
+                ResourcesLibrary.PreloadResource<GameObject>(characterSettings.overrideView);
+            }
+            if(characterSettings.classOutfit == "None")
+            {
+                var clothes = gender == Gender.Male ? BlueprintRoot.Instance.CharGen.MaleClothes : BlueprintRoot.Instance.CharGen.FemaleClothes;
+                foreach (var clothing in clothes) clothing.Preload();
+            }
+        }
+        [HarmonyPatch(typeof(ResourcesPreload), "PreloadUnitResources")]
+        static class ResourcesPreload_PreloadUnitResources_Patch
+        {
+            static void Postfix()
+            {
+                try
+                {
+                    foreach (UnitEntityData unitEntityData in Game.Instance.State.Units)
+                    {
+                        PreloadUnit(unitEntityData.View);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Main.DebugError(ex);
+                }
+            }
+        }
         [HarmonyPatch(typeof(Game), "OnAreaLoaded")]
         static class Game_OnAreaLoaded_Patch
         {
@@ -566,6 +607,8 @@ namespace VisualAdjustments
                     foreach (var character in Game.Instance.Player.ControllableCharacters)
                     {
                         RebuildCharacter(character);
+                        UpdateModel(character.View);
+                        character.View.HandsEquipment.UpdateAll();
                     }
                 } catch(Exception ex)
                 {

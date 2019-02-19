@@ -141,7 +141,7 @@ namespace VisualAdjustments
                     if (characterSettings.showInfo) InfoManager.ShowInfo(unitEntityData);
 #endif
                 }
-                settings.rebuildCharacters = GUILayout.Toggle(settings.rebuildCharacters, " Fix visual gitches after load screen");
+                settings.rebuildCharacters = GUILayout.Toggle(settings.rebuildCharacters, "Rebuild character model on loadscreen (Fix visual gitches)");
             }
             catch (Exception e)
             {
@@ -476,29 +476,7 @@ namespace VisualAdjustments
                 ChooseToggle("Hide Tail", ref characterSettings.hideTail, onHideEquipment);
             }
         }
-        static void ChooseSlider(string name, UnorderedList<string, string> items, ref string currentItem, Action onChoose)
-        {
-            var currentIndex = currentItem == null ? -1 : items.IndexOfKey(currentItem);
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(name + " ", GUILayout.Width(DefaultLabelWidth));
-            var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, -1, items.Count - 1, GUILayout.Width(DefaultSliderWidth)), 0);
-            if (GUILayout.Button("Prev", GUILayout.Width(45)) && currentIndex >= 0)
-            {
-                newIndex = currentIndex - 1;
-            }
-            if (GUILayout.Button("Next", GUILayout.Width(45)) && currentIndex < items.Count - 1)
-            {
-                newIndex = currentIndex + 1;
-            }
-            var displayText = newIndex == -1 ? "None" : items.Values[newIndex];
-            GUILayout.Label(" " + displayText, GUILayout.ExpandWidth(true));
-            GUILayout.EndHorizontal();
-            if (currentIndex != newIndex)
-            {
-                currentItem = newIndex == -1 ? "" : items.Keys[newIndex];
-                onChoose();
-            }
-        }
+
         /*
          * m_Size is updated from GetSizeScale (EntityData.Descriptor.State.Size) and 
          * is with m_OriginalScale to adjust the transform.localScale 
@@ -526,37 +504,6 @@ namespace VisualAdjustments
             GUILayout.Label($" {(Size)(sizeModifier)}", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
         }
-        static void ChooseSliderList(string name, UnorderedList<string, string> items, List<string> saved, int savedIndex, Action onChoose)
-        {
-            var currentItem = saved[savedIndex];
-            var currentIndex = currentItem == null ? -1 : items.IndexOfKey(currentItem);
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(name + " ", GUILayout.Width(DefaultLabelWidth));
-            var newIndex = (int)Math.Round(GUILayout.HorizontalSlider(currentIndex, -1, items.Count - 1, GUILayout.Width(DefaultSliderWidth)), 0);
-            if (GUILayout.Button("Prev", GUILayout.Width(45)) && currentIndex >= 0)
-            {
-                newIndex = currentIndex - 1;
-            }
-            if (GUILayout.Button("Next", GUILayout.Width(45)) && currentIndex < items.Count - 1)
-            {
-                newIndex = currentIndex + 1;
-            }
-            if (GUILayout.Button("Remove", GUILayout.ExpandWidth(false)))
-            {
-                saved.RemoveAt(savedIndex);
-                onChoose();
-                return;
-            }
-            var displayText = newIndex == -1 ? "None" : items.Values[newIndex];
-            GUILayout.Label(" " + displayText, GUILayout.ExpandWidth(true));
-            GUILayout.EndHorizontal();
-            if (currentIndex != newIndex)
-            {
-                currentItem = newIndex == -1 ? "" : items.Keys[newIndex];
-                saved[savedIndex] = currentItem;
-                onChoose();
-            }
-        }
         static void ChooseEquipmentOverride(UnitEntityData unitEntityData, CharacterSettings characterSettings)
         {
             void onEquipment()
@@ -566,31 +513,31 @@ namespace VisualAdjustments
             }
             GUILayout.Label("Equipment", "box", GUILayout.Width(DefaultLabelWidth));
             void onView() => ViewManager.ReplaceView(unitEntityData, characterSettings.overrideView);
-            ChooseSlider("Override Helm", EquipmentResourcesManager.Helm, ref characterSettings.overrideHelm, onEquipment);
-            ChooseSlider("Override Cloak", EquipmentResourcesManager.Cloak, ref characterSettings.overrideCloak, onEquipment);
-            ChooseSlider("Override Armor", EquipmentResourcesManager.Armor, ref characterSettings.overrideArmor, onEquipment);
-            ChooseSlider("Override Bracers", EquipmentResourcesManager.Bracers, ref characterSettings.overrideBracers, onEquipment);
-            ChooseSlider("Override Gloves", EquipmentResourcesManager.Gloves, ref characterSettings.overrideGloves, onEquipment);
-            ChooseSlider("Override Boots", EquipmentResourcesManager.Boots, ref characterSettings.overrideBoots, onEquipment);
-            ChooseSlider("Override Tattoos", EquipmentResourcesManager.Tattoos, ref characterSettings.overrideTattoo, onEquipment);
+            Util.ChooseSlider("Override Helm", EquipmentResourcesManager.Helm, ref characterSettings.overrideHelm, onEquipment);
+            Util.ChooseSlider("Override Cloak", EquipmentResourcesManager.Cloak, ref characterSettings.overrideCloak, onEquipment);
+            Util.ChooseSlider("Override Armor", EquipmentResourcesManager.Armor, ref characterSettings.overrideArmor, onEquipment);
+            Util.ChooseSlider("Override Bracers", EquipmentResourcesManager.Bracers, ref characterSettings.overrideBracers, onEquipment);
+            Util.ChooseSlider("Override Gloves", EquipmentResourcesManager.Gloves, ref characterSettings.overrideGloves, onEquipment);
+            Util.ChooseSlider("Override Boots", EquipmentResourcesManager.Boots, ref characterSettings.overrideBoots, onEquipment);
+            Util.ChooseSlider("Override Tattoos", EquipmentResourcesManager.Tattoos, ref characterSettings.overrideTattoo, onEquipment);
             GUILayout.Label("Weapons", "box", GUILayout.Width(DefaultLabelWidth));
             foreach (var kv in EquipmentResourcesManager.Weapons)
             {
                 var animationStyle = kv.Key;
                 var weaponLookup = kv.Value;
-                characterSettings.overrideWeapons.TryGetValue(animationStyle, out string currentValue);
+                characterSettings.overrideWeapons.TryGetValue(animationStyle, out BlueprintRef currentValue);
                 void onWeapon()
                 {
                     characterSettings.overrideWeapons[animationStyle] = currentValue;
                     unitEntityData.View.HandsEquipment.UpdateAll();
                 }
-                ChooseSlider($"Override {animationStyle} ", weaponLookup, ref currentValue, onWeapon);
+                Util.ChooseSlider($"Override {animationStyle} ", weaponLookup, ref currentValue, onWeapon);
             }
             GUILayout.BeginHorizontal();
             GUILayout.Label("Main Weapon Enchantments", "box", GUILayout.Width(DefaultLabelWidth));
             if (GUILayout.Button("Add Enchantment", GUILayout.ExpandWidth(false)))
             {
-                characterSettings.overrideMainWeaponEnchantments.Add("");
+                characterSettings.overrideMainWeaponEnchantments.Add(null);
             }
             GUILayout.EndHorizontal();
             void onWeaponEnchantment()
@@ -598,7 +545,7 @@ namespace VisualAdjustments
                 unitEntityData.View.HandsEquipment.UpdateAll();
             }
             for (int i = 0; i < characterSettings.overrideMainWeaponEnchantments.Count; i++) {
-                ChooseSliderList($"Override Main Hand", EquipmentResourcesManager.WeaponEnchantments, 
+                Util.ChooseSliderList($"Override Main Hand", EquipmentResourcesManager.WeaponEnchantments, 
                     characterSettings.overrideMainWeaponEnchantments, i, onWeaponEnchantment);
             }
             GUILayout.BeginHorizontal();
@@ -610,11 +557,11 @@ namespace VisualAdjustments
             GUILayout.EndHorizontal();
             for (int i = 0; i < characterSettings.overrideOffhandWeaponEnchantments.Count; i++)
             {
-                ChooseSliderList($"Override Off Hand", EquipmentResourcesManager.WeaponEnchantments,
+                Util.ChooseSliderList($"Override Off Hand", EquipmentResourcesManager.WeaponEnchantments,
                     characterSettings.overrideOffhandWeaponEnchantments, i, onWeaponEnchantment);
             }
             GUILayout.Label("View", "box", GUILayout.Width(DefaultLabelWidth));
-            ChooseSlider("Override View", EquipmentResourcesManager.Units, ref characterSettings.overrideView, onView);
+            Util.ChooseSlider("Override View", EquipmentResourcesManager.Units, ref characterSettings.overrideView, onView);
             void onChooseScale()
             {
                 Traverse.Create(unitEntityData.View).Field("m_Scale").SetValue(unitEntityData.View.GetSizeScale() + 0.01f);

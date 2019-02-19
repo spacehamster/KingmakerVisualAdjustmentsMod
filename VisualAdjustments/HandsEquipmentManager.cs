@@ -98,7 +98,7 @@ namespace VisualAdjustments
                     if (__instance.VisibleItem == null) return;
                     var blueprint = __instance.VisibleItem.Blueprint as BlueprintItemEquipmentHand;
                     var animationStyle = blueprint.VisualParameters.AnimStyle.ToString();
-                    characterSettings.overrideWeapons.TryGetValue(animationStyle, out string blueprintId);
+                    characterSettings.overrideWeapons.TryGetValue(animationStyle, out BlueprintRef blueprintId);
                     if (blueprintId == null || blueprintId == "") return;
                     var newBlueprint = ResourcesLibrary.TryGetBlueprint<BlueprintItemEquipmentHand>(blueprintId);
                     if (newBlueprint == null) return;

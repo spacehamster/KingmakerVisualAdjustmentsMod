@@ -10,7 +10,7 @@ namespace VisualAdjustments
 {
     public class EquipmentResourcesManager
     {
-        public static UnorderedList<string, string> Helm
+        public static UnorderedList<BlueprintRef, string> Helm
         {
             get
             {
@@ -18,7 +18,7 @@ namespace VisualAdjustments
                 return m_Helm;
             }
         }
-        public static UnorderedList<string, string> Cloak
+        public static UnorderedList<BlueprintRef, string> Cloak
         {
             get
             {
@@ -26,7 +26,7 @@ namespace VisualAdjustments
                 return m_Cloak;
             }
         }
-        public static UnorderedList<string, string> Armor
+        public static UnorderedList<BlueprintRef, string> Armor
         {
             get
             {
@@ -34,7 +34,7 @@ namespace VisualAdjustments
                 return m_Armor;
             }
         }
-        public static UnorderedList<string, string> Bracers
+        public static UnorderedList<BlueprintRef, string> Bracers
         {
             get
             {
@@ -42,7 +42,7 @@ namespace VisualAdjustments
                 return m_Bracers;
             }
         }
-        public static UnorderedList<string, string> Gloves
+        public static UnorderedList<BlueprintRef, string> Gloves
         {
             get
             {
@@ -50,7 +50,7 @@ namespace VisualAdjustments
                 return m_Gloves;
             }
         }
-        public static UnorderedList<string, string> Boots
+        public static UnorderedList<BlueprintRef, string> Boots
         {
             get
             {
@@ -58,7 +58,7 @@ namespace VisualAdjustments
                 return m_Boots;
             }
         }
-        public static UnorderedList<string, string> Units
+        public static UnorderedList<ResourceRef, string> Units
         {
             get
             {
@@ -66,7 +66,7 @@ namespace VisualAdjustments
                 return m_Units; ;
             }
         }
-        public static SortedList<string, UnorderedList<string, string>> Weapons
+        public static SortedList<string, UnorderedList<BlueprintRef, string>> Weapons
         {
             get
             {
@@ -74,7 +74,7 @@ namespace VisualAdjustments
                 return m_Weapons;
             }
         }
-        public static UnorderedList<string, string> WeaponEnchantments
+        public static UnorderedList<BlueprintRef, string> WeaponEnchantments
         {
             get
             {
@@ -82,7 +82,7 @@ namespace VisualAdjustments
                 return m_WeaponEnchantments;
             }
         }
-        public static UnorderedList<string, string> Tattoos
+        public static UnorderedList<ResourceRef, string> Tattoos
         {
             get
             {
@@ -96,16 +96,16 @@ namespace VisualAdjustments
                 return m_Tattoo;
             }
         }
-        private static UnorderedList<string, string> m_Helm = new UnorderedList<string, string>();
-        private static UnorderedList<string, string> m_Cloak = new UnorderedList<string, string>();
-        private static UnorderedList<string, string> m_Armor = new UnorderedList<string, string>();
-        private static UnorderedList<string, string> m_Bracers = new UnorderedList<string, string>();
-        private static UnorderedList<string, string> m_Gloves = new UnorderedList<string, string>();
-        private static UnorderedList<string, string> m_Boots = new UnorderedList<string, string>();
-        private static UnorderedList<string, string> m_Tattoo = new UnorderedList<string, string>();
-        private static UnorderedList<string, string> m_Units = new UnorderedList<string, string>();
-        private static UnorderedList<string, string> m_WeaponEnchantments = new UnorderedList<string, string>();
-        private static SortedList<string, UnorderedList<string, string>> m_Weapons = new SortedList<string, UnorderedList<string, string>>();
+        private static UnorderedList<BlueprintRef, string> m_Helm = new UnorderedList<BlueprintRef, string>();
+        private static UnorderedList<BlueprintRef, string> m_Cloak = new UnorderedList<BlueprintRef, string>();
+        private static UnorderedList<BlueprintRef, string> m_Armor = new UnorderedList<BlueprintRef, string>();
+        private static UnorderedList<BlueprintRef, string> m_Bracers = new UnorderedList<BlueprintRef, string>();
+        private static UnorderedList<BlueprintRef, string> m_Gloves = new UnorderedList<BlueprintRef, string>();
+        private static UnorderedList<BlueprintRef, string> m_Boots = new UnorderedList<BlueprintRef, string>();
+        private static UnorderedList<ResourceRef, string> m_Tattoo = new UnorderedList<ResourceRef, string>();
+        private static UnorderedList<ResourceRef, string> m_Units = new UnorderedList<ResourceRef, string>();
+        private static UnorderedList<BlueprintRef, string> m_WeaponEnchantments = new UnorderedList<BlueprintRef, string>();
+        private static SortedList<string, UnorderedList<BlueprintRef, string>> m_Weapons = new SortedList<string, UnorderedList<BlueprintRef, string>>();
         private static bool loaded = false;
         static void BuildEquipmentLookup()
         {
@@ -153,10 +153,10 @@ namespace VisualAdjustments
                 var visualParameters = bp.VisualParameters;
                 var animationStyle = visualParameters.AnimStyle.ToString();
                 if (bp.VisualParameters.Model == null) continue;
-                UnorderedList<string, string> eeList = null;
+                UnorderedList<BlueprintRef, string> eeList = null;
                 if (!m_Weapons.ContainsKey(animationStyle))
                 {
-                    eeList = new UnorderedList<string, string>();
+                    eeList = new UnorderedList<BlueprintRef, string>();
                     m_Weapons[animationStyle] = eeList;
                 }
                 else
