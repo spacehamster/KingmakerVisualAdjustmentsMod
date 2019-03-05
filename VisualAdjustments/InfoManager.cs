@@ -141,10 +141,6 @@ namespace VisualAdjustments
                 unitEntityData.View.CharacterAvatar.RebuildOutfit();
                 unitEntityData.View.CharacterAvatar.BakedCharacter = bakedCharacter;
             }
-            if (GUILayout.Button("Remove Outfit"))
-            {
-                unitEntityData.View.CharacterAvatar.RemoveOutfit();
-            }
             if (GUILayout.Button("Update Class Equipment"))
             {
                 var bakedCharacter = unitEntityData.View.CharacterAvatar.BakedCharacter;

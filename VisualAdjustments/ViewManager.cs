@@ -22,7 +22,8 @@ namespace VisualAdjustments
             return ResourcesLibrary.TryGetResource<UnitEntityView>(id);
         }
         /*
-         * Based on Polymorph.TryReplaceView
+         * Based on Polymorph.TryReplaceView. Replaces view, only used when changing view through UI
+         * When id is null or "", rebuilds original view
          */ 
         public static void ReplaceView(UnitEntityData unit, string id)
         {
@@ -33,12 +34,17 @@ namespace VisualAdjustments
             }
             UnitEntityView template = GetView(id);
             if (template == null) template = unit.Blueprint.Prefab.Load();
-            var instance = UnityEngine.Object.Instantiate<UnitEntityView>(template).GetComponent<UnitEntityView>();
+            var instance = UnityEngine.Object.Instantiate(template).GetComponent<UnitEntityView>();
             instance.UniqueId = unit.UniqueId;
             instance.transform.SetParent(original.transform.parent);
             instance.transform.position = original.transform.position;
             instance.transform.rotation = original.transform.rotation;
-            if (id != null && id != "") instance.DisableSizeScaling = true;
+            if (!string.IsNullOrEmpty(id))
+            {
+                instance.DisableSizeScaling = true;
+                //Prevent halflings from running too fast
+                Traverse.Create(instance).Field("m_IgnoreRaceAnimationSettings").SetValue(true);
+            }
             instance.Blueprint = unit.Blueprint;
             unit.AttachToViewOnLoad(instance);
             unit.Commands.InterruptAll((UnitCommand cmd) => !(cmd is UnitMoveTo));
@@ -51,7 +57,7 @@ namespace VisualAdjustments
             if (string.IsNullOrEmpty(id)) CharacterManager.RebuildCharacter(unit);
         }
         /*
-         * Used for overriding view
+         * Used for overriding view, when view is first created
          */ 
         [HarmonyPatch(typeof(UnitEntityData), "CreateView")]
         static class UnitEntityData_CreateView_Patch
@@ -83,7 +89,9 @@ namespace VisualAdjustments
                         return true;
                     }
                     Quaternion rotation = (!template.ForbidRotation) ? Quaternion.Euler(0f, __instance.Orientation, 0f) : Quaternion.identity;
-                    __result = UnityEngine.Object.Instantiate<UnitEntityView>(template, __instance.Position, rotation);
+                    __result = UnityEngine.Object.Instantiate(template, __instance.Position, rotation);
+                    //Prevent halflings from running too fast
+                    Traverse.Create(__result).Field("m_IgnoreRaceAnimationSettings").SetValue(true);
                     return false;
                 } catch(Exception ex)
                 {
@@ -161,6 +169,17 @@ namespace VisualAdjustments
                 }
             }
         }
+        public static float GetRealSizeScale(UnitEntityView __instance, Settings.CharacterSettings characterSettings)
+        {
+            var originalScale = __instance.GetSizeScale();
+            int originalSize = (int)__instance.EntityData.Descriptor.OriginalSize;
+            if (__instance.DisableSizeScaling) originalSize = (int)__instance.EntityData.Descriptor.State.Size;
+            float sizeScale = 1;
+            if (characterSettings.overrideScaleAdditive) sizeScale = originalScale * Mathf.Pow(1 / 0.66f, characterSettings.additiveScaleFactor);
+            else sizeScale = Mathf.Pow(1 / 0.66f, characterSettings.overrideScaleFactor - originalSize);
+            return sizeScale;
+
+        }
         /*
          * The unitEntityView stores the current scale in m_Scale, and smoothly adjusts to until it is equal to
          * sizeScale from unitEntityView.GetSizeScale()
@@ -171,12 +190,7 @@ namespace VisualAdjustments
          */
         static void OverrideSize(UnitEntityView __instance, Settings.CharacterSettings characterSettings)
         {
-            var originalScale = __instance.GetSizeScale();
-            int originalSize = (int)__instance.EntityData.Descriptor.OriginalSize;
-            if(__instance.DisableSizeScaling) originalSize = (int)__instance.EntityData.Descriptor.State.Size;
-            float sizeScale = 1;
-            if (characterSettings.overrideScaleAdditive) sizeScale = originalScale * Mathf.Pow(1 / 0.66f, characterSettings.additiveScaleFactor);
-            else sizeScale = Mathf.Pow(1 / 0.66f, characterSettings.overrideScaleFactor - originalSize);
+            var sizeScale = GetRealSizeScale(__instance, characterSettings);
             var m_OriginalScale = m_OriginalScaleRef(__instance);
             var m_Scale = __instance.transform.localScale.x / m_OriginalScale.x;
             if (!sizeScale.Equals(m_Scale) && !__instance.DoNotAdjustScale)

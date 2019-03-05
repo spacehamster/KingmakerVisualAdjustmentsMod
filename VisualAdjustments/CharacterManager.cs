@@ -302,7 +302,7 @@ namespace VisualAdjustments
                     }
                 }
             }
-            if (characterSettings.hideClassCloak || characterSettings.overrideCloak != "")
+            if (characterSettings.hideClassCloak || characterSettings.overrideCloak != null)
             {
                 foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
                 {
