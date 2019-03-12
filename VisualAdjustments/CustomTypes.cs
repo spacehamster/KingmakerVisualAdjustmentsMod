@@ -38,7 +38,7 @@ namespace VisualAdjustments
         }
         public static implicit operator BlueprintRef(string value)
         {
-            return value == null ? null : new BlueprintRef(value);
+            return string.IsNullOrEmpty(value) ? null : new BlueprintRef(value);
         }
         public override bool Equals(object obj)
         {
@@ -66,7 +66,7 @@ namespace VisualAdjustments
         }
         public static implicit operator ResourceRef(string value)
         {
-            return value == null ? null : new ResourceRef(value);
+            return string.IsNullOrEmpty(value) ? null : new ResourceRef(value);
         }
         public override bool Equals(object obj)
         {

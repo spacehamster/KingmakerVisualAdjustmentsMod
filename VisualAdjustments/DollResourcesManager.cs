@@ -1,6 +1,7 @@
 ﻿using Kingmaker.Blueprints;
 using Kingmaker.Blueprints.CharGen;
 using Kingmaker.Blueprints.Classes;
+using Kingmaker.Blueprints.Root;
 using Kingmaker.EntitySystem.Entities;
 using Kingmaker.ResourceLinks;
 using Kingmaker.UnitLogic.Class.LevelUp;
@@ -103,7 +104,11 @@ namespace VisualAdjustments
             foreach(var bp in ResourcesLibrary.GetBlueprints<BlueprintPortrait>())
             {
                 //Note there are two wolf portraits
-                if(!portraits.ContainsKey(bp.name) && bp.name != "CustomPortrait") portraits.Add(bp.name, bp);
+                if (bp == BlueprintRoot.Instance.CharGen.CustomPortrait || bp.Data.IsCustom)
+                {
+                    continue;
+                }
+                if (!portraits.ContainsKey(bp.name)) portraits.Add(bp.name, bp);
             }
             customPortraits.AddRange(CustomPortraitsManager.Instance.GetExistingCustomPortraitIds());
             foreach (var bp in ResourcesLibrary.GetBlueprints<BlueprintUnitAsksList>())

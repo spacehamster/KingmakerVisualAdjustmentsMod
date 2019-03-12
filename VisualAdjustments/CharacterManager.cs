@@ -89,8 +89,8 @@ namespace VisualAdjustments
              * Purple 25-29
              * Black 30-34
              */
-            int primaryIndex = -1;
-            int secondaryIndex = -1;
+            int primaryIndex = 0;
+            int secondaryIndex = 0;
             switch (__instance.EntityData.Blueprint.AssetGuid)
             {
                 case "77c11edb92ce0fd408ad96b40fd27121": //"Linzi",
@@ -178,6 +178,9 @@ namespace VisualAdjustments
                     secondaryIndex = 17;
                     break;
             }
+            //Can't load save if color index is out of range
+            if (characterSettings.companionPrimary < 0) characterSettings.companionPrimary = primaryIndex;
+            if (characterSettings.companionPrimary < 0) characterSettings.companionPrimary = secondaryIndex;
             if (characterSettings.companionPrimary >= 0) primaryIndex = characterSettings.companionPrimary;
             if (characterSettings.companionSecondary >= 0) secondaryIndex = characterSettings.companionSecondary;
             var _class = __instance.EntityData.Descriptor.Progression.GetEquipmentClass();

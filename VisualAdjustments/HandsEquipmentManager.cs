@@ -143,17 +143,12 @@ namespace VisualAdjustments
             {
                 try
                 {
-                    Main.DebugLog("Calling OwnerWeaponScale");
                     if (!Main.enabled) return;
                     if (!__instance.Owner.IsPlayerFaction) return;
                     var characterSettings = Main.settings.GetCharacterSettings(__instance.Owner);
                     if (characterSettings == null) return;
                     if (!characterSettings.overrideScale) return;
                     var realScale = ViewManager.GetRealSizeScale(__instance.Owner.View, characterSettings);
-                    Main.DebugLog($"Setting weapon real scale {__instance.Owner.View.GetSizeScale()} -> {realScale}");
-                    Main.DebugLog($"Owner Original size {__instance.Owner.Descriptor.OriginalSize}, WeaponModelCoeff {Game.Instance.BlueprintRoot.WeaponModelSizing.GetCoeff(__instance.Owner.Descriptor.OriginalSize)}");
-                    __result = ViewManager.GetRealSizeScale(__instance.Owner.View, characterSettings) *
-                        Game.Instance.BlueprintRoot.WeaponModelSizing.GetCoeff(__instance.Owner.Descriptor.OriginalSize);
                 }
                 catch (Exception ex)
                 {
