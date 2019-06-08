@@ -75,8 +75,55 @@ namespace VisualAdjustments
             }
         }
         /*
-         * Hide Weapon Models
-         * 
+         * Hide Quiver
+         */ 
+        [HarmonyPatch(typeof(UnitViewHandSlotData), "ReattachSheath")]
+        static class UnitViewHandsSlotData_ReattachSheath_Patch
+        {
+            static FastInvoker<UnitViewHandSlotData, object> DestroySheathModelInvoker = null;
+            static bool Prepare()
+            {
+                DestroySheathModelInvoker = Accessors.CreateInvoker<UnitViewHandSlotData, object>("DestroySheathModel");
+                return true;
+            }
+            static bool HasQuiver(UnitViewHandSlotData slotData)
+            {
+                if (slotData.VisibleItem == null) return false;
+                var blueprint = slotData.VisibleItem.Blueprint as BlueprintItemEquipmentHand;
+                if (blueprint == null) return false;
+                return blueprint.VisualParameters.HasQuiver;
+            }
+            static bool Prefix(UnitViewHandSlotData __instance, UnitViewHandsEquipment ___m_Equipment)
+            {
+                try
+                {
+                    if (!Main.enabled) return true;
+                    if (!__instance.Owner.IsPlayerFaction) return true;
+                    var characterSettings = Main.settings.GetCharacterSettings(__instance.Owner);
+                    if (characterSettings == null) return true;
+                    if (!HasQuiver(__instance)) return true;
+                    if (characterSettings.hideQuiver)
+                    {
+                        UnitViewHandSlotData unitViewHandSlotData = ___m_Equipment.QuiverHandSlot;
+                        if (unitViewHandSlotData == null) return true;
+                        if (unitViewHandSlotData == __instance) return false;
+                        if(unitViewHandSlotData.IsActiveSet || unitViewHandSlotData.SheathVisualModel == null || !HasQuiver(unitViewHandSlotData))
+                        {
+                            DestroySheathModelInvoker(unitViewHandSlotData);
+                            unitViewHandSlotData = null;
+                        }
+                        return false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Main.DebugError(ex);
+                }
+                return true;
+            }
+        }
+        /*
+         * Hide Weapon Models 
          */
         [HarmonyPatch(typeof(UnitViewHandSlotData), "AttachModel", new Type[] { })]
         static class UnitViewHandsSlotData_AttachModel_Patch

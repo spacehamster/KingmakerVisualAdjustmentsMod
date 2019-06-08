@@ -456,7 +456,7 @@ namespace VisualAdjustments
             var portrait = unitEntityData.Descriptor.Portrait;
             var portraitBP = unitEntityData.Descriptor.UISettings.PortraitBlueprint;
             var uiPortrait = unitEntityData.Descriptor.UISettings.Portrait;
-            var CustomPortrait = unitEntityData.Descriptor.UISettings.CustomPortrait;
+            var CustomPortrait = unitEntityData.Descriptor.UISettings.CustomPortraitRaw;
             GUILayout.Label($"Portrait Blueprint: {portraitBP}, {portraitBP?.name}");
             GUILayout.Label($"Descriptor Portrait: {portrait}, isCustom {portrait?.IsCustom}");
             GUILayout.Label($"UI Portrait: {portrait}, isCustom {portrait?.IsCustom}");

@@ -248,10 +248,6 @@ namespace VisualAdjustments
                 ChangeCompanionOutfit(view, characterSettings);
             }
             if (characterSettings.classOutfit == "None") NoClassOutfit(view);
-            if (characterSettings.hideHelmet)
-            {
-                HideSlot(view, view.EntityData.Body.Head, ref dirty);
-            }
             if (characterSettings.hideItemCloak)
             {
                 HideSlot(view, view.EntityData.Body.Shoulders, ref dirty);
@@ -294,17 +290,6 @@ namespace VisualAdjustments
                     }
                 }
             }
-            if (characterSettings.hideBackpack)
-            {
-                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
-                {
-                    if (ee.OutfitParts.Exists((outfit) => outfit.Special == EquipmentEntity.OutfitPartSpecialType.Backpack))
-                    {
-                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
-                        dirty = true;
-                    }
-                }
-            }
             if (characterSettings.hideClassCloak || characterSettings.overrideCloak != null)
             {
                 foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
@@ -317,25 +302,6 @@ namespace VisualAdjustments
                         view.CharacterAvatar.EquipmentEntities.Remove(ee);
                         dirty = true;
                     }
-                }
-            }
-            if (characterSettings.hideCap)
-            {
-                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
-                {
-                    if (ee.BodyParts.Exists((bodypart) => bodypart.Type == BodyPartType.Cap) &&
-                        !view.ExtractEquipmentEntities(view.EntityData.Body.Head).Contains(ee))
-                    {
-                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
-                        dirty = true;
-                    }
-                }
-            }
-            if (characterSettings.overrideHelm != null && !characterSettings.hideHelmet)
-            {
-                if (!OverrideEquipment(view, view.EntityData.Body.Head, characterSettings.overrideHelm, ref dirty))
-                {
-                    characterSettings.overrideHelm = null;
                 }
             }
             if (characterSettings.overrideCloak != null && !characterSettings.hideItemCloak)
@@ -506,6 +472,9 @@ namespace VisualAdjustments
                             break;
                         case "Rogue":
                             __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["299aa766dee3cbf4790da4efb8c72484"];
+                            break;
+                        case "Slayer":
+                            __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["c75e0971973957d4dbad24bc7957e4fb"];
                             break;
                         case "Sorcerer":
                             __result = (BlueprintCharacterClass)ResourcesLibrary.LibraryObject.BlueprintsByAssetId["b3a505fb61437dc4097f43c3f8f9a4cf"];

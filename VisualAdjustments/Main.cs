@@ -37,7 +37,7 @@ namespace VisualAdjustments
         }
         public static bool enabled;
         public static Settings settings;
-        public static String[] classes = new String[] {
+        public static string[] classes = new string[] {
             "Default",
             "Alchemist",
             "Barbarian",
@@ -52,6 +52,7 @@ namespace VisualAdjustments
             "Paladin",
             "Ranger",
             "Rogue",
+            "Slayer",
             "Sorcerer",
             "Wizard",
             "None"
@@ -177,7 +178,7 @@ namespace VisualAdjustments
         {
             if (unitEntityData.Portrait.IsCustom)
             {
-                var key = unitEntityData.Descriptor.UISettings.CustomPortrait.CustomId;
+                var key = unitEntityData.Descriptor.UISettings.CustomPortraitRaw.CustomId;
                 var currentIndex = DollResourcesManager.CustomPortraits.IndexOf(key);
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Portrait:  ", GUILayout.Width(DefaultLabelWidth));
@@ -457,10 +458,7 @@ namespace VisualAdjustments
             {
                 unitEntityData.View.HandsEquipment.UpdateAll();
             }
-            ChooseToggle("Hide Cap", ref characterSettings.hideCap, onHideEquipment);
-            ChooseToggle("Hide Backpack", ref characterSettings.hideBackpack, onHideEquipment);
             ChooseToggle("Hide Class Cloak", ref characterSettings.hideClassCloak, onHideEquipment);
-            ChooseToggle("Hide Helmet", ref characterSettings.hideHelmet, onHideEquipment);
             ChooseToggle("Hide Item Cloak", ref characterSettings.hideItemCloak, onHideEquipment);
             ChooseToggle("Hide Armor", ref characterSettings.hideArmor, onHideEquipment);
             ChooseToggle("Hide Bracers", ref characterSettings.hideBracers, onHideEquipment);
@@ -468,6 +466,7 @@ namespace VisualAdjustments
             ChooseToggle("Hide Boots", ref characterSettings.hideBoots, onHideEquipment);
             ChooseToggle("Hide Inactive Weapons", ref characterSettings.hideWeapons, onWeaponChanged);
             ChooseToggle("Hide Belt Slots", ref characterSettings.hideBeltSlots, onWeaponChanged);
+            ChooseToggle("Hide Quiver", ref characterSettings.hideQuiver, onWeaponChanged);
             ChooseToggle("Hide Weapon Enchantments", ref characterSettings.hideWeaponEnchantments, onWeaponChanged);
             ChooseToggle("Hide Wings", ref characterSettings.hideWings, onHideBuff);
             if (BlueprintRoot.Instance.DlcSettings.Tieflings.Enabled)

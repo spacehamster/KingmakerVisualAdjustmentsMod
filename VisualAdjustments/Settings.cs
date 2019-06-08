@@ -19,10 +19,7 @@ namespace VisualAdjustments
             public bool showDollSelection = false;
             public bool showEquipmentSelection = false;
             public bool showOverrideSelection = false;
-            public bool hideBackpack = false;
-            public bool hideCap = false;
             public bool hideClassCloak = false;
-            public bool hideHelmet = false;
             public bool hideItemCloak = false;
             public bool hideArmor = false;
             public bool hideBracers = false;
@@ -34,6 +31,7 @@ namespace VisualAdjustments
             public bool hideHorns = false;
             public bool hideWeapons = false;
             public bool hideBeltSlots = false;
+            public bool hideQuiver = false;
 
             public BlueprintRef overrideHelm = null;
             public BlueprintRef overrideCloak = null;
