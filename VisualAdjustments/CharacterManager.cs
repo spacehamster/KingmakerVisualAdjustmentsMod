@@ -248,6 +248,10 @@ namespace VisualAdjustments
                 ChangeCompanionOutfit(view, characterSettings);
             }
             if (characterSettings.classOutfit == "None") NoClassOutfit(view);
+            if (characterSettings.hideHelmet)
+            {
+                HideSlot(view, view.EntityData.Body.Head, ref dirty);
+            }
             if (characterSettings.hideItemCloak)
             {
                 HideSlot(view, view.EntityData.Body.Shoulders, ref dirty);
@@ -302,6 +306,25 @@ namespace VisualAdjustments
                         view.CharacterAvatar.EquipmentEntities.Remove(ee);
                         dirty = true;
                     }
+                }
+            }
+            if (characterSettings.hideCap)
+            {
+                foreach (var ee in view.CharacterAvatar.EquipmentEntities.ToArray())
+                {
+                    if (ee.BodyParts.Exists((bodypart) => bodypart.Type == BodyPartType.Cap) &&
+                        !view.ExtractEquipmentEntities(view.EntityData.Body.Head).Contains(ee))
+                    {
+                        view.CharacterAvatar.EquipmentEntities.Remove(ee);
+                        dirty = true;
+                    }
+                }
+            }
+            if (characterSettings.overrideHelm != null && !characterSettings.hideHelmet)
+            {
+                if (!OverrideEquipment(view, view.EntityData.Body.Head, characterSettings.overrideHelm, ref dirty))
+                {
+                    characterSettings.overrideHelm = null;
                 }
             }
             if (characterSettings.overrideCloak != null && !characterSettings.hideItemCloak)

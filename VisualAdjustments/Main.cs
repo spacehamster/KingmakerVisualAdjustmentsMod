@@ -458,6 +458,8 @@ namespace VisualAdjustments
             {
                 unitEntityData.View.HandsEquipment.UpdateAll();
             }
+            ChooseToggle("Hide Cap", ref characterSettings.hideCap, onHideEquipment);
+            ChooseToggle("Hide Helmet", ref characterSettings.hideHelmet, onHideEquipment);
             ChooseToggle("Hide Class Cloak", ref characterSettings.hideClassCloak, onHideEquipment);
             ChooseToggle("Hide Item Cloak", ref characterSettings.hideItemCloak, onHideEquipment);
             ChooseToggle("Hide Armor", ref characterSettings.hideArmor, onHideEquipment);
