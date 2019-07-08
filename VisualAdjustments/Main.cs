@@ -20,7 +20,9 @@ using Kingmaker.Blueprints.Root;
 using Kingmaker.Utility;
 namespace VisualAdjustments
 {
-
+#if DEBUG
+    [EnableReloading]
+#endif
     public class Main
     {
         const float DefaultLabelWidth = 200f;
@@ -61,19 +63,28 @@ namespace VisualAdjustments
         {
             try
             {
+                logger = modEntry.Logger;
                 settings = Settings.Load(modEntry);
                 var harmony = HarmonyInstance.Create(modEntry.Info.Id);
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
                 modEntry.OnToggle = OnToggle;
                 modEntry.OnGUI = OnGUI;
                 modEntry.OnSaveGUI = OnSaveGUI;
-                logger = modEntry.Logger;
+#if DEBUG
+                modEntry.OnUnload = Unload;
+#endif
+
             }
             catch (Exception e)
             {
                 DebugLog(e.ToString() + "\n" + e.StackTrace);
                 throw e;
             }
+            return true;
+        }
+        static bool Unload(UnityModManager.ModEntry modEntry)
+        {
+            HarmonyInstance.Create(modEntry.Info.Id).UnpatchAll(modEntry.Info.Id);
             return true;
         }
         static void OnSaveGUI(UnityModManager.ModEntry modEntry)
