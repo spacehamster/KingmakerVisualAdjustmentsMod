@@ -9,6 +9,7 @@ using Kingmaker.EntitySystem.Entities;
 using Kingmaker.Items.Slots;
 using Kingmaker.ResourceLinks;
 using Kingmaker.UnitLogic.Buffs.Blueprints;
+using Kingmaker.View;
 using Kingmaker.View.Equipment;
 using Kingmaker.Visual.CharacterSystem;
 using Kingmaker.Visual.Decals;
@@ -525,6 +526,10 @@ namespace VisualAdjustments
         static int buffIndex = 0;
         static void ShowBuffInfo(UnitEntityData unitEntityData)
         {
+            if (blueprintBuffs.Length == 0)
+            {
+                BuildLookup();
+            }
             GUILayout.BeginHorizontal();
             buffIndex = (int)GUILayout.HorizontalSlider(buffIndex, 0, blueprintBuffs.Length - 1, GUILayout.Width(300));
             if(GUILayout.Button("Prev", GUILayout.Width(45)))
@@ -573,9 +578,64 @@ namespace VisualAdjustments
                 GUILayout.Label($"{id} - {ee?.name}");
             }
         }
-            //Refer FxHelper.SpawnFxOnGameObject
-            static void ShowFxInfo(UnitEntityData unitEntityData)
+        static string[] FXIds = new string[] { };
+        static int fxIndex = 0;
+        static void LoadFxLookup(bool forceReload = false)
         {
+            var filepath = $"{Main.ModEntry.Path}/fxlookup.txt";
+            if (File.Exists(filepath) && !forceReload)
+            {
+                FXIds = File
+                    .ReadAllLines($"{Main.ModEntry.Path}/fxlookup.txt")
+                    .Where(id => ResourcesLibrary.LibraryObject.ResourceNamesByAssetId.ContainsKey(id))
+                    .ToArray();
+            } else { 
+                var idList = new List<string>();
+                foreach (var kv in ResourcesLibrary.LibraryObject.ResourceNamesByAssetId)
+                {
+                    var obj = ResourcesLibrary.TryGetResource<UnityEngine.Object>(kv.Key);
+                    var go = obj as GameObject;
+                    if (go != null && go.GetComponent<PooledFx>() != null)
+                    {
+                        idList.Add(kv.Key);
+                    }
+                    ResourcesLibrary.CleanupLoadedCache();
+                }
+                FXIds = idList
+                    .OrderBy(id => ResourcesLibrary.LibraryObject.ResourceNamesByAssetId[id])
+                    .ToArray();
+                File.WriteAllLines(filepath, FXIds);
+            }
+        }
+        //Refer FxHelper.SpawnFxOnGameObject
+        static void ShowFxInfo(UnitEntityData unitEntityData)
+        {
+            //Choose FX
+            GUILayout.Label($"Choose FX {FXIds.Length} available");
+            if(FXIds.Length == 0) LoadFxLookup();
+            GUILayout.BeginHorizontal();
+            fxIndex = (int)GUILayout.HorizontalSlider(fxIndex, 0, FXIds.Length - 1, GUILayout.Width(300));
+            if (GUILayout.Button("Prev", GUILayout.Width(45)))
+            {
+                fxIndex = fxIndex == 0 ? 0 : fxIndex - 1;
+            }
+            if (GUILayout.Button("Next", GUILayout.Width(45)))
+            {
+                fxIndex = fxIndex >= FXIds.Length - 1 ? FXIds.Length - 1 : fxIndex + 1;
+            }
+            var fxId = FXIds[fxIndex];
+            GUILayout.Label($"{ResourcesLibrary.LibraryObject.ResourceNamesByAssetId[fxId]} {FXIds[fxIndex]}");
+            if (GUILayout.Button("Apply", GUILayout.Width(200)))
+            {
+                var prefab = ResourcesLibrary.TryGetResource<GameObject>(fxId);
+                FxHelper.SpawnFxOnUnit(prefab, unitEntityData.View);
+            }
+            if (GUILayout.Button("Clear FX Cache", GUILayout.Width(200)))
+            {
+                LoadFxLookup(forceReload: true);
+            }
+            GUILayout.EndHorizontal();
+            //List of SpawnFxOnStart
             var spawnOnStart = unitEntityData.View.GetComponent<SpawnFxOnStart>();
             if (spawnOnStart)
             {
@@ -610,6 +670,38 @@ namespace VisualAdjustments
                     }
                     GUILayout.EndHorizontal();
                 }
+            }
+            GUILayout.Label("FXRoot");
+            foreach(Transform t in FxHelper.FxRoot.transform)
+            {
+                var pooledFX = t.gameObject.GetComponent<PooledFx>();
+                var snapToLocaters = (List<SnapToLocator>)AccessTools.Field(typeof(PooledFx), "m_SnapToLocators").GetValue(pooledFX);
+                var fxBone = snapToLocaters.Select(s => s.Locator).FirstOrDefault();
+                UnitEntityView unit = null;
+                if (fxBone != null)
+                {
+                    var viewTransform = fxBone.Transform;
+                    while (viewTransform != null && unit == null)
+                    {
+                        unit = viewTransform.GetComponent<UnitEntityView>();
+                        if (unit == null)
+                        {
+                            viewTransform = viewTransform.parent;
+                        }
+                    }
+                }
+                GUILayout.BeginHorizontal();
+                if (unit != null)
+                {
+                    GUILayout.Label($"{pooledFX.name} - {unit.EntityData.CharacterName} - {unit.name}");
+                } else
+                {
+                    GUILayout.Label($"{pooledFX.name}");
+                }
+                if(GUILayout.Button("DestroyFX", GUILayout.Width(200))){
+                    FxHelper.Destroy(t.gameObject);
+                }
+                GUILayout.EndHorizontal();
             }
         }
     }

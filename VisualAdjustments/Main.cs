@@ -18,6 +18,7 @@ using Kingmaker.Enums;
 using Kingmaker.UnitLogic;
 using Kingmaker.Blueprints.Root;
 using Kingmaker.Utility;
+
 namespace VisualAdjustments
 {
 #if DEBUG
@@ -39,6 +40,7 @@ namespace VisualAdjustments
         }
         public static bool enabled;
         public static Settings settings;
+        public static UnityModManager.ModEntry ModEntry;
         public static string[] classes = new string[] {
             "Default",
             "Alchemist",
@@ -63,6 +65,7 @@ namespace VisualAdjustments
         {
             try
             {
+                ModEntry = modEntry;
                 logger = modEntry.Logger;
                 settings = Settings.Load(modEntry);
                 var harmony = HarmonyInstance.Create(modEntry.Info.Id);
@@ -321,6 +324,10 @@ namespace VisualAdjustments
         }
         static void ChooseEEL(UnitEntityData unitEntityData, DollState doll, string label, EquipmentEntityLink[] links, EquipmentEntityLink link, Action<EquipmentEntityLink> setter)
         {
+            if(links.Length == 0)
+            {
+                GUILayout.Label($"Missing equipment for {label}");
+            }
             var index = links.ToList().FindIndex((eel) => eel.AssetId == link.AssetId);
             ChooseFromList(label, links, ref index, () => {
                 setter(links[index]);
@@ -335,6 +342,20 @@ namespace VisualAdjustments
                 unitEntityData.Descriptor.Doll = doll.CreateData();
                 CharacterManager.RebuildCharacter(unitEntityData);
             });
+        }
+        static void ChooseRace(UnitEntityData unitEntityData, DollState doll)
+        {
+            var currentRace = doll.Race;
+            var races = BlueprintRoot.Instance.Progression.CharacterRaces;
+            var index = Array.FindIndex(races, (race) => race == currentRace);
+            GUILayout.BeginHorizontal();
+            ChooseFromList("Race", races, ref index, () => {
+                doll.SetRace(races[index]);
+                unitEntityData.Descriptor.Doll = doll.CreateData();
+                CharacterManager.RebuildCharacter(unitEntityData);
+            });
+            GUILayout.Label(" " + races[index].Name);
+            GUILayout.EndHorizontal();
         }
         static void ChooseVisualPreset(UnitEntityData unitEntityData, DollState doll, string label, BlueprintRaceVisualPreset[] presets,
             BlueprintRaceVisualPreset currentPreset)
@@ -355,15 +376,16 @@ namespace VisualAdjustments
                 CharacterManager.RebuildCharacter(unitEntityData);
             }
             var doll = DollResourcesManager.GetDoll(unitEntityData);
-            var race = unitEntityData.Descriptor.Progression.Race;
+            var race = doll.Race;
             var gender = unitEntityData.Gender;
             CustomizationOptions customizationOptions = gender != Gender.Male ? race.FemaleOptions : race.MaleOptions;
+            ChooseRace(unitEntityData, doll);
             ChooseEEL(unitEntityData, doll, "Face", customizationOptions.Heads, doll.Head, (EquipmentEntityLink ee) => doll.SetHead(ee));
             ChooseEEL(unitEntityData, doll, "Hair", customizationOptions.Hair, doll.Hair, (EquipmentEntityLink ee) => doll.SetHair(ee));
-            ChooseEEL(unitEntityData, doll, "Beards", customizationOptions.Beards, doll.Beard, (EquipmentEntityLink ee) => doll.SetBeard(ee));
+            if (customizationOptions.Beards.Length > 0) ChooseEEL(unitEntityData, doll, "Beards", customizationOptions.Beards, doll.Beard, (EquipmentEntityLink ee) => doll.SetBeard(ee));
             if (BlueprintRoot.Instance.DlcSettings.Tieflings.Enabled)
             {
-                ChooseEEL(unitEntityData, doll, "Horns", customizationOptions.Horns, doll.Horn, (EquipmentEntityLink ee) => doll.SetHorn(ee));
+                if(customizationOptions.Horns.Length > 0) ChooseEEL(unitEntityData, doll, "Horns", customizationOptions.Horns, doll.Horn, (EquipmentEntityLink ee) => doll.SetHorn(ee));
             }
             ChooseRamp(unitEntityData, doll, "Hair Color", doll.GetHairRamps(), doll.HairRampIndex, (int index) => doll.SetHairColor(index));
             ChooseRamp(unitEntityData, doll, "Skin Color", doll.GetSkinRamps(), doll.SkinRampIndex, (int index) => doll.SetSkinColor(index));

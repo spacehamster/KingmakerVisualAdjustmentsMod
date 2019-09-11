@@ -1,13 +1,12 @@
-﻿using System;
+﻿using Kingmaker.ResourceLinks;
+using Kingmaker.Visual.CharacterSystem;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace VisualAdjustments
 {
-    public class Util
+    public static class Util
     {
         const float DefaultLabelWidth = 200f;
         const float DefaultSliderWidth = 300f;
@@ -64,6 +63,10 @@ namespace VisualAdjustments
                 saved[savedIndex] = currentItem;
                 onChoose();
             }
+        }
+        public static void AddEquipmentEntities(this Character character, IEnumerable<EquipmentEntityLink> links, bool saved = false)
+        {
+            foreach (var eel in links) character.AddEquipmentEntity(eel);
         }
     }
 }
