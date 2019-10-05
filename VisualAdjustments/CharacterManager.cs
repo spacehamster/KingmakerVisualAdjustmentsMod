@@ -395,7 +395,7 @@ namespace VisualAdjustments
                 }
                 catch (Exception ex)
                 {
-                    Main.DebugError(ex);
+                    Main.Error(ex);
                 }
             }
         }
@@ -416,7 +416,7 @@ namespace VisualAdjustments
                 }
                 catch (Exception ex)
                 {
-                    Main.DebugError(ex);
+                    Main.Error(ex);
                 }
             }
         }
@@ -439,7 +439,7 @@ namespace VisualAdjustments
                 }
                 catch (Exception ex)
                 {
-                    Main.DebugError(ex);
+                    Main.Error(ex);
                 }
             }
         }
@@ -513,7 +513,7 @@ namespace VisualAdjustments
                 }
                 catch (Exception ex)
                 {
-                    Main.DebugError(ex);
+                    Main.Error(ex);
                     return true;
                 }
             }
@@ -585,7 +585,7 @@ namespace VisualAdjustments
                 }
                 catch (Exception ex)
                 {
-                    Main.DebugError(ex);
+                    Main.Error(ex);
                 }
             }
         }
@@ -598,7 +598,7 @@ namespace VisualAdjustments
                 {
                     if (!Main.enabled) return;
                     if (!Main.settings.rebuildCharacters) return;
-                    Main.DebugLog("Rebuilding characters");
+                    Main.Log("Rebuilding characters");
                     foreach (var character in Game.Instance.Player.ControllableCharacters)
                     {
                         RebuildCharacter(character);
@@ -607,7 +607,7 @@ namespace VisualAdjustments
                     }
                 } catch(Exception ex)
                 {
-                    Main.DebugError(ex);
+                    Main.Error(ex);
                 }
             }
         }

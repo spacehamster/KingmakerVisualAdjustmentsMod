@@ -85,7 +85,7 @@ namespace VisualAdjustments
                     UnitEntityView template = GetView(characterSettings.overrideView);
                     if (template == null)
                     {
-                        Main.DebugLog("Overriding invalid view " + characterSettings.overrideView);
+                        Main.Log("Overriding invalid view " + characterSettings.overrideView);
                         return true;
                     }
                     Quaternion rotation = (!template.ForbidRotation) ? Quaternion.Euler(0f, __instance.Orientation, 0f) : Quaternion.identity;
@@ -95,7 +95,7 @@ namespace VisualAdjustments
                     return false;
                 } catch(Exception ex)
                 {
-                    Main.DebugError(ex);
+                    Main.Error(ex);
                     return true;
                 }
             }
@@ -132,7 +132,7 @@ namespace VisualAdjustments
                 }
                 catch (Exception ex)
                 {
-                    Main.DebugError(ex);
+                    Main.Error(ex);
                 }
             }
         }
@@ -165,7 +165,7 @@ namespace VisualAdjustments
                 }
                 catch (Exception ex)
                 {
-                    Main.DebugError(ex);
+                    Main.Error(ex);
                 }
             }
         }
@@ -232,6 +232,7 @@ namespace VisualAdjustments
                     var characterSettings = Main.settings.GetCharacterSettings(__instance.EntityData);
                     if (characterSettings == null) return;
                     if (!characterSettings.overrideScale || characterSettings.overrideScaleCheatMode) return;
+                    if (__instance.EntityData.Body == null) return;
                     if (characterSettings.overrideScaleShapeshiftOnly &&
                         !__instance.EntityData.Body.IsPolymorphed)
                     {
@@ -242,7 +243,7 @@ namespace VisualAdjustments
                 }
                 catch (Exception ex)
                 {
-                    Main.DebugError(ex);
+                    Main.Error(ex);
                 }
             }
         }

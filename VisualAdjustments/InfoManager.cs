@@ -220,7 +220,7 @@ namespace VisualAdjustments
                 {
                     var result = serializer.Deserialize<UnorderedList<string, string>>(reader);
                     m_OrphanedMaleEquipment = result;
-                    if(m_OrphanedMaleEquipment == null) Main.DebugLog($"Error loading {maleFilepath}");
+                    if(m_OrphanedMaleEquipment == null) Main.Log($"Error loading {maleFilepath}");
                 }
             }
             var femaleFilepath = "Mods/VisualAdjustments/FemaleOrphanedEquipment.json";
@@ -232,12 +232,12 @@ namespace VisualAdjustments
                 {
                     var result = serializer.Deserialize<UnorderedList<string, string>>(reader);
                     m_OrphanedFemaleEquipment = result;
-                    if (m_OrphanedFemaleEquipment == null) Main.DebugLog($"Error loading {femaleFilepath}");
+                    if (m_OrphanedFemaleEquipment == null) Main.Log($"Error loading {femaleFilepath}");
                 }
             }
             if (m_OrphanedMaleEquipment == null || m_OrphanedFemaleEquipment == null)
             {
-                Main.DebugLog("Rebuilding Orphaned Equipment Lookup");
+                Main.Log("Rebuilding Orphaned Equipment Lookup");
                 var eeBlacklist = new HashSet<string>();
                 foreach (var gender in new Gender[] { Gender.Male, Gender.Female })
                 {

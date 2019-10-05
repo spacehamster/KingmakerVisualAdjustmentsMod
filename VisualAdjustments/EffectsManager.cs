@@ -53,7 +53,7 @@ namespace VisualAdjustments
                 }
                 catch (Exception ex)
                 {
-                    Main.DebugError(ex);
+                    Main.Error(ex);
                     return true;
                 }
             }
@@ -116,7 +116,7 @@ namespace VisualAdjustments
                     }
                 } catch(Exception ex)
                 {
-                    Main.DebugError(ex);
+                    Main.Error(ex);
                 }
             }
         }
@@ -155,7 +155,7 @@ namespace VisualAdjustments
                     }
                 } catch(Exception ex)
                 {
-                    Main.DebugError(ex);
+                    Main.Error(ex);
                 }
     }
         }
@@ -180,7 +180,7 @@ namespace VisualAdjustments
                     WeaponEnchantments.Remove(__instance.Slot.MaybeItem);
                 } catch(Exception ex)
                 {
-                    Main.DebugError(ex);
+                    Main.Error(ex);
                 }
             }
         }
@@ -203,7 +203,7 @@ namespace VisualAdjustments
                 }
                 catch (Exception ex)
                 {
-                    Main.DebugError(ex);
+                    Main.Error(ex);
                 }
             }
         }

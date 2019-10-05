@@ -30,13 +30,17 @@ namespace VisualAdjustments
         const float DefaultSliderWidth = 300f;
         public static UnityModManager.ModEntry.ModLogger logger;
         [System.Diagnostics.Conditional("DEBUG")]
-        public static void DebugLog(string msg)
+        public static void Log(string msg)
         {
             if (logger != null) logger.Log(msg);
         }
-        public static void DebugError(Exception ex)
+        public static void Error(Exception ex)
         {
             if (logger != null) logger.Log(ex.ToString() + "\n" + ex.StackTrace);
+        }
+        public static void Error(string msg)
+        {
+            if (logger != null) logger.Log(msg);
         }
         public static bool enabled;
         public static Settings settings;
@@ -80,7 +84,7 @@ namespace VisualAdjustments
             }
             catch (Exception e)
             {
-                DebugLog(e.ToString() + "\n" + e.StackTrace);
+                Log(e.ToString() + "\n" + e.StackTrace);
                 throw e;
             }
             return true;
@@ -160,7 +164,7 @@ namespace VisualAdjustments
             }
             catch (Exception e)
             {
-                DebugLog(e.ToString() + " " + e.StackTrace);
+                Log(e.ToString() + " " + e.StackTrace);
             }
         }
         static void ChooseClassOutfit(CharacterSettings characterSettings, UnitEntityData unitEntityData)
