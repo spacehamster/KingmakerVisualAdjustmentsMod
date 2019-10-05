@@ -24,7 +24,7 @@ namespace VisualAdjustments
                 var loadedResources = Traverse.Create(typeof(ResourcesLibrary)).Field("s_LoadedResources").GetValue<IDictionary>();
                 if (loadedResources == null)
                 {
-                    Main.DebugLog("Can't get s_LoadedResources");
+                    Main.Log("Can't get s_LoadedResources");
                     return;
                 }
                 foreach (var key in loadedResources.Keys)
@@ -32,19 +32,19 @@ namespace VisualAdjustments
                     var LoadedResource = loadedResources[key];
                     var resource = Traverse.Create(LoadedResource).Field("Resource").GetValue<UnityEngine.Object>();
                     int requestCounter = Traverse.Create(LoadedResource).Field("RequestCounter").GetValue<int>();
-                    Main.DebugLog($"Resource {resource?.name ?? "NULL"} RequestCounter {requestCounter} Key {key}");
+                    Main.Log($"Resource {resource?.name ?? "NULL"} RequestCounter {requestCounter} Key {key}");
                 }
             }
             static bool Prefix()
             {
                 try
                 {
-                    Main.DebugLog("CleanupLoadedCache.Prefix");
+                    Main.Log("CleanupLoadedCache.Prefix");
                     Log();
                 }
                 catch(Exception ex)
                 {
-                    Main.DebugError(ex);
+                    Main.Error(ex);
                 }
                 return true;
             }
@@ -52,12 +52,12 @@ namespace VisualAdjustments
             {
                 try
                 {
-                    Main.DebugLog("CleanupLoadedCache.Postfix");
+                    Main.Log("CleanupLoadedCache.Postfix");
                     Log();
                 }
                 catch (Exception ex)
                 {
-                    Main.DebugError(ex);
+                    Main.Error(ex);
                 }
             }
         }

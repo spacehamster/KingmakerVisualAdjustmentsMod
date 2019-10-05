@@ -36,7 +36,7 @@ namespace VisualAdjustments
         }
         public static void Error(Exception ex)
         {
-            if (logger != null) logger.Log(ex.ToString() + "\n" + ex.StackTrace);
+            if (logger != null) logger.Log(ex.ToString());
         }
         public static void Error(string msg)
         {
@@ -332,7 +332,7 @@ namespace VisualAdjustments
             {
                 GUILayout.Label($"Missing equipment for {label}");
             }
-            var index = links.ToList().FindIndex((eel) => eel.AssetId == link.AssetId);
+            var index = links.ToList().FindIndex((eel) => eel != null && eel.AssetId == link?.AssetId);
             ChooseFromList(label, links, ref index, () => {
                 setter(links[index]);
                 unitEntityData.Descriptor.Doll = doll.CreateData();
